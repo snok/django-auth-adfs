@@ -53,7 +53,7 @@ In your project's ``settings.py``
         "ADFS_SERVER": "adfs.yourcompany.com",
         "ADFS_CLIENT_ID": "your-configured-client-id",
         "ADFS_RESOURCE": "your-adfs-RPT-name",
-        "ADFS_SIGNING_CERT": "/path/to/afs-signing-certificate.pem",
+        "ADFS_SIGNING_CERT": "/path/to/adfs-signing-certificate.pem",
         "ADFS_AUDIENCE": "microsoft:identityserver:your-adfs-RPT-name",
         "ADFS_ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",
         "ADFS_CA_BUNDLE": "/path/to/ca-bundle.pem",
