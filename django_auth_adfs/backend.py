@@ -1,10 +1,11 @@
-import jwt
 from os.path import isfile
+
+import jwt
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
 from requests import post
 
@@ -23,7 +24,7 @@ class AdfsBackend(ModelBackend):
             certificate = self._settings.ADFS_SIGNING_CERT
             if isfile(certificate):
                 with open(certificate, 'r') as file:
-                    certificate=file.read()
+                    certificate = file.read()
             if isinstance(certificate, str):
                 certificate = certificate.encode()
             cert_obj = load_pem_x509_certificate(certificate, default_backend())
