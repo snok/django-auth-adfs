@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+from django_auth_adfs import __version__
+
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 with open('CHANGELOG.rst') as changelog_file:
@@ -7,7 +9,7 @@ with open('CHANGELOG.rst') as changelog_file:
 
 setup(
     name='django-auth-adfs',
-    version='0.0.1',
+    version=__version__,
     packages=find_packages(),
     author='Joris Beckers',
     author_email='joris.beckers@gmail.com',
@@ -42,4 +44,3 @@ setup(
     ],
     zip_safe=False,
 )
-
