@@ -10,13 +10,13 @@ class Settings(object):
             "ADFS_TOKEN_PATH": "/adfs/oauth2/token",
             "ADFS_CLIENT_ID": None,  # Required
             "ADFS_RESOURCE": None,  # Required
-            "ADFS_SIGNING_CERT": None,
+            "ADFS_SIGNING_CERT": None,  # Required
             "ADFS_AUDIENCE": None,
             "ADFS_ISSUER": None,
             "ADFS_CA_BUNDLE": True,
             "ADFS_REDIR_URI": None,
-            "ADFS_AFTER_LOGIN_URL": "/",
-            "ADFS_USERNAME_CLAIM": "winaccountname",  # Required
+            "ADFS_LOGIN_REDIRECT_URL": None,
+            "ADFS_USERNAME_CLAIM": "winaccountname",
             "ADFS_GROUP_CLAIM": "group",
             "ADFS_CLAIM_MAPPING": {},
             "REQUIRE_LOGIN_EXEMPT_URLS": [],

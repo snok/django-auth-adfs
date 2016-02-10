@@ -20,7 +20,7 @@ import sphinx_rtd_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../django_auth_adfs'))
+sys.path.insert(0, os.path.abspath('../'))
 from django_auth_adfs import __version__
 
 
@@ -28,6 +28,7 @@ from django_auth_adfs import __version__
 # http://stackoverflow.com/questions/12772927/specifying-an-online-image-in-sphinx-restructuredtext-format
 import sphinx.environment
 from docutils.utils import get_source_line
+
 
 def _warn_node(self, msg, node):
     if not msg.startswith('nonlocal image URI found:'):

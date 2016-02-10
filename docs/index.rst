@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to django-auth-adfs's documentation!
-====================================================
+============================================
 
 Contents:
 
@@ -12,6 +12,9 @@ Contents:
    :maxdepth: 3
 
    readme
+   requirements
+   install
+   configuration
    contributing
 
 Indices and tables
