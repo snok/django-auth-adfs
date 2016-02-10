@@ -1,7 +1,4 @@
-from .config import Settings
 from .util import get_adfs_auth_url
-
-settings = Settings()
 
 
 def adfs_url(request):

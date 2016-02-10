@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
 from requests import post
 
-from .config import Settings
+from .config import settings
 
 
 class AdfsBackend(ModelBackend):
@@ -18,10 +18,8 @@ class AdfsBackend(ModelBackend):
     """
 
     def __init__(self):
-        self._settings = Settings()
-
-        if self._settings.ADFS_SIGNING_CERT:
-            certificate = self._settings.ADFS_SIGNING_CERT
+        if settings.ADFS_SIGNING_CERT:
+            certificate = settings.ADFS_SIGNING_CERT
             if isfile(certificate):
                 with open(certificate, 'r') as file:
                     certificate = file.read()
@@ -32,13 +30,10 @@ class AdfsBackend(ModelBackend):
         else:
             raise ImproperlyConfigured("ADFS token signing certificate not set")
 
-    # pylint: disable=arguments-differ,too-many-locals,too-many-branches
     def authenticate(self, access_token=None, authorization_code=None, redir_uri=None):
         # If there's no token or code, we pass controll to the next authentication backend
         if not access_token and not authorization_code:
             return
-
-        settings = self._settings
 
         if access_token and not (redir_uri or settings.ADFS_REDIR_URI):
             raise ValueError("Redirect URI not specified")
@@ -104,7 +99,6 @@ class AdfsBackend(ModelBackend):
 
         # Create the user
         usermodel = get_user_model()
-        # pylint: disable=unused-variable
         user, created = usermodel.objects.get_or_create(**{
             usermodel.USERNAME_FIELD: payload[username_claim]
         })
@@ -124,7 +118,7 @@ class AdfsBackend(ModelBackend):
                 user_groups = [user_groups, ]
             for group_name in user_groups:
                 try:
-                    group = Group.objects.get(name=group_name) #pylint: disable=no-member
+                    group = Group.objects.get(name=group_name)
                     user.groups.add(group)
                 except ObjectDoesNotExist:
                     pass

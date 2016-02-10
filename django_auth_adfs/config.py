@@ -1,7 +1,5 @@
-from django.conf import settings
+from django.conf import settings as django_settings
 
-
-# pylint: disable=too-few-public-methods
 
 class Settings(object):
     def __init__(self):
@@ -20,9 +18,10 @@ class Settings(object):
             "ADFS_AFTER_LOGIN_URL": "/",
             "ADFS_USERNAME_CLAIM": "winaccountname",  # Required
             "ADFS_GROUP_CLAIM": "group",
-            "ADFS_CLAIM_MAPPING": {}
+            "ADFS_CLAIM_MAPPING": {},
+            "REQUIRE_LOGIN_EXEMPT_URLS": [],
         }
-        self._user_settings = getattr(settings, "AUTH_ADFS")
+        self._user_settings = getattr(django_settings, "AUTH_ADFS")
 
     def __getattr__(self, attr):
         if attr not in self._defaults:
@@ -37,3 +36,6 @@ class Settings(object):
         # Cache the result
         setattr(self, attr, val)
         return val
+
+
+settings = Settings()

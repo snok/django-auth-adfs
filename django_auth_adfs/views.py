@@ -3,7 +3,7 @@ from django.http.response import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic import View
 
-from django_auth_adfs.config import Settings
+from django_auth_adfs.config import settings
 from .util import get_redir_uri, get_adfs_auth_url
 
 
@@ -24,21 +24,21 @@ class OAuth2View(View):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                settings = Settings()
-                # Redirect to a success page.
+                # Redirect to the "after login" page.
+                # Because we got redirected from ADFS, we can't know where the user came from
                 return redirect(settings.ADFS_AFTER_LOGIN_URL)
             else:
                 # Return a 'disabled account' error message
-                return HttpResponse("Login failed")
+                return HttpResponse("Account disabled")
         else:
             # Return an 'invalid login' error message.
             return HttpResponse("Login failed")
 
 
-class LoginView(View):
+class ADFSView(View):
     def get(self, request):
         """
-        Redirects the user to ADFS for logig.
+        Redirects the user to ADFS for login.
 
         Args:
             request (django.http.request.HttpRequest): A Django Request object

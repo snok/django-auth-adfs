@@ -1,7 +1,6 @@
-from .config import Settings
 from django.core.urlresolvers import reverse
 
-settings = Settings()
+from .config import settings
 
 
 def get_redir_uri(request):
