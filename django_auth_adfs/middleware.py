@@ -11,7 +11,7 @@ REQUIRE_LOGIN_EXEMPT_URLS = [
     compile(django_settings.LOGIN_URL.lstrip('/')),
     compile(reverse("auth_adfs:login").lstrip('/')),
 ]
-if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
+if hasattr(settings, 'REQUIRE_LOGIN_EXEMPT_URLS'):
     REQUIRE_LOGIN_EXEMPT_URLS += [compile(expr) for expr in settings.REQUIRE_LOGIN_EXEMPT_URLS]
 
 
