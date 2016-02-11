@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.http.response import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic import View
-
+from django.conf import settings as django_settings
 from django_auth_adfs.config import settings
 from .util import get_redir_uri, get_adfs_auth_url
 
@@ -26,8 +26,10 @@ class OAuth2View(View):
                 login(request, user)
                 # Redirect to the "after login" page.
                 # Because we got redirected from ADFS, we can't know where the user came from
-                # TODO: if ADFS_LOGIN_REDIRECT_URL is not set, use the django setting LOGIN_REDIRECT_URL
-                return redirect(settings.ADFS_LOGIN_REDIRECT_URL)
+                if settings.ADFS_LOGIN_REDIRECT_URL:
+                    return redirect(settings.ADFS_LOGIN_REDIRECT_URL)
+                else:
+                    return redirect(django_settings.LOGIN_REDIRECT_URL)
             else:
                 # Return a 'disabled account' error message
                 return HttpResponse("Account disabled")
