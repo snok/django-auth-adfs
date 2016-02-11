@@ -69,15 +69,13 @@ class AdfsBackend(ModelBackend):
             # Explicit is better then implicit and it protects against
             # changes is the defaults the jwt module uses
 
-            # ToDo: Override ``iss`` and ``aud`` setting based on ADFS_ISSUER and ADFS_AUDIENCE
-            #       If they are None, these settings should be False
             options = {
                 'verify_signature': True,
                 'verify_exp': True,
                 'verify_nbf': True,
                 'verify_iat': True,
-                'verify_aud': True,
-                'verify_iss': True,
+                'verify_aud': (True if settings.ADFS_AUDIENCE else False),
+                'verify_iss': (True if settings.ADFS_ISSUER else False),
                 'require_exp': False,
                 'require_iat': False,
                 'require_nbf': False
