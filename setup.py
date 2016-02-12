@@ -5,7 +5,7 @@ from django_auth_adfs import __version__
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 with open('CHANGELOG.rst') as changelog_file:
-    changelog = changelog_file.read().replace('.. :changelog:', '')
+    changelog = changelog_file.read()
 
 setup(
     name='django-auth-adfs',

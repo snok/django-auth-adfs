@@ -12,9 +12,10 @@ Contents:
    :maxdepth: 3
 
    readme
-   requirements
    install
    configuration
+   extras
+   adfs_oauth
    contributing
 
 Indices and tables
