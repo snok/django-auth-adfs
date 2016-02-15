@@ -3,7 +3,6 @@ import time
 
 import jwt
 from django.test import TestCase, Client
-from mock import patch
 from httmock import with_httmock, urlmatch
 
 client = Client(HTTP_HOST='example.com')
