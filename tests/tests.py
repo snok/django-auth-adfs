@@ -7,9 +7,10 @@ from django.test import TestCase, Client
 from httmock import with_httmock, urlmatch
 
 
-class simple_utc(tzinfo):
+class SimpleUtc(tzinfo):
     def tzname(self):
         return "UTC"
+
     def utcoffset(self, dt):
         return timedelta(0)
 
@@ -36,7 +37,7 @@ base_jwt_claims["iat"] = int(time.time())
 base_jwt_claims["exp"] = base_jwt_claims["iat"]+3600
 
 auth_time = datetime.utcnow()
-auth_time = auth_time.replace(tzinfo=simple_utc(), microsecond=0)
+auth_time = auth_time.replace(tzinfo=SimpleUtc(), microsecond=0)
 base_jwt_claims["auth_time"] = auth_time.isoformat()
 
 rsa_key = """
@@ -83,4 +84,4 @@ class AuthenticationTests(TestCase):
         response = client.get("/oauth2/login", {'code': 'testcode'})
 
         self.assertEqual(response.status_code, 302)
-        self.assertRegex(response['Location'], '/accounts/profile/$')
+        self.assertTrue(response['Location'].endswith('/accounts/profile/'))
