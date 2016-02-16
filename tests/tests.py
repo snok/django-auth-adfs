@@ -3,8 +3,12 @@ import time
 from datetime import datetime, tzinfo, timedelta
 
 import jwt
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User, Group
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, Client
 from httmock import with_httmock, urlmatch
+from mock import patch
 
 
 class SimpleUtc(tzinfo):
@@ -78,10 +82,31 @@ def token_response(url, request):
 
 
 class AuthenticationTests(TestCase):
+    def setUp(self):
+        Group.objects.create(name='group1')
+        Group.objects.create(name='group2')
+        Group.objects.create(name='group3')
 
     @with_httmock(token_response)
-    def test_incoming_auth_code(self):
+    def test_authentication(self):
         response = client.get("/oauth2/login", {'code': 'testcode'})
+
+        user = User.objects.get(username="testuser")
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response['Location'].endswith('/accounts/profile/'))
+
+        self.assertEqual(user.first_name, "John")
+        self.assertEqual(user.last_name, "Doe")
+
+        self.assertEqual(len(user.groups.all()), 2)
+        self.assertEqual(user.groups.all()[0].name, "group1")
+        self.assertEqual(user.groups.all()[1].name, "group2")
+
+
+class InvalidSettingsTests(TestCase):
+    @with_httmock(token_response)
+    def test_invalid_certificate(self):
+        with patch("django_auth_adfs.backend.settings") as mock_setting:
+            mock_setting.ADFS_SIGNING_CERT = None
+            self.assertRaises(ImproperlyConfigured, authenticate, authorization_code='testcode', redir_uri='test')
