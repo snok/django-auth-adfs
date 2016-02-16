@@ -93,8 +93,8 @@ aK7TCdKeEyDaHh6/Dg==
     "ADFS_AUDIENCE": "microsoft:identityserver:your-adfs-RPT-name",
     "ADFS_ISSUER": "http://adfs.example.com/adfs/services/trust",
     "ADFS_CA_BUNDLE": "/path/to/ca-bundle.pem",
-    "ADFS_CLAIM_MAPPING": {"given_name": "first_name",
-                           "family_name": "last_name",
+    "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
+                           "last_name": "family_name",
                            "email": "email"},
 }
 

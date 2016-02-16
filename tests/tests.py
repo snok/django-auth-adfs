@@ -1,9 +1,17 @@
 import json
 import time
+from datetime import datetime, tzinfo, timedelta
 
 import jwt
 from django.test import TestCase, Client
 from httmock import with_httmock, urlmatch
+
+
+class simple_utc(tzinfo):
+    def tzname(self):
+        return "UTC"
+    def utcoffset(self, dt):
+        return timedelta(0)
 
 client = Client(HTTP_HOST='example.com')
 
@@ -15,12 +23,21 @@ base_jwt_claims = json.loads("""
     "exp":1,
     "winaccountname":"testuser",
     "group":["group1","group2"],
-    "first_name":"John",
-    "last_name":"Doe",
-    "email":"john.doe@example.com"
+    "given_name":"John",
+    "family_name":"Doe",
+    "email":"john.doe@example.com",
+    "sub": "john.doe@example.com",
+    "appid": "your-configured-client-id",
+    "auth_time": "2016-02-16T06:42:21.629Z",
+    "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+    "ver": "1.0"
 }""")
 base_jwt_claims["iat"] = int(time.time())
 base_jwt_claims["exp"] = base_jwt_claims["iat"]+3600
+
+auth_time = datetime.utcnow()
+auth_time = auth_time.replace(tzinfo=simple_utc(), microsecond=0)
+base_jwt_claims["auth_time"] = auth_time.isoformat()
 
 rsa_key = """
 -----BEGIN RSA PRIVATE KEY-----
@@ -66,4 +83,4 @@ class AuthenticationTests(TestCase):
         response = client.get("/oauth2/login", {'code': 'testcode'})
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], '/accounts/profile/')
+        self.assertRegex(response['Location'], '/accounts/profile/$')
