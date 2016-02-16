@@ -1,4 +1,4 @@
-ADFS OAtuh2 flow
+ADFS OAuth2 flow
 ================
 
 This page briefly explains the way OAuth2 authentication with ADFS works.

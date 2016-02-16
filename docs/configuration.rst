@@ -158,6 +158,18 @@ Default: ``None``
 A dictionary of claim/field mappings that will be used to populate the user account in Django.
 The user's details will be set according to this setting upon each login.
 
+The **key** represents user model field (e.g. ``first_name``)
+and the **value** represents the claim name (e.g. ``given_name``).
+
+example
+
+.. code-block:: python
+
+    AUTH_ADFS = {
+        "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
+                               "last_name": "family_name",
+                               "email": "email"},
+    }
 
 REQUIRE_LOGIN_EXEMPT_URLS
 -------------------------
