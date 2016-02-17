@@ -90,7 +90,7 @@ SEtFTMAxlamUZ0PhC2H9nxDo3dN8KS44fT4hBx5FUaUffetl4Q5ebrJ1IoBNZ6+S
 aK7TCdKeEyDaHh6/Dg==
 -----END CERTIFICATE-----
 """,
-    "ADFS_AUDIENCE": "microsoft:identityserver:your-adfs-RPT-name",
+    "ADFS_AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
     "ADFS_ISSUER": "http://adfs.example.com/adfs/services/trust",
     "ADFS_CA_BUNDLE": "/path/to/ca-bundle.pem",
     "ADFS_CLAIM_MAPPING": {"first_name": "given_name",

@@ -18,7 +18,7 @@ client = Client(HTTP_HOST='example.com')
 
 base_jwt_claims = json.loads("""
 {
-    "aud":"microsoft:identityserver:your-adfs-RPT-name",
+    "aud":"microsoft:identityserver:your-RelyingPartyTrust-identifier",
     "iss":"http://adfs.example.com/adfs/services/trust",
     "iat":1,
     "exp":1,

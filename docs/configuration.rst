@@ -65,17 +65,25 @@ ADFS_AUDIENCE
 
 Default: ``None``
 
-Set this to the value of the ``aud claim`` your ADFS server sends back in the JWT token.
-Usually this is something like ``microsoft:identityserver:your-RelyingPartyTrust-name``
-
+Set this to the value of the ``aud`` claim your ADFS server sends back in the JWT token.
 If you leave this set to ``None`` this claim will not be verified.
+
+Examples
+
++--------------------------------------------------+------------------------------------------------------------+
+| Relying Party Trust identifier                   | ``aud`` claim value                                        |
++==================================================+============================================================+
+| your-RelyingPartyTrust-identifier                | microsoft:identityserver:your-RelyingPartyTrust-identifier |
++--------------------------------------------------+------------------------------------------------------------+
+| https://adfs.yourcompany.com/adfs/services/trust | https://adfs.yourcompany.com/adfs/services/trust           |
++--------------------------------------------------+------------------------------------------------------------+
 
 ADFS_ISSUER
 -----------
 
 Default: ``None``
 
-Set this to the value of the ``iss claim`` your ADFS server sends back in the JWT token.
+Set this to the value of the ``iss`` claim your ADFS server sends back in the JWT token.
 Usually this is something like ``http://adfs.yourcompany.com/adfs/services/trust``.
 
 If you leave this set to ``None`` this claim will not be verified.
@@ -135,6 +143,10 @@ Default: ``winaccountname``
 Name of the claim sent in the JWT token from ADFS that contains the username.
 If the user doesn't exist yet, this field will be used as it's username.
 
+.. NOTE::
+   You can find the short name for the claims you configure in the ADFS management console underneath
+   **ADFS** -> **Service** -> **Claim Descriptions**
+
 ADFS_GROUP_CLAIM
 ----------------
 
@@ -149,6 +161,9 @@ If there's no value in the configured claim, or the claim doesn't exist, users a
    User's group membership in Django will be reset to math this claim's value.
    If there's no value, the user will end up being member of no groups.
 
+.. NOTE::
+   You can find the short name for the claims you configure in the ADFS management console underneath
+   **ADFS** -> **Service** -> **Claim Descriptions**
 
 ADFS_CLAIM_MAPPING
 ------------------
@@ -159,7 +174,7 @@ A dictionary of claim/field mappings that will be used to populate the user acco
 The user's details will be set according to this setting upon each login.
 
 The **key** represents user model field (e.g. ``first_name``)
-and the **value** represents the claim name (e.g. ``given_name``).
+and the **value** represents the claim short name (e.g. ``given_name``).
 
 example
 
@@ -170,6 +185,10 @@ example
                                "last_name": "family_name",
                                "email": "email"},
     }
+
+.. NOTE::
+   You can find the short name for the claims you configure in the ADFS management console underneath
+   **ADFS** -> **Service** -> **Claim Descriptions**
 
 REQUIRE_LOGIN_EXEMPT_URLS
 -------------------------

@@ -46,7 +46,9 @@ In your project's ``settings.py``
         "ADFS_CLIENT_ID": "your-configured-client-id",
         "ADFS_RESOURCE": "your-adfs-RPT-name",
         "ADFS_SIGNING_CERT": "/path/to/adfs-signing-certificate.pem",
-        "ADFS_AUDIENCE": "microsoft:identityserver:your-adfs-RPT-name",
+        # Make sure to read the documentation about the ADFS_AUDIENCE setting
+        # when you configured the identifier as a URL!
+        "ADFS_AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
         "ADFS_ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",
         "ADFS_CA_BUNDLE": "/path/to/ca-bundle.pem",
         "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
