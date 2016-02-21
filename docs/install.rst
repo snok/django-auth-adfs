@@ -6,7 +6,15 @@ Requirements
 
 This package has been tested on the following Python versions:
 
+* 2.7
 * 3.4
+* 3.5
+
+And with the following Django versions:
+
+* 1.7
+* 1.8
+* 1.9
 
 You will also need the following:
 

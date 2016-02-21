@@ -17,6 +17,7 @@ Contents:
    extras
    adfs_oauth
    contributing
+   changelog
 
 Indices and tables
 ==================
