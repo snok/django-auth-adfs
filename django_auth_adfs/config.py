@@ -14,7 +14,7 @@ class Settings(object):
             "ADFS_AUDIENCE": None,
             "ADFS_ISSUER": None,
             "ADFS_CA_BUNDLE": True,
-            "ADFS_REDIR_URI": None,
+            "ADFS_REDIR_URI": None,  # Required
             "ADFS_LOGIN_REDIRECT_URL": None,
             "ADFS_USERNAME_CLAIM": "winaccountname",
             "ADFS_GROUP_CLAIM": "group",
