@@ -116,9 +116,13 @@ class AdfsBackend(ModelBackend):
             logging.debug('User "{0}" has been created.'.format(username_claim))
 
         # Update the user's attributes
-        for field, attr in settings.ADFS_CLAIM_MAPPING.items():
+        for field, claim in settings.ADFS_CLAIM_MAPPING.items():
             if hasattr(user, field):
-                setattr(user, field, payload[attr])
+                if claim in payload:
+                    setattr(user, field, payload[claim])
+                else:
+                    msg = "Claim not found in payload: '{0}'. Check ADFS claims mapping."
+                    raise ImproperlyConfigured(msg.format(claim))
             else:
                 msg = "User model has no field named '{0}'. Check ADFS claims mapping."
                 raise ImproperlyConfigured(msg.format(field))

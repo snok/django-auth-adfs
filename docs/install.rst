@@ -62,6 +62,7 @@ In your project's ``settings.py``
         "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
                                "last_name": "family_name",
                                "email": "email"},
+        "ADFS_REDIR_URI": "https://www.yourcompany.com/oauth2/login",
     }
 
     ########################
@@ -89,15 +90,8 @@ In your project's ``settings.py``
         # You can specify URLs for which login is not forced by
         # specifying them in LOGIN_EXEMPT_URLS in setting.py.
         # The values in LOGIN_EXEMPT_URLS are interpreted as regular expressions.
-        #
-        # The user will get redirected to the url set in the Django setting ``LOGIN_URL``
         'django_auth_adfs.middleware.LoginRequiredMiddleware',
     )
-
-    # There's a view available for automatically redirecting users to the ADFS authorization URL.
-    # If you set the value of LOGIN_URL like this, along with enabling the middleware,
-    # users have to take no action themselves for logging on
-    LOGIN_URL = reverse_lazy('auth_adfs:adfs')
 
 In your project's ``urls.py``
 

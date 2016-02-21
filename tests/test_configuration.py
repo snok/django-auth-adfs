@@ -1,11 +1,12 @@
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, Client
 from httmock import with_httmock, urlmatch
-from .utils import get_base_claims, encode_jwt
 from mock import patch, mock_open
+
 from django_auth_adfs.backend import AdfsBackend
-from django_auth_adfs.config import settings as adfs_settings
-from django.conf import settings
+from django_auth_adfs.config import Settings
+from .utils import get_base_claims, encode_jwt
 
 client = Client()
 
@@ -25,8 +26,24 @@ class InvalidConfigurationTests(TestCase):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code='testcode')
 
     @with_httmock(token_response)
-    def test_invalid_setting(self):
-        self.assertRaises(AttributeError, adfs_settings.__getattr__, "NON_EXISTING")
+    def test_required_setting(self):
+        new_settings = settings.AUTH_ADFS
+        new_settings["ADFS_SERVER"] = None
+        with self.settings(AUTH_ADFS=new_settings):
+            self.assertRaises(ImproperlyConfigured, Settings)
+
+    @with_httmock(token_response)
+    def test_unknown_setting(self):
+        new_settings = settings.AUTH_ADFS
+        new_settings["NON_EXISTING"] = "Dummy"
+        with self.settings(AUTH_ADFS=new_settings):
+            self.assertRaises(ImproperlyConfigured, Settings)
+
+    @with_httmock(token_response)
+    def test_missing_setting(self):
+        with self.settings():
+            del settings.AUTH_ADFS
+            self.assertRaises(ImproperlyConfigured, Settings)
 
     @with_httmock(token_response)
     def test_invalid_certificate(self):
@@ -61,7 +78,7 @@ class InvalidConfigurationTests(TestCase):
             "email": "email"
         }
         with patch("django_auth_adfs.backend.settings.ADFS_CLAIM_MAPPING", mock_claim_mapping):
-            self.assertRaises(KeyError, backend.authenticate, authorization_code="dummycode")
+            self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
 
     @with_httmock(token_response)
     def test_group_claim(self):
@@ -92,17 +109,6 @@ class ConfigurationVariationsTests(TestCase):
         }
         with patch("django_auth_adfs.backend.settings.ADFS_CLAIM_MAPPING", mock_claim_mapping):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
-
-    @with_httmock(token_response)
-    def test_claim_mapping_non_existing_claim(self):
-        backend = AdfsBackend()
-        mock_claim_mapping = {
-            "first_name": "nonexisting",
-            "last_name": "family_name",
-            "email": "email"
-        }
-        with patch("django_auth_adfs.backend.settings.ADFS_CLAIM_MAPPING", mock_claim_mapping):
-            self.assertRaises(KeyError, backend.authenticate, authorization_code="dummycode")
 
     @with_httmock(token_response)
     def test_signing_cert_file(self):
