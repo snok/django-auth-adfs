@@ -1,5 +1,3 @@
-from django.core.urlresolvers import reverse_lazy
-
 SECRET_KEY = 'secret'
 
 DATABASES = {
@@ -16,7 +14,6 @@ DATABASES = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -31,8 +28,20 @@ TEMPLATES = [
     },
 ]
 
+TEMPLATE_DIRS = (
+    'templates',
+)
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.contrib.auth.context_processors.auth",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.i18n",
+    "django.core.context_processors.media",
+    "django.core.context_processors.static",
+    "django.core.context_processors.tz",
+    "django.contrib.messages.context_processors.messages",
+    'django_auth_adfs.context_processors.adfs_url',
+)
 MIDDLEWARE_CLASSES = (
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -53,6 +62,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'django_auth_adfs',
+    'tests',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -67,6 +77,7 @@ STATIC_URL = '/static/'
 
 AUTH_ADFS = {
     "ADFS_SERVER": "adfs.example.com",
+    "ADFS_REDIR_URI": "example.com",
     "ADFS_CLIENT_ID": "your-configured-client-id",
     "ADFS_RESOURCE": "your-adfs-RPT-name",
     "ADFS_SIGNING_CERT": """
@@ -96,6 +107,5 @@ aK7TCdKeEyDaHh6/Dg==
     "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
                            "last_name": "family_name",
                            "email": "email"},
+    "REQUIRE_LOGIN_EXEMPT_URLS": ["^context_processor/$"]
 }
-
-LOGIN_URL = reverse_lazy('auth_adfs:adfs')

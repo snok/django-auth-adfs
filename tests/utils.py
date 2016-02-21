@@ -3,8 +3,6 @@ import time
 from datetime import datetime, tzinfo, timedelta
 
 import jwt
-from django.test import TestCase, Client
-from httmock import with_httmock, urlmatch
 
 
 class SimpleUtc(tzinfo):
@@ -14,33 +12,42 @@ class SimpleUtc(tzinfo):
     def utcoffset(self, dt):
         return timedelta(0)
 
-client = Client(HTTP_HOST='example.com')
 
-base_jwt_claims = json.loads("""
-{
-    "aud":"microsoft:identityserver:your-RelyingPartyTrust-identifier",
-    "iss":"http://adfs.example.com/adfs/services/trust",
-    "iat":1,
-    "exp":1,
-    "winaccountname":"testuser",
-    "group":["group1","group2"],
-    "given_name":"John",
-    "family_name":"Doe",
-    "email":"john.doe@example.com",
-    "sub": "john.doe@example.com",
-    "appid": "your-configured-client-id",
-    "auth_time": "2016-02-16T06:42:21.629Z",
-    "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
-    "ver": "1.0"
-}""")
-base_jwt_claims["iat"] = int(time.time())
-base_jwt_claims["exp"] = base_jwt_claims["iat"]+3600
+def get_base_claims():
+    """
+    Returns:
+        dict
+    """
 
-auth_time = datetime.utcnow()
-auth_time = auth_time.replace(tzinfo=SimpleUtc(), microsecond=0)
-base_jwt_claims["auth_time"] = auth_time.isoformat()
+    claims = json.loads("""
+    {
+        "aud":"microsoft:identityserver:your-RelyingPartyTrust-identifier",
+        "iss":"http://adfs.example.com/adfs/services/trust",
+        "iat":1,
+        "exp":1,
+        "winaccountname":"testuser",
+        "group":["group1","group2"],
+        "given_name":"John",
+        "family_name":"Doe",
+        "email":"john.doe@example.com",
+        "sub": "john.doe@example.com",
+        "appid": "your-configured-client-id",
+        "auth_time": "2016-02-16T06:42:21.629Z",
+        "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
+        "ver": "1.0"
+    }""")
+    claims["iat"] = int(time.time())
+    claims["exp"] = claims["iat"]+3600
 
-rsa_key = """
+    auth_time = datetime.utcnow()
+    auth_time = auth_time.replace(tzinfo=SimpleUtc(), microsecond=0)
+    claims["auth_time"] = auth_time.isoformat()
+
+    return claims
+
+
+def encode_jwt(claims):
+    rsa_key = """
 -----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEAy3JZC0ZF+8XpDQxQQDZEtmThOLnhld1TlLTBSEX7lLLoDvlT
 Vfop3LgWhdGhW1gM3Wa47oR3ni3JoXrbky+cAkMkslzu+p4xMS1ApZApZUFh9ZL9
@@ -68,20 +75,5 @@ MFnYPeBXReNXu8o/2BvdRrkdAoGAK7yjFmYmysSKsHfAWw96IImHJqg36ui5giWF
 h7wYqFo4fHj8QnfvaNmeoorfCAipwpMW6wOZz62DbYMbRrkbPM0QaMD1RFr+St8x
 AfJq5XYuxoMS4jr4GsaBdoW1aSldBsTcn971LTW2g/QyapTYlUjThi0=
 -----END RSA PRIVATE KEY-----
-"""
-jwt_token = jwt.encode(base_jwt_claims, rsa_key, algorithm="RS256")
-
-
-@urlmatch(path=r"^/adfs/oauth2/token$")
-def token_response(url, request):
-    return {'status_code': 200, 'content': b'{"access_token":"'+jwt_token+b'"}'}
-
-
-class AuthenticationTests(TestCase):
-
-    @with_httmock(token_response)
-    def test_incoming_auth_code(self):
-        response = client.get("/oauth2/login", {'code': 'testcode'})
-
-        self.assertEqual(response.status_code, 302)
-        self.assertTrue(response['Location'].endswith('/accounts/profile/'))
+    """
+    return jwt.encode(claims, rsa_key, algorithm="RS256")

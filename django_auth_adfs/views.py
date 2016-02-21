@@ -4,7 +4,6 @@ from django.shortcuts import redirect
 from django.views.generic import View
 from django.conf import settings as django_settings
 from django_auth_adfs.config import settings
-from .util import get_redir_uri, get_adfs_auth_url
 
 
 class OAuth2View(View):
@@ -18,8 +17,7 @@ class OAuth2View(View):
         """
         code = request.GET["code"]
 
-        redir_uri = get_redir_uri(request)
-        user = authenticate(authorization_code=code, redir_uri=redir_uri)
+        user = authenticate(authorization_code=code)
 
         if user is not None:
             if user.is_active:
@@ -32,18 +30,7 @@ class OAuth2View(View):
                     return redirect(django_settings.LOGIN_REDIRECT_URL)
             else:
                 # Return a 'disabled account' error message
-                return HttpResponse("Account disabled")
+                return HttpResponse("Account disabled", status=403)
         else:
             # Return an 'invalid login' error message.
-            return HttpResponse("Login failed")
-
-
-class ADFSView(View):
-    def get(self, request):
-        """
-        Redirects the user to ADFS for login.
-
-        Args:
-            request (django.http.request.HttpRequest): A Django Request object
-        """
-        return redirect(get_adfs_auth_url(request))
+            return HttpResponse("Login failed", status=401)

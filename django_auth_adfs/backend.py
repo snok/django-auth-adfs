@@ -1,6 +1,8 @@
 from os.path import isfile
 
 import jwt
+import logging
+from pprint import pformat
 from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.x509 import load_pem_x509_certificate
 from django.contrib.auth import get_user_model
@@ -10,6 +12,8 @@ from django.core.exceptions import ImproperlyConfigured, PermissionDenied, Objec
 from requests import post
 
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class AdfsBackend(ModelBackend):
@@ -25,43 +29,48 @@ class AdfsBackend(ModelBackend):
                     certificate = file.read()
             if isinstance(certificate, str):
                 certificate = certificate.encode()
-            backend.activate_builtin_random()
-            cert_obj = load_pem_x509_certificate(certificate, backend)
-            self._public_key = cert_obj.public_key()
+            try:
+                cert_obj = load_pem_x509_certificate(certificate, backend)
+                backend.activate_builtin_random()
+                self._public_key = cert_obj.public_key()
+            except ValueError:
+                raise ImproperlyConfigured("Invalid value for ADFS token signing certificate")
         else:
             raise ImproperlyConfigured("ADFS token signing certificate not set")
 
-    def authenticate(self, access_token=None, authorization_code=None, redir_uri=None):
+    def authenticate(self, authorization_code=None):
         # If there's no token or code, we pass controll to the next authentication backend
-        if not access_token and not authorization_code:
+        if authorization_code is None or authorization_code == '':
             return
 
-        if access_token and not (redir_uri or settings.ADFS_REDIR_URI):
-            raise ValueError("Redirect URI not specified")
+        if settings.ADFS_REDIR_URI is None:
+            raise ImproperlyConfigured("ADFS Redirect URI is not configured")
 
-        # If we get passed an authorization code, we first have to fetch the access token from ADFS
-        if authorization_code:
-            token_url = "https://{0}{1}".format(settings.ADFS_SERVER, settings.ADFS_TOKEN_PATH)
-            if not redir_uri:
-                redir_uri = settings.ADFS_REDIR_URI
-            data = {
-                'grant_type': 'authorization_code',
-                'client_id': settings.ADFS_CLIENT_ID,
-                'redirect_uri': redir_uri,
-                'code': authorization_code,
-            }
-            response = post(token_url, data, verify=settings.ADFS_CA_BUNDLE)
+        token_url = "https://{0}{1}".format(settings.ADFS_SERVER, settings.ADFS_TOKEN_PATH)
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': settings.ADFS_CLIENT_ID,
+            'redirect_uri': settings.ADFS_REDIR_URI,
+            'code': authorization_code,
+        }
+        logger.debug("Authorization code received. Fetching access token.")
+        logger.debug(":: token URL: "+token_url)
+        logger.debug(":: authorization code: "+authorization_code)
+        response = post(token_url, data, verify=settings.ADFS_CA_BUNDLE)
 
-            # 200 = valid token received
-            # 400 = 'something' is wrong in our request
-            if response.status_code == 400:
-                raise PermissionDenied(response.json()["error_description"])
+        # 200 = valid token received
+        # 400 = 'something' is wrong in our request
+        if response.status_code == 400:
+            logger.error("ADFS server returned an error: " + response.json()["error_description"])
+            raise PermissionDenied
 
-            if response.status_code != 200:
-                raise PermissionDenied("Unexpected response from ADFS")
+        if response.status_code != 200:
+            logger.error("Unexpected ADFS response: " + response.content.decode())
+            raise PermissionDenied
 
-            json_response = response.json()
-            access_token = json_response["access_token"]
+        json_response = response.json()
+        access_token = json_response["access_token"]
+        logger.debug("Received access token: "+access_token)
 
         try:
             # Explicitly define the verification option
@@ -90,13 +99,11 @@ class AdfsBackend(ModelBackend):
                 issuer=settings.ADFS_ISSUER,
                 options=options,
             )
-        except jwt.ExpiredSignature:
-            raise PermissionDenied('Signature has expired.')
-        except jwt.DecodeError:
-            raise PermissionDenied('Error decoding signature.')
-        except jwt.InvalidTokenError:
-            raise PermissionDenied("Invalid token.")
+        except (jwt.ExpiredSignature, jwt.DecodeError, jwt.InvalidTokenError) as error:
+            logger.info(str(error))
+            raise PermissionDenied
 
+        logger.debug("JWT payload:\n"+pformat(payload))
         username_claim = settings.ADFS_USERNAME_CLAIM
 
         # Create the user
@@ -105,27 +112,37 @@ class AdfsBackend(ModelBackend):
             usermodel.USERNAME_FIELD: payload[username_claim]
         })
 
+        if created:
+            logging.debug('User "{0}" has been created.'.format(username_claim))
+
         # Update the user's attributes
-        for field, attr in settings.ADFS_CLAIM_MAPPING.items():
-            try:
-                setattr(user, field, payload[attr])
-            except AttributeError:
-                pass
+        for field, claim in settings.ADFS_CLAIM_MAPPING.items():
+            if hasattr(user, field):
+                if claim in payload:
+                    setattr(user, field, payload[claim])
+                else:
+                    msg = "Claim not found in payload: '{0}'. Check ADFS claims mapping."
+                    raise ImproperlyConfigured(msg.format(claim))
+            else:
+                msg = "User model has no field named '{0}'. Check ADFS claims mapping."
+                raise ImproperlyConfigured(msg.format(field))
 
         # Update the user's group memberships
         user.groups.clear()
-        try:
+        logging.debug('User "{0}" has been removed from all groups.'.format(username_claim))
+        if settings.ADFS_GROUP_CLAIM is not None:
+            if settings.ADFS_GROUP_CLAIM not in payload:
+                raise ImproperlyConfigured("The configured group claim was not found in the payload")
             user_groups = payload[settings.ADFS_GROUP_CLAIM]
-            if isinstance(user_groups, str):
+            if not isinstance(user_groups, list):
                 user_groups = [user_groups, ]
             for group_name in user_groups:
                 try:
                     group = Group.objects.get(name=group_name)
                     user.groups.add(group)
+                    logger.debug('User added to group "{0}"'.format(group_name))
                 except ObjectDoesNotExist:
                     pass
-        except KeyError:
-            pass
 
         user.save()
         return user

@@ -12,4 +12,4 @@ def adfs_url(request):
         dict: A dictionary with the ADFS authorization URL
     """
 
-    return {"ADFS_AUTH_URL": get_adfs_auth_url(request)}
+    return {"ADFS_AUTH_URL": get_adfs_auth_url()}

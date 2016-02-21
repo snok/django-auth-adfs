@@ -6,6 +6,7 @@ from django.conf import settings as django_settings
 from django.core.urlresolvers import reverse
 from re import compile
 from .config import settings
+from .util import get_adfs_auth_url
 
 REQUIRE_LOGIN_EXEMPT_URLS = [
     compile(django_settings.LOGIN_URL.lstrip('/')),
@@ -37,4 +38,4 @@ class LoginRequiredMiddleware:
         if not request.user.is_authenticated():
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in REQUIRE_LOGIN_EXEMPT_URLS):
-                return HttpResponseRedirect(django_settings.LOGIN_URL)
+                return HttpResponseRedirect(get_adfs_auth_url())

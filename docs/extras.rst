@@ -31,19 +31,6 @@ In your ``settings.py`` file, add the following:
         ...
     }
 
-ADFS redirect view
-------------------
-
-There's a view available for automatically redirecting users to the ADFS authorization URL.
-If you set the value of ``LOGIN_URL`` like this, along with enabling the middleware, users have
-are automatically directed to the ADFS server.
-
-In your ``settings.py`` file, add the following:
-
-.. code-block:: python
-
-    LOGIN_URL = reverse_lazy('auth_adfs:adfs')
-
 Context processor
 -----------------
 
