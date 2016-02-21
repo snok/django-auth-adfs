@@ -130,7 +130,7 @@ class AdfsBackend(ModelBackend):
             if settings.ADFS_GROUP_CLAIM not in payload:
                 raise ImproperlyConfigured("The configured group claim was not found in the payload")
             user_groups = payload[settings.ADFS_GROUP_CLAIM]
-            if isinstance(user_groups, str):
+            if not isinstance(user_groups, list):
                 user_groups = [user_groups, ]
             for group_name in user_groups:
                 try:
