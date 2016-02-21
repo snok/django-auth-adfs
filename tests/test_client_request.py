@@ -2,7 +2,6 @@ from django.test import TestCase, Client
 from httmock import with_httmock, urlmatch
 from .utils import get_base_claims, encode_jwt
 from django.contrib.auth.models import User, Group
-from django_auth_adfs.util import get_adfs_auth_url
 
 client = Client()
 
@@ -54,10 +53,10 @@ class ClientRequestTests(TestCase):
     def test_login_redir(self):
         response = client.get("/test/")
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&client_id=your-configured-client-id&resource=your-adfs-RPT-name&redirect_uri=example.com')
+        self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&client_id=your-configured-client-id&resource=your-adfs-RPT-name&redirect_uri=example.com')  # noqa
 
     @with_httmock(token_response)
     def test_context_processor(self):
         response = client.get("/context_processor/")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;redirect_uri=example.com\n')
+        self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;redirect_uri=example.com\n')  # noqa

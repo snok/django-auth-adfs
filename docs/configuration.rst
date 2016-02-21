@@ -100,6 +100,8 @@ Have a look at the `Requests documentation
 ADFS_REDIR_URI
 --------------
 
+**Required**
+
 Default: ``None``
 
 Allows you to specify a specific **redirirect uri** configured for your client id in ADFS.
@@ -143,7 +145,7 @@ Default ``group``
 Name of the claim sent in the JWT token from ADFS that contains the groups the user is member of.
 If a entry in this claim matches a group configured in Django, the user will join it automatically.
 
-If there's no value in the configured claim, or the claim doesn't exist, users are not joined to any group.
+If the returned claim is empty, or the setting is set to ``None``, users are not joined to any group.
 
 .. IMPORTANT::
    User's group membership in Django will be reset to math this claim's value.

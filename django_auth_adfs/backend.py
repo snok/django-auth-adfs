@@ -62,11 +62,11 @@ class AdfsBackend(ModelBackend):
         # 400 = 'something' is wrong in our request
         if response.status_code == 400:
             logger.error("ADFS server returned an error: " + response.json()["error_description"])
-            raise PermissionDenied(response.json()["error_description"])
+            raise PermissionDenied
 
         if response.status_code != 200:
-            logger.error("Unexpected ADFS response: " + response.content)
-            raise PermissionDenied("Unexpected response from ADFS")
+            logger.error("Unexpected ADFS response: " + response.content.decode())
+            raise PermissionDenied
 
         json_response = response.json()
         access_token = json_response["access_token"]

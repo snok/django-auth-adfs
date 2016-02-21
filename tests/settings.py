@@ -101,4 +101,3 @@ aK7TCdKeEyDaHh6/Dg==
                            "email": "email"},
     "REQUIRE_LOGIN_EXEMPT_URLS": ["^context_processor/$"]
 }
-

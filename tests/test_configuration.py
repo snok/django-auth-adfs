@@ -35,7 +35,6 @@ class InvalidConfigurationTests(TestCase):
 
     @with_httmock(token_response)
     def test_invalid_certificate_path(self):
-        cert_content = settings.AUTH_ADFS["ADFS_SIGNING_CERT"]
         mock_file_path = "/path/to/cert.pem"
         with patch("django_auth_adfs.backend.settings.ADFS_SIGNING_CERT", mock_file_path):
             with patch("django_auth_adfs.backend.isfile") as mock_isfile:
@@ -113,7 +112,7 @@ class ConfigurationVariationsTests(TestCase):
             with patch("django_auth_adfs.backend.isfile") as mock_isfile:
                 mock_isfile.return_value = True
                 with patch("django_auth_adfs.backend.open", mock_open(read_data=cert_content)) as mock_file:
-                    backend = AdfsBackend()
+                    AdfsBackend()
                     mock_file.assert_called_once_with(mock_file_path, 'r')
 
     @with_httmock(token_response)
