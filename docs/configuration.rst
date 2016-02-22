@@ -118,6 +118,10 @@ Usually this is something like ``http://adfs.yourcompany.com/adfs/services/trust
 
 If you leave this set to ``None`` this claim will not be verified.
 
+.. IMPORTANT::
+   The issuer isn't necessarily the same as the URL of your ADFS server.
+   It also usually starts with ``HTTP`` instead of ``HTTPS``
+
 ADFS_REDIR_URI
 --------------
 **Required**
