@@ -70,7 +70,7 @@ example
 
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
-   **ADFS** -> **Service** -> **Claim Descriptions**
+   **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
 ADFS_CLIENT_ID
 --------------
@@ -95,7 +95,7 @@ If the returned claim is empty, or the setting is set to ``None``, users are not
 
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
-   **ADFS** -> **Service** -> **Claim Descriptions**
+   **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
 ADFS_LOGIN_REDIRECT_URL
 -----------------------
@@ -181,7 +181,7 @@ If the user doesn't exist yet, this field will be used as it's username.
 
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
-   **ADFS** -> **Service** -> **Claim Descriptions**
+   **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
 
 REQUIRE_LOGIN_EXEMPT_URLS
