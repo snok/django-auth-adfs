@@ -20,10 +20,9 @@ A Django authentication backend for Microsoft ADFS
 Features
 --------
 
-* Let's your django users login through Microsoft ADFS by using OAuth2.
-* Provides seamless single sign-on on intranet environments.
-* Automatically creates users upon receiving a valid access token from ADFS.
-* Adds users to groups upon signin
+* Integrates Django with Active Directory through Microsoft ADFS by using OAuth2.
+* Provides seamless single sign on (SSO) for your Django project on intranet environments.
+* Auto creates users and adds them to Django groups based on info in JWT claims received from ADFS.
 
 Installation
 ------------
