@@ -3,6 +3,7 @@ from django.test import TestCase
 from httmock import with_httmock, urlmatch
 from .utils import get_base_claims, encode_jwt
 from django_auth_adfs.backend import AdfsBackend
+from mock import patch
 
 
 @urlmatch(path=r"^/adfs/oauth2/token$")
@@ -34,3 +35,14 @@ class AuthenticationTests(TestCase):
     def test_empty(self):
         backend = AdfsBackend()
         self.assertIsNone(backend.authenticate())
+
+    @with_httmock(token_response)
+    def test_group_claim(self):
+        backend = AdfsBackend()
+        with patch("django_auth_adfs.backend.settings.ADFS_GROUP_CLAIM", "nonexisting"):
+            user = backend.authenticate(authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            self.assertEqual(len(user.groups.all()), 0)

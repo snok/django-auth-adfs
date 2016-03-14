@@ -1,6 +1,10 @@
 Changelog
 ---------
 
+0.0.4 (2016-03-14)
+~~~~~~~~~~~~~~~~~~
+* Made the absence of the group claim non-fatal to allow users without a group.
+
 0.0.3 (2016-02-21)
 ~~~~~~~~~~~~~~~~~~
 

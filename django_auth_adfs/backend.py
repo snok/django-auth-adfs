@@ -131,18 +131,19 @@ class AdfsBackend(ModelBackend):
         user.groups.clear()
         logging.debug('User "{0}" has been removed from all groups.'.format(username_claim))
         if settings.ADFS_GROUP_CLAIM is not None:
-            if settings.ADFS_GROUP_CLAIM not in payload:
-                raise ImproperlyConfigured("The configured group claim was not found in the payload")
-            user_groups = payload[settings.ADFS_GROUP_CLAIM]
-            if not isinstance(user_groups, list):
-                user_groups = [user_groups, ]
-            for group_name in user_groups:
-                try:
-                    group = Group.objects.get(name=group_name)
-                    user.groups.add(group)
-                    logger.debug('User added to group "{0}"'.format(group_name))
-                except ObjectDoesNotExist:
-                    pass
+            if settings.ADFS_GROUP_CLAIM in payload:
+                user_groups = payload[settings.ADFS_GROUP_CLAIM]
+                if not isinstance(user_groups, list):
+                    user_groups = [user_groups, ]
+                for group_name in user_groups:
+                    try:
+                        group = Group.objects.get(name=group_name)
+                        user.groups.add(group)
+                        logger.debug('User added to group "{0}"'.format(group_name))
+                    except ObjectDoesNotExist:
+                        pass
+            else:
+                logger.debug("The configured group claim was not found in the payload")
 
         user.save()
         return user

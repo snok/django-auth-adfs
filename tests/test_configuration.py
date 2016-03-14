@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, Client
@@ -78,12 +79,6 @@ class InvalidConfigurationTests(TestCase):
             "email": "email"
         }
         with patch("django_auth_adfs.backend.settings.ADFS_CLAIM_MAPPING", mock_claim_mapping):
-            self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
-
-    @with_httmock(token_response)
-    def test_group_claim(self):
-        backend = AdfsBackend()
-        with patch("django_auth_adfs.backend.settings.ADFS_GROUP_CLAIM", "nonexisting"):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
 
 
