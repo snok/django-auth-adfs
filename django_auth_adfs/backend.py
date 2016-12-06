@@ -115,7 +115,22 @@ class AdfsBackend(ModelBackend):
         if created:
             logging.debug('User "{0}" has been created.'.format(username_claim))
 
-        # Update the user's attributes
+        self.update_users_attributes(user, payload)
+
+        self.update_users_groups(user, payload)
+
+        user.save()
+        return user
+
+    def update_users_attributes(self, user, payload):
+        """
+        Updates users attributes based on ADFS_CLAIM_MAPPING set up in
+        settings.
+
+        Args:
+            user (auth.User): User model isntance
+            payload (dictionary): decoded JSON web token
+        """
         for field, claim in settings.ADFS_CLAIM_MAPPING.items():
             if hasattr(user, field):
                 if claim in payload:
@@ -127,9 +142,20 @@ class AdfsBackend(ModelBackend):
                 msg = "User model has no field named '{0}'. Check ADFS claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
 
-        # Update the user's group memberships
+    def update_users_groups(self, user, payload):
+        """
+        Updates users group memberships based on ADFS_GROUP_CLAIM set up in
+        settings.
+
+        Args:
+            user (auth.User): User model isntance
+            payload (dictionary): decoded JSON web token
+        """
         user.groups.clear()
-        logging.debug('User "{0}" has been removed from all groups.'.format(username_claim))
+
+        logging.debug('User "{0}" has been removed from all groups.'
+                      .format(getattr(user, user.USERNAME_FIELD)))
+
         if settings.ADFS_GROUP_CLAIM is not None:
             if settings.ADFS_GROUP_CLAIM in payload:
                 user_groups = payload[settings.ADFS_GROUP_CLAIM]
@@ -144,6 +170,3 @@ class AdfsBackend(ModelBackend):
                         pass
             else:
                 logger.debug("The configured group claim was not found in the payload")
-
-        user.save()
-        return user
