@@ -66,3 +66,6 @@ target/
 # PyCharm
 # https://www.jetbrains.com/pycharm/help/managing-projects-under-version-control.html
 .idea/
+
+# Virtual env
+.venv/
