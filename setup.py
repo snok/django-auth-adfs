@@ -21,9 +21,9 @@ setup(
     keywords='django authentication adfs oauth2',
     classifiers=[
         'Environment :: Web Environment',
-        'Framework :: Django :: 1.7',
         'Framework :: Django :: 1.8',
         'Framework :: Django :: 1.9',
+        'Framework :: Django :: 1.10',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Operating System :: OS Independent',
@@ -44,7 +44,7 @@ setup(
     install_requires=[
         'pyjwt >= 1.0.1',
         'cryptography',
-        'django >= 1.7',
+        'django >= 1.8',
         'requests',
     ],
     zip_safe=False,
