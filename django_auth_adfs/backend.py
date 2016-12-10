@@ -7,7 +7,7 @@ from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.x509 import load_pem_x509_certificate
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
 from requests import post
 
@@ -127,7 +127,7 @@ class AdfsBackend(ModelBackend):
         settings.
 
         Args:
-            user (User): User model instance
+            user (django.contrib.auth.models.User): User model instance
             payload (dictionary): decoded JSON web token
         """
         for field, claim in settings.ADFS_CLAIM_MAPPING.items():
@@ -147,7 +147,7 @@ class AdfsBackend(ModelBackend):
         settings.
 
         Args:
-            user (User): User model instance
+            user (django.contrib.auth.models.User): User model instance
             payload (dictionary): decoded JSON web token
         """
         user.groups.clear()
