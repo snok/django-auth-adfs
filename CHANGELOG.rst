@@ -1,6 +1,10 @@
 Changelog
 ---------
 
+0.0.5 (2016-12-10)
+~~~~~~~~~~~~~~~~~~
+* User update code in authentication backend split into separate functions.
+
 0.0.4 (2016-03-14)
 ~~~~~~~~~~~~~~~~~~
 * Made the absence of the group claim non-fatal to allow users without a group.
