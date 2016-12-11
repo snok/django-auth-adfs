@@ -55,7 +55,7 @@ In your project's ``settings.py``
         "SERVER": "adfs.yourcompany.com",
         "CLIENT_ID": "your-configured-client-id",
         "RESOURCE": "your-adfs-RPT-name",
-        # Make sure to read the documentation about the ADFS_AUDIENCE setting
+        # Make sure to read the documentation about the AUDIENCE setting
         # when you configured the identifier as a URL!
         "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
         "ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",

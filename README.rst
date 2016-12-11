@@ -2,7 +2,7 @@ ADFS Authentication for Django
 ==============================
 
 .. image:: https://readthedocs.org/projects/django-auth-adfs/badge/?version=latest
-    :target: http://django-auth-adfs.readthedocs.org/en/latest/?badge=latest
+    :target: http://django-auth-adfs.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 .. image:: https://img.shields.io/pypi/v/django-auth-adfs.svg
     :target: https://pypi.python.org/pypi/django-auth-adfs
@@ -15,7 +15,7 @@ A Django authentication backend for Microsoft ADFS
 
 * Free software: BSD License
 * Homepage: https://github.com/jobec/django-auth-adfs
-* Documentation: http://django-auth-adfs.readthedocs.org/
+* Documentation: http://django-auth-adfs.readthedocs.io/
 
 Features
 --------
@@ -49,18 +49,18 @@ In your project's ``settings.py``
 
     # checkout config.py for more settings
     AUTH_ADFS = {
-        "ADFS_SERVER": "adfs.yourcompany.com",
-        "ADFS_CLIENT_ID": "your-configured-client-id",
-        "ADFS_RESOURCE": "your-adfs-RPT-name",
-        # Make sure to read the documentation about the ADFS_AUDIENCE setting
+        "SERVER": "adfs.yourcompany.com",
+        "CLIENT_ID": "your-configured-client-id",
+        "RESOURCE": "your-adfs-RPT-name",
+        # Make sure to read the documentation about the AUDIENCE setting
         # when you configured the identifier as a URL!
-        "ADFS_AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
-        "ADFS_ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",
-        "ADFS_CA_BUNDLE": "/path/to/ca-bundle.pem",
-        "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
-                               "last_name": "family_name",
-                               "email": "email"},
-        "ADFS_REDIR_URI": "https://www.yourcompany.com/oauth2/login",
+        "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
+        "ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",
+        "CA_BUNDLE": "/path/to/ca-bundle.pem",
+        "CLAIM_MAPPING": {"first_name": "given_name",
+                          "last_name": "family_name",
+                          "email": "email"},
+        "REDIR_URI": "https://www.yourcompany.com/oauth2/login",
     }
 
     ########################
