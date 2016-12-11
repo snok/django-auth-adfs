@@ -78,7 +78,6 @@ class KeysTests(TestCase):
             with patch("django_auth_adfs.backend.settings.SIGNING_CERT", True):
                 backend = AdfsBackend()
                 user = backend.authenticate(authorization_code="dummycode")
-                self.assertLogs(level="ERROR")
                 self.assertIsInstance(user, User)
 
     @with_httmock(token_response, empty_metadata_response)
