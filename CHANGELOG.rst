@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-0.1.0 (2016-.....)
+0.1.0 (2016-12-11)
 ~~~~~~~~~~~~~~~~~~
 
 * By default, the ADFS signing certificate is loaded from the ``FederationMetadata.xml`` file every 24 hours.
