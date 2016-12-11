@@ -54,3 +54,25 @@ class AuthenticationTests(TestCase):
         backend = AdfsBackend()
         with patch("django_auth_adfs.backend.AdfsBackend._public_keys", []):
             self.assertRaises(PermissionDenied, backend.authenticate, authorization_code='testcode')
+
+    @with_httmock(token_response)
+    def test_group_removal(self):
+        user, created = User.objects.get_or_create(**{
+            User.USERNAME_FIELD: "testuser"
+        })
+        group = Group.objects.get(name="group3")
+        user.groups.add(group)
+        user.save()
+
+        self.assertEqual(user.groups.all()[0].name, "group3")
+
+        backend = AdfsBackend()
+
+        user = backend.authenticate(authorization_code="dummycode")
+        self.assertIsInstance(user, User)
+        self.assertEqual(user.first_name, "John")
+        self.assertEqual(user.last_name, "Doe")
+        self.assertEqual(user.email, "john.doe@example.com")
+        self.assertEqual(len(user.groups.all()), 2)
+        self.assertEqual(user.groups.all()[0].name, "group1")
+        self.assertEqual(user.groups.all()[1].name, "group2")

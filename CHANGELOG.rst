@@ -7,6 +7,8 @@ Changelog
 * By default, the ADFS signing certificate is loaded from the ``FederationMetadata.xml`` file every 24 hours.
   Allowing to automatically follow certificate updates when the ADFS settings for ``AutoCertificateRollover``
   is set to ``True`` (the default).
+* Group assignment optimisation. Users are not removed and added to all groups anymore. Instead only the
+  groups that need to be removed or added are handled.
 
 **Backwards incompatible changes**
 

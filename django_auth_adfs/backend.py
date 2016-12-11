@@ -133,7 +133,7 @@ class AdfsBackend(ModelBackend):
         cls._public_keys = []
 
     def authenticate(self, authorization_code=None):
-        # If there's no token or code, we pass controll to the next authentication backend
+        # If there's no token or code, we pass control to the next authentication backend
         if authorization_code is None or authorization_code == '':
             return
 
@@ -255,22 +255,37 @@ class AdfsBackend(ModelBackend):
             user (django.contrib.auth.models.User): User model instance
             payload (dict): decoded JSON web token
         """
-        user.groups.clear()
-
-        logging.debug('User "{0}" has been removed from all groups.'
-                      .format(getattr(user, user.USERNAME_FIELD)))
-
         if settings.GROUP_CLAIM is not None:
+            # Update the user's group memberships
+            django_groups = [group.name for group in user.groups.all()]
+
             if settings.GROUP_CLAIM in payload:
-                user_groups = payload[settings.GROUP_CLAIM]
-                if not isinstance(user_groups, list):
-                    user_groups = [user_groups, ]
-                for group_name in user_groups:
-                    try:
-                        group = Group.objects.get(name=group_name)
-                        user.groups.add(group)
-                        logger.debug('User added to group "{0}"'.format(group_name))
-                    except ObjectDoesNotExist:
-                        pass
+                claim_groups = payload[settings.GROUP_CLAIM]
+                if not isinstance(claim_groups, list):
+                    claim_groups = [claim_groups, ]
             else:
                 logger.debug("The configured group claim was not found in the payload")
+                claim_groups = []
+
+            # Make a diff of the user's groups.
+            # Removing a user from all groups and then re-add them would cause
+            # the autoincrement value for the database table storing the
+            # user-to-group mappings to increment for no reason.
+            groups_to_remove = [group for group in django_groups if group not in claim_groups]
+            groups_to_add = [group for group in claim_groups if group not in django_groups]
+
+            # Loop through the groups in the group claim and
+            # add the user to these groups as needed.
+            for group_name in groups_to_remove:
+                group = Group.objects.get(name=group_name)
+                user.groups.remove(group)
+                logger.debug('User removed from group "{0}"'.format(group_name))
+
+            for group_name in groups_to_add:
+                try:
+                    group = Group.objects.get(name=group_name)
+                    user.groups.add(group)
+                    logger.debug('User added to group "{0}"'.format(group_name))
+                except ObjectDoesNotExist:
+                    # Silently fail for non-existing groups.
+                    pass
