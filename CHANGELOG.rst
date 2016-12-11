@@ -1,12 +1,26 @@
 Changelog
 ---------
 
+0.1.0 (2016-.....)
+~~~~~~~~~~~~~~~~~~
+
+* By default, the ADFS signing certificate is loaded from the ``FederationMetadata.xml`` file every 24 hours.
+  Allowing to automatically follow certificate updates when the ADFS settings for ``AutoCertificateRollover``
+  is set to ``True`` (the default).
+
+**Backwards incompatible changes**
+
+* The redundant ``ADFS_`` prefix was removed from the configuration variables.
+* The ``REQUIRE_LOGIN_EXEMPT_URLS`` variable was renamed to ``LOGIN_EXEMPT_URLS``
+
 0.0.5 (2016-12-10)
 ~~~~~~~~~~~~~~~~~~
+
 * User update code in authentication backend split into separate functions.
 
 0.0.4 (2016-03-14)
 ~~~~~~~~~~~~~~~~~~
+
 * Made the absence of the group claim non-fatal to allow users without a group.
 
 0.0.3 (2016-02-21)

@@ -3,8 +3,8 @@
 Settings
 ========
 
-ADFS_AUDIENCE
--------------
+AUDIENCE
+--------
 Default: ``None``
 
 Set this to the value of the ``aud`` claim your ADFS server sends back in the JWT token.
@@ -20,8 +20,8 @@ Examples
 | https://adfs.yourcompany.com/adfs/services/trust | https://adfs.yourcompany.com/adfs/services/trust           |
 +--------------------------------------------------+------------------------------------------------------------+
 
-ADFS_AUTHORIZE_PATH
--------------------
+AUTHORIZE_PATH
+--------------
 Default: ``/adfs/oauth2/authorize``
 
 The path to the authorize page off your ADFS server.
@@ -32,8 +32,8 @@ django-auth-adfs context processor ``adfs_url``.
 
 The default value matches the default for ADFS 3.0.
 
-ADFS_CA_BUNDLE
---------------
+CA_BUNDLE
+---------
 Default: ``True``
 
 The value of this setting is passed to the call to the ``Requests`` package when fetching the access token from ADFS.
@@ -48,8 +48,8 @@ It allows you to control the webserver certificate verification of the ADFS serv
 Have a look at the `Requests documentation
 <http://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for more details.
 
-ADFS_CLAIM_MAPPING
-------------------
+CLAIM_MAPPING
+-------------
 Default: ``None``
 
 A dictionary of claim/field mappings that will be used to populate the user account in Django.
@@ -63,25 +63,34 @@ example
 .. code-block:: python
 
     AUTH_ADFS = {
-        "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
-                               "last_name": "family_name",
-                               "email": "email"},
+        "CLAIM_MAPPING": {"first_name": "given_name",
+                          "last_name": "family_name",
+                          "email": "email"},
     }
 
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
-ADFS_CLIENT_ID
---------------
+CLIENT_ID
+---------
 **Required**
-
-Default: ``None``
 
 Set this to the value you configured on your ADFS server as ``ClientId``
 
-ADFS_GROUP_CLAIM
-----------------
+CERT_MAX_AGE
+------------
+Default: ``24``
+
+The number of hours the ADFS token signing certificate is cached.
+This timer gets started the first time someone logs in using a ADFS JWT token
+because only then the backend class is loaded for the first time.
+
+.. NOTE::
+   This setting is related with the ``SIGNING_CERT`` setting.
+
+GROUP_CLAIM
+-----------
 Default ``group``
 
 Name of the claim sent in the JWT token from ADFS that contains the groups the user is member of.
@@ -97,8 +106,19 @@ If the returned claim is empty, or the setting is set to ``None``, users are not
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
-ADFS_LOGIN_REDIRECT_URL
------------------------
+LOGIN_EXEMPT_URLS
+-----------------
+Default: ``None``
+
+When you activate the ``LoginRequiredMiddleware`` middleware, by default every page will redirect
+an unauthenticated used to the page configured in the Django setting ``LOGIN_URL``.
+
+If you have pages that should not trigger this redirect, add them to this setting as a list value.
+
+Every item it the list is interpreted as a regular expression.
+
+LOGIN_REDIRECT_URL
+------------------
 Default: ``None``
 
 The URL users are redirected to when their authentication is successful.
@@ -109,8 +129,8 @@ Thet's why we redirect to a fixed page.
 
 If you leave this set to ``None``, the Django setting named ``LOGIN_REDIRECT_URL`` will be used instead.
 
-ADFS_ISSUER
------------
+ISSUER
+------
 Default: ``None``
 
 Set this to the value of the ``iss`` claim your ADFS server sends back in the JWT token.
@@ -122,58 +142,60 @@ If you leave this set to ``None`` this claim will not be verified.
    The issuer isn't necessarily the same as the URL of your ADFS server.
    It also usually starts with ``HTTP`` instead of ``HTTPS``
 
-ADFS_REDIR_URI
---------------
+REDIR_URI
+---------
 **Required**
 
-Default: ``None``
+Sets the **redirect uri** configured for your client id in ADFS.
 
-Allows you to specify a specific **redirirect uri** configured for your client id in ADFS.
+Because we need this value in a context without access to a Django ``request`` object,
+it needs to be explicitly configured.
 
-If you leave this set to ``None``, the URI will be calculated based on these values.
+.. IMPORTANT::
+   Make sure both this setting and the setting on your ADFS server
+   matches with the url pattern configured in your ``urls.py`` file.
 
-* ``request.scheme``
-* ``request.META['HTTP_HOST']``
-* ``reverse("auth_adfs:login")``
+   See the :ref:`install documentation <install>` for more details.
 
-If for some reason this resolution fails (ex. your behind a SSL offloading reverse proxy), you can set this
-value manually
-
-ADFS_RESOURCE
--------------
+RESOURCE
+--------
 **Required**
-
-Default: ``None``
 
 Set this to the name of the ``Relying Party Trust`` you configured in ADFS.
 
-ADFS_SIGNING_CERT
------------------
-**Required**
+SIGNING_CERT
+------------
+Default: ``True``
 
-Default: ``None``
+Can be one of the following values:
 
-This can either be the base64 PEM representation of the ``Token Signing Certificate``
-you configured on ADFS. Or it can be the path to a certificate file in base64 PEM format.
+* ``True`` for autoloading the certificate from the ``FederationMetadata.xml`` file on the ADFS server.
+* The base64 PEM representation of the ``Token Signing Certificate`` configured in your ADFS server.
+* The path to a certificate file in base64 PEM format.
 
-ADFS_SERVER
------------
+The default value allows you to automatically load new certificates when they get changed on the ADFS server.
+For more details see the ``AutoCertificateRollover`` setting of your ADFS server.
+
+.. NOTE::
+   This setting is related with the ``CERT_MAX_AGE`` setting.
+
+SERVER
+------
 **Required**
 
 Default: ``None``
 
 The FQDN of the ADFS server you want users to authenticate against.
 
-ADFS_TOKEN_PATH
----------------
-
+TOKEN_PATH
+----------
 Default: ``/adfs/oauth2/token``
 
 This is the path to the token page off your ADFS server. The authentication backand
 will try to fetch the access token by submitting the authorization code to this page.
 
-ADFS_USERNAME_CLAIM
--------------------
+USERNAME_CLAIM
+--------------
 Default: ``winaccountname``
 
 Name of the claim sent in the JWT token from ADFS that contains the username.
@@ -182,15 +204,3 @@ If the user doesn't exist yet, this field will be used as it's username.
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
-
-
-REQUIRE_LOGIN_EXEMPT_URLS
--------------------------
-Default: ``None``
-
-When you activate the ``LoginRequiredMiddleware`` middleware, by default every page will redirect
-an unauthenticated used to the page configured in the Django setting ``LOGIN_URL``.
-
-If you have pages that should not trigger this redirect, add them to this setting as a list value.
-
-Every item it the list is interpreted as a regular expression.
