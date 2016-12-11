@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, Client
@@ -18,17 +20,29 @@ def token_response(url, request):
     return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
 
 
+@urlmatch(path=r"^/FederationMetadata/2007-06/FederationMetadata.xml$")
+def metadata_response(url, request):
+    with open(os.path.join(os.path.dirname(__file__), "FederationMetadata.xml")) as f:
+        return {'status_code': 200, 'content': f.read()}
+
+
+@urlmatch(path=r"^/FederationMetadata/2007-06/FederationMetadata.xml$")
+def empty_metadata_response(url, request):
+    with open(os.path.join(os.path.dirname(__file__), "FederationMetadata_empty.xml")) as f:
+        return {'status_code': 200, 'content': f.read()}
+
+
 class InvalidConfigurationTests(TestCase):
     @with_httmock(token_response)
     def test_invalid_redir_uri(self):
         backend = AdfsBackend()
-        with patch("django_auth_adfs.backend.settings.ADFS_REDIR_URI", None):
+        with patch("django_auth_adfs.backend.settings.REDIR_URI", None):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code='testcode')
 
     @with_httmock(token_response)
     def test_required_setting(self):
         new_settings = settings.AUTH_ADFS
-        new_settings["ADFS_SERVER"] = None
+        new_settings["SERVER"] = None
         with self.settings(AUTH_ADFS=new_settings):
             self.assertRaises(ImproperlyConfigured, Settings)
 
@@ -47,16 +61,17 @@ class InvalidConfigurationTests(TestCase):
 
     @with_httmock(token_response)
     def test_invalid_certificate(self):
-        with patch("django_auth_adfs.backend.settings.ADFS_SIGNING_CERT", None):
+        with patch("django_auth_adfs.backend.settings.SIGNING_CERT", None):
             self.assertRaises(ImproperlyConfigured, AdfsBackend)
 
     @with_httmock(token_response)
     def test_invalid_certificate_path(self):
         mock_file_path = "/path/to/cert.pem"
-        with patch("django_auth_adfs.backend.settings.ADFS_SIGNING_CERT", mock_file_path):
-            with patch("django_auth_adfs.backend.isfile") as mock_isfile:
-                mock_isfile.return_value = False
-                self.assertRaises(ImproperlyConfigured, AdfsBackend)
+        with patch("django_auth_adfs.backend.AdfsBackend._public_keys", []):
+            with patch("django_auth_adfs.backend.settings.SIGNING_CERT", mock_file_path):
+                with patch("django_auth_adfs.backend.isfile") as mock_isfile:
+                    mock_isfile.return_value = False
+                    self.assertRaises(ImproperlyConfigured, AdfsBackend)
 
     @with_httmock(token_response)
     def test_claim_mapping_non_existing_model_field(self):
@@ -66,7 +81,7 @@ class InvalidConfigurationTests(TestCase):
             "last_name": "family_name",
             "email": "email"
         }
-        with patch("django_auth_adfs.backend.settings.ADFS_CLAIM_MAPPING", mock_claim_mapping):
+        with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", mock_claim_mapping):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
 
     @with_httmock(token_response)
@@ -77,7 +92,7 @@ class InvalidConfigurationTests(TestCase):
             "last_name": "family_name",
             "email": "email"
         }
-        with patch("django_auth_adfs.backend.settings.ADFS_CLAIM_MAPPING", mock_claim_mapping):
+        with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", mock_claim_mapping):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
 
 
@@ -85,13 +100,14 @@ class ConfigurationVariationsTests(TestCase):
     @with_httmock(token_response)
     def test_invalid_redir_uri(self):
         backend = AdfsBackend()
-        with patch("django_auth_adfs.backend.settings.ADFS_REDIR_URI", None):
+        with patch("django_auth_adfs.backend.settings.REDIR_URI", None):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code='testcode')
 
     @with_httmock(token_response)
     def test_invalid_certificate(self):
-        with patch("django_auth_adfs.backend.settings.ADFS_SIGNING_CERT", None):
-            self.assertRaises(ImproperlyConfigured, AdfsBackend)
+        with patch("django_auth_adfs.backend.AdfsBackend._public_keys", []):
+            with patch("django_auth_adfs.backend.settings.SIGNING_CERT", None):
+                self.assertRaises(ImproperlyConfigured, AdfsBackend)
 
     @with_httmock(token_response)
     def test_claim_mapping_non_existing_model_field(self):
@@ -101,23 +117,24 @@ class ConfigurationVariationsTests(TestCase):
             "last_name": "family_name",
             "email": "email"
         }
-        with patch("django_auth_adfs.backend.settings.ADFS_CLAIM_MAPPING", mock_claim_mapping):
+        with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", mock_claim_mapping):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
 
     @with_httmock(token_response)
     def test_signing_cert_file(self):
-        cert_content = settings.AUTH_ADFS["ADFS_SIGNING_CERT"]
+        cert_content = settings.AUTH_ADFS["SIGNING_CERT"]
         mock_file_path = "/path/to/cert.pem"
-        with patch("django_auth_adfs.backend.settings.ADFS_SIGNING_CERT", mock_file_path):
-            with patch("django_auth_adfs.backend.isfile") as mock_isfile:
-                mock_isfile.return_value = True
-                with patch("django_auth_adfs.backend.open", mock_open(read_data=cert_content)) as mock_file:
-                    AdfsBackend()
-                    mock_file.assert_called_once_with(mock_file_path, 'r')
+        with patch("django_auth_adfs.backend.AdfsBackend._public_keys", []):
+            with patch("django_auth_adfs.backend.settings.SIGNING_CERT", mock_file_path):
+                with patch("django_auth_adfs.backend.isfile") as mock_isfile:
+                    mock_isfile.return_value = True
+                    with patch("django_auth_adfs.backend.open", mock_open(read_data=cert_content)) as mock_file:
+                        AdfsBackend()
+                        mock_file.assert_called_once_with(mock_file_path, 'r')
 
     @with_httmock(token_response)
     def test_authentication(self):
-        with patch("django_auth_adfs.backend.settings.ADFS_LOGIN_REDIRECT_URL", "/test/path/"):
+        with patch("django_auth_adfs.backend.settings.LOGIN_REDIRECT_URL", "/test/path/"):
             response = client.get("/oauth2/login", {'code': 'testcode'})
             self.assertEqual(response.status_code, 302)
             self.assertTrue(response['Location'].endswith('/test/path/'))

@@ -42,13 +42,13 @@ class ClaimTests(TestCase):
         Group.objects.create(name='group2')
         Group.objects.create(name='group3')
 
-    @with_httmock(expired_token_response)
-    def test_expired_token(self):
+    @with_httmock(corrupt_token_response)
+    def test_corrupt_token(self):
         backend = AdfsBackend()
         self.assertRaises(PermissionDenied, backend.authenticate, authorization_code='testcode')
 
-    @with_httmock(corrupt_token_response)
-    def test_corrupt_token(self):
+    @with_httmock(expired_token_response)
+    def test_expired_token(self):
         backend = AdfsBackend()
         self.assertRaises(PermissionDenied, backend.authenticate, authorization_code='testcode')
 

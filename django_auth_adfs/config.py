@@ -5,29 +5,29 @@ from django.core.exceptions import ImproperlyConfigured
 class Settings(object):
     def __init__(self):
         # Set defaults
-        self.ADFS_SERVER = None  # Required
-        self.ADFS_AUTHORIZE_PATH = "/adfs/oauth2/authorize"
-        self.ADFS_TOKEN_PATH = "/adfs/oauth2/token"
-        self.ADFS_CLIENT_ID = None  # Required
-        self.ADFS_RESOURCE = None  # Required
-        self.ADFS_SIGNING_CERT = None  # Required
-        self.ADFS_AUDIENCE = None
-        self.ADFS_ISSUER = None
-        self.ADFS_CA_BUNDLE = True
-        self.ADFS_REDIR_URI = None  # Required
-        self.ADFS_LOGIN_REDIRECT_URL = None
-        self.ADFS_USERNAME_CLAIM = "winaccountname"
-        self.ADFS_GROUP_CLAIM = "group"
-        self.ADFS_CLAIM_MAPPING = {}
-        self.REQUIRE_LOGIN_EXEMPT_URLS = []
+        self.SERVER = None  # Required
+        self.AUTHORIZE_PATH = "/adfs/oauth2/authorize"
+        self.TOKEN_PATH = "/adfs/oauth2/token"
+        self.CLIENT_ID = None  # Required
+        self.RESOURCE = None  # Required
+        self.SIGNING_CERT = True  # Autoload by default
+        self.CERT_MAX_AGE = 24  # hours
+        self.AUDIENCE = None
+        self.ISSUER = None
+        self.CA_BUNDLE = True
+        self.REDIR_URI = None  # Required
+        self.LOGIN_REDIRECT_URL = None
+        self.USERNAME_CLAIM = "winaccountname"
+        self.GROUP_CLAIM = "group"
+        self.CLAIM_MAPPING = {}
+        self.LOGIN_EXEMPT_URLS = []
 
         required_settings = [
-            "ADFS_SERVER",
-            "ADFS_CLIENT_ID",
-            "ADFS_RESOURCE",
-            "ADFS_SIGNING_CERT",
-            "ADFS_REDIR_URI",
-            "ADFS_USERNAME_CLAIM",
+            "SERVER",
+            "CLIENT_ID",
+            "RESOURCE",
+            "REDIR_URI",
+            "USERNAME_CLAIM",
         ]
 
         if not hasattr(django_settings, "AUTH_ADFS"):

@@ -1,3 +1,5 @@
+.. _install:
+
 Installation
 ============
 
@@ -12,14 +14,14 @@ This package has been tested on the following Python versions:
 
 And with the following Django versions:
 
-* 1.7
 * 1.8
 * 1.9
+* 1.10
 
 You will also need the following:
 
 * A properly configured Microsoft Windows server with the **ADFS 3.0** role installed.
-* A copy of the **Token Signing Certificate** as configured on your ADFS server in base64 PEM format.
+* A root CA bundle containing the root CA that signed the webserver certificate of your ADFS server.
 
 Package installation
 --------------------
@@ -50,19 +52,18 @@ In your project's ``settings.py``
 
     # checkout config.py for more settings
     AUTH_ADFS = {
-        "ADFS_SERVER": "adfs.yourcompany.com",
-        "ADFS_CLIENT_ID": "your-configured-client-id",
-        "ADFS_RESOURCE": "your-adfs-RPT-name",
-        "ADFS_SIGNING_CERT": "/path/to/adfs-signing-certificate.pem",
+        "SERVER": "adfs.yourcompany.com",
+        "CLIENT_ID": "your-configured-client-id",
+        "RESOURCE": "your-adfs-RPT-name",
         # Make sure to read the documentation about the ADFS_AUDIENCE setting
         # when you configured the identifier as a URL!
-        "ADFS_AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
-        "ADFS_ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",
-        "ADFS_CA_BUNDLE": "/path/to/ca-bundle.pem",
-        "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
+        "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
+        "ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",
+        "CA_BUNDLE": "/path/to/ca-bundle.pem",
+        "CLAIM_MAPPING": {"first_name": "given_name",
                                "last_name": "family_name",
                                "email": "email"},
-        "ADFS_REDIR_URI": "https://www.yourcompany.com/oauth2/login",
+        "REDIR_URI": "https://www.yourcompany.com/oauth2/login",
     }
 
     ########################

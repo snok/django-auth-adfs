@@ -10,9 +10,9 @@ def get_adfs_auth_url():
 
     """
     return "https://{0}{1}?response_type=code&client_id={2}&resource={3}&redirect_uri={4}".format(
-        settings.ADFS_SERVER,
-        settings.ADFS_AUTHORIZE_PATH,
-        settings.ADFS_CLIENT_ID,
-        settings.ADFS_RESOURCE,
-        settings.ADFS_REDIR_URI,
+        settings.SERVER,
+        settings.AUTHORIZE_PATH,
+        settings.CLIENT_ID,
+        settings.RESOURCE,
+        settings.REDIR_URI,
     )

@@ -1,19 +1,21 @@
 """
 Based on https://djangosnippets.org/snippets/1179/
 """
-from django.http import HttpResponseRedirect
+from re import compile
+
 from django.conf import settings as django_settings
 from django.core.urlresolvers import reverse
-from re import compile
+from django.http import HttpResponseRedirect
+
 from .config import settings
 from .util import get_adfs_auth_url
 
-REQUIRE_LOGIN_EXEMPT_URLS = [
+LOGIN_EXEMPT_URLS = [
     compile(django_settings.LOGIN_URL.lstrip('/')),
     compile(reverse("auth_adfs:login").lstrip('/')),
 ]
-if hasattr(settings, 'REQUIRE_LOGIN_EXEMPT_URLS'):
-    REQUIRE_LOGIN_EXEMPT_URLS += [compile(expr) for expr in settings.REQUIRE_LOGIN_EXEMPT_URLS]
+if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
+    LOGIN_EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
 
 
 class LoginRequiredMiddleware:
@@ -27,15 +29,14 @@ class LoginRequiredMiddleware:
     loaded. You'll get an error if they aren't.
     """
     def process_request(self, request):
-
-        assert hasattr(request, 'user'), "The Login Required middleware\
-            requires authentication middleware to be installed. Edit your\
-            MIDDLEWARE_CLASSES setting to insert\
-            'django.contrib.auth.middlware.AuthenticationMiddleware'. If that doesn't\
-            work, ensure your TEMPLATE_CONTEXT_PROCESSORS setting includes\
-            'django.core.context_processors.auth'."
+        assert hasattr(request, 'user'), "The Login Required middleware requires" \
+                                         " authentication middleware to be installed." \
+                                         " Edit your MIDDLEWARE_CLASSES setting to insert" \
+                                         " 'django.contrib.auth.middlware.AuthenticationMiddleware'." \
+                                         " If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS" \
+                                         " setting includes 'django.core.context_processors.auth'."
 
         if not request.user.is_authenticated():
             path = request.path_info.lstrip('/')
-            if not any(m.match(path) for m in REQUIRE_LOGIN_EXEMPT_URLS):
+            if not any(m.match(path) for m in LOGIN_EXEMPT_URLS):
                 return HttpResponseRedirect(get_adfs_auth_url())
