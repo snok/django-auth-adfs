@@ -76,11 +76,11 @@ STATIC_ROOT = '/tmp/'  # Dummy
 STATIC_URL = '/static/'
 
 AUTH_ADFS = {
-    "ADFS_SERVER": "adfs.example.com",
-    "ADFS_REDIR_URI": "example.com",
-    "ADFS_CLIENT_ID": "your-configured-client-id",
-    "ADFS_RESOURCE": "your-adfs-RPT-name",
-    "ADFS_SIGNING_CERT": """
+    "SERVER": "adfs.example.com",
+    "REDIR_URI": "example.com",
+    "CLIENT_ID": "your-configured-client-id",
+    "RESOURCE": "your-adfs-RPT-name",
+    "SIGNING_CERT": """
 -----BEGIN CERTIFICATE-----
 MIIDCTCCAfGgAwIBAgIJALLjs7wGmYSvMA0GCSqGSIb3DQEBBQUAMBsxGTAXBgNV
 BAMMEGFkZnMuZXhhbXBsZS5jb20wHhcNMTYwMjE1MjAyNDQxWhcNMjYwMjEyMjAy
@@ -101,11 +101,11 @@ SEtFTMAxlamUZ0PhC2H9nxDo3dN8KS44fT4hBx5FUaUffetl4Q5ebrJ1IoBNZ6+S
 aK7TCdKeEyDaHh6/Dg==
 -----END CERTIFICATE-----
 """,
-    "ADFS_AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
-    "ADFS_ISSUER": "http://adfs.example.com/adfs/services/trust",
-    "ADFS_CA_BUNDLE": "/path/to/ca-bundle.pem",
-    "ADFS_CLAIM_MAPPING": {"first_name": "given_name",
-                           "last_name": "family_name",
-                           "email": "email"},
-    "REQUIRE_LOGIN_EXEMPT_URLS": ["^context_processor/$"]
+    "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
+    "ISSUER": "http://adfs.example.com/adfs/services/trust",
+    "CA_BUNDLE": "/path/to/ca-bundle.pem",
+    "CLAIM_MAPPING": {"first_name": "given_name",
+                      "last_name": "family_name",
+                      "email": "email"},
+    "LOGIN_EXEMPT_URLS": ["^context_processor/$"]
 }
