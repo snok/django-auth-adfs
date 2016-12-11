@@ -1,9 +1,10 @@
+from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, login
 from django.http.response import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic import View
-from django.conf import settings as django_settings
-from django_auth_adfs.config import settings
+
+from .config import settings
 
 
 class OAuth2View(View):
@@ -24,8 +25,8 @@ class OAuth2View(View):
                 login(request, user)
                 # Redirect to the "after login" page.
                 # Because we got redirected from ADFS, we can't know where the user came from
-                if settings.ADFS_LOGIN_REDIRECT_URL:
-                    return redirect(settings.ADFS_LOGIN_REDIRECT_URL)
+                if settings.LOGIN_REDIRECT_URL:
+                    return redirect(settings.LOGIN_REDIRECT_URL)
                 else:
                     return redirect(django_settings.LOGIN_REDIRECT_URL)
             else:

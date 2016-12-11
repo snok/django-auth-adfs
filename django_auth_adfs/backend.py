@@ -1,8 +1,11 @@
+import logging
+from datetime import datetime, timedelta
 from os.path import isfile
+from pprint import pformat
+from xml.etree import ElementTree
 
 import jwt
-import logging
-from pprint import pformat
+import requests
 from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.x509 import load_pem_x509_certificate
 from django.contrib.auth import get_user_model
@@ -15,48 +18,139 @@ from .config import settings
 
 logger = logging.getLogger(__name__)
 
+# MUST come before any HTTPS request.
+# If not, the python process deadlocks and generates gateway timeouts
+#    -> Timeout when reading response headers from daemon process
+#    -> function Cryptography_rand_bytes() called, but no code was attached to it yet with @ffi.def_extern()
+# REF: https://github.com/pyca/cryptography/issues/2299#issuecomment-182835098
+backend.activate_builtin_random()
+
 
 class AdfsBackend(ModelBackend):
     """
-    This backend is based on the ``RemoteUserBackend`` from Django.
+    Authentication backend to allow authenticating users against a microsoft ADFS server.
+    It's based on the ``RemoteUserBackend`` from Django.
     """
+    # globally cache keys because Django instantiates our class on every authentication.
+    # Loading keys every time would waste resources
+    _public_keys = []
+    _key_age = None
 
     def __init__(self):
-        if settings.ADFS_SIGNING_CERT:
-            certificate = settings.ADFS_SIGNING_CERT
-            if isfile(certificate):
-                with open(certificate, 'r') as file:
-                    certificate = file.read()
-            if isinstance(certificate, str):
-                certificate = certificate.encode()
-            try:
-                cert_obj = load_pem_x509_certificate(certificate, backend)
-                backend.activate_builtin_random()
-                self._public_key = cert_obj.public_key()
-            except ValueError:
-                raise ImproperlyConfigured("Invalid value for ADFS token signing certificate")
-        else:
+        if not settings.SIGNING_CERT:
             raise ImproperlyConfigured("ADFS token signing certificate not set")
+        cert_exp_time = datetime.now() - timedelta(hours=settings.CERT_MAX_AGE)
+        if len(AdfsBackend._public_keys) < 1 or AdfsBackend._key_age < cert_exp_time:
+            if settings.SIGNING_CERT is True:
+                self._autoload()
+            elif isfile(settings.SIGNING_CERT):
+                self._load_from_file(settings.SIGNING_CERT)
+            else:
+                self._load_from_string(settings.SIGNING_CERT)
+
+    @classmethod
+    def _autoload(cls):
+        """
+        Autoloads certificates from the ADFS meta data file.
+
+        Returns:
+
+        """
+        # Fetch medata file from ADFS server
+        metadata_url = "https://" + settings.SERVER + "/FederationMetadata/2007-06/FederationMetadata.xml"
+        logger.info("Retrieving ADFS metadata file from {}".format(metadata_url))
+        response = requests.get(metadata_url, verify=settings.CA_BUNDLE, timeout=10)
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logger.error("Could not load ADFS signing certificates from federation meta data")
+            if not isinstance(cls._public_keys, list) or len(cls._public_keys) == 0:
+                raise
+
+        # Extract token signing certificates
+        xml_tree = ElementTree.fromstring(response.content)
+        cert_nodes = xml_tree.findall(
+            "./{urn:oasis:names:tc:SAML:2.0:metadata}RoleDescriptor"
+            "[@{http://www.w3.org/2001/XMLSchema-instance}type='fed:SecurityTokenServiceType']"
+            "/{urn:oasis:names:tc:SAML:2.0:metadata}KeyDescriptor[@use='signing']"
+            "/{http://www.w3.org/2000/09/xmldsig#}KeyInfo"
+            "/{http://www.w3.org/2000/09/xmldsig#}X509Data"
+            "/{http://www.w3.org/2000/09/xmldsig#}X509Certificate")
+        if len(cert_nodes) < 1:
+            if isinstance(cls._public_keys, list) and len(cls._public_keys) > 0:
+                logger.error("No singing certificates found in ADFS meta data file, keeping already cached keys.")
+                return
+            else:
+                raise Exception("No singing certificates found in ADFS meta data file")
+
+        cls._reset_keys()
+
+        # Load all found certificates
+        for node in cert_nodes:
+            # Convert BASE64 encoded certificate into proper PEM format
+            # Some OpenSSL versions seem to fail when the certificate is not split in 64 character lines
+            certificate = ["-----BEGIN CERTIFICATE-----"]
+            no_of_slices = int(len(node.text) / 64)
+            for i in range(0, no_of_slices + 1):
+                certificate.append(node.text[i * 64:(i + 1) * 64])
+            certificate.append("-----END CERTIFICATE-----")
+            certificate = "\n".join(certificate)
+            cls._load_from_string(certificate)
+
+    @classmethod
+    def _load_from_file(cls, file):
+        """
+        Load a certificate from a Base64 PEM encoded file
+
+        Args:
+            file (str): Valid path to a certificate file
+        """
+        cls._reset_keys()
+        with open(file, 'r') as file:
+            certificate = file.read()
+        cls._load_from_string(certificate)
+
+    @classmethod
+    def _load_from_string(cls, certificate):
+        """
+        Load a certificate from a string
+        Args:
+            certificate (str): A base64 PEM encoded certificate
+        """
+        certificate = certificate.encode()
+        try:
+            cert_obj = load_pem_x509_certificate(certificate, backend)
+            cls._public_keys.append(cert_obj.public_key())
+            cls._key_age = datetime.now()
+        except ValueError:
+            raise ImproperlyConfigured("Invalid ADFS token signing certificate")
+
+    @classmethod
+    def _reset_keys(cls):
+        """
+        Remove all cached keys from the class
+        """
+        cls._public_keys = []
 
     def authenticate(self, authorization_code=None):
         # If there's no token or code, we pass controll to the next authentication backend
         if authorization_code is None or authorization_code == '':
             return
 
-        if settings.ADFS_REDIR_URI is None:
+        if settings.REDIR_URI is None:
             raise ImproperlyConfigured("ADFS Redirect URI is not configured")
 
-        token_url = "https://{0}{1}".format(settings.ADFS_SERVER, settings.ADFS_TOKEN_PATH)
+        token_url = "https://{0}{1}".format(settings.SERVER, settings.TOKEN_PATH)
         data = {
             'grant_type': 'authorization_code',
-            'client_id': settings.ADFS_CLIENT_ID,
-            'redirect_uri': settings.ADFS_REDIR_URI,
+            'client_id': settings.CLIENT_ID,
+            'redirect_uri': settings.REDIR_URI,
             'code': authorization_code,
         }
         logger.debug("Authorization code received. Fetching access token.")
         logger.debug(":: token URL: "+token_url)
         logger.debug(":: authorization code: "+authorization_code)
-        response = post(token_url, data, verify=settings.ADFS_CA_BUNDLE)
+        response = post(token_url, data, verify=settings.CA_BUNDLE)
 
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
@@ -72,65 +166,77 @@ class AdfsBackend(ModelBackend):
         access_token = json_response["access_token"]
         logger.debug("Received access token: "+access_token)
 
-        try:
-            # Explicitly define the verification option
-            # The list below is the default the jwt module uses.
-            # Explicit is better then implicit and it protects against
-            # changes is the defaults the jwt module uses
+        payload = None
 
-            options = {
-                'verify_signature': True,
-                'verify_exp': True,
-                'verify_nbf': True,
-                'verify_iat': True,
-                'verify_aud': (True if settings.ADFS_AUDIENCE else False),
-                'verify_iss': (True if settings.ADFS_ISSUER else False),
-                'require_exp': False,
-                'require_iat': False,
-                'require_nbf': False
-            }
+        for idx, key in enumerate(self._public_keys):
+            try:
+                # Explicitly define the verification option
+                # The list below is the default the jwt module uses.
+                # Explicit is better then implicit and it protects against
+                # changes is the defaults the jwt module uses
+                options = {
+                    'verify_signature': True,
+                    'verify_exp': True,
+                    'verify_nbf': True,
+                    'verify_iat': True,
+                    'verify_aud': (True if settings.AUDIENCE else False),
+                    'verify_iss': (True if settings.ISSUER else False),
+                    'require_exp': False,
+                    'require_iat': False,
+                    'require_nbf': False
+                }
+                # Validate token and extract payload
+                payload = jwt.decode(
+                    access_token,
+                    key=key,
+                    verify=True,
+                    audience=settings.AUDIENCE,
+                    issuer=settings.ISSUER,
+                    options=options,
+                )
+            except jwt.ExpiredSignature as error:
+                logger.info("Signature has expired: %s" % error)
+                raise PermissionDenied
+            except jwt.DecodeError as error:
+                # If it's not the last certificate in the list, skip to the next one
+                if idx < len(self._public_keys)-1:
+                    continue
+                else:
+                    logger.info('Error decoding signature: %s' % error)
+                    raise PermissionDenied
+            except jwt.InvalidTokenError as error:
+                logger.info(str(error))
+                raise PermissionDenied
 
-            # Validate token and extract payload
-            payload = jwt.decode(
-                access_token,
-                key=self._public_key,
-                verify=True,
-                audience=settings.ADFS_AUDIENCE,
-                issuer=settings.ADFS_ISSUER,
-                options=options,
-            )
-        except (jwt.ExpiredSignature, jwt.DecodeError, jwt.InvalidTokenError) as error:
-            logger.info(str(error))
+        if not payload:
+            logger.error("JWT payload empty, cannot authenticate the request")
             raise PermissionDenied
 
         logger.debug("JWT payload:\n"+pformat(payload))
-        username_claim = settings.ADFS_USERNAME_CLAIM
 
         # Create the user
+        username_claim = settings.USERNAME_CLAIM
         usermodel = get_user_model()
         user, created = usermodel.objects.get_or_create(**{
             usermodel.USERNAME_FIELD: payload[username_claim]
         })
-
         if created:
             logging.debug('User "{0}" has been created.'.format(username_claim))
-
         self.update_users_attributes(user, payload)
         self.update_users_groups(user, payload)
-
         user.save()
+
         return user
 
     def update_users_attributes(self, user, payload):
         """
-        Updates users attributes based on ADFS_CLAIM_MAPPING set up in
-        settings.
+        Updates users attributes based on the CLAIM_MAPPING setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
-            payload (dictionary): decoded JSON web token
+            payload (dict): decoded JSON web token
         """
-        for field, claim in settings.ADFS_CLAIM_MAPPING.items():
+        for field, claim in settings.CLAIM_MAPPING.items():
             if hasattr(user, field):
                 if claim in payload:
                     setattr(user, field, payload[claim])
@@ -143,21 +249,20 @@ class AdfsBackend(ModelBackend):
 
     def update_users_groups(self, user, payload):
         """
-        Updates users group memberships based on ADFS_GROUP_CLAIM set up in
-        settings.
+        Updates users group memberships based on the GROUP_CLAIM setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
-            payload (dictionary): decoded JSON web token
+            payload (dict): decoded JSON web token
         """
         user.groups.clear()
 
         logging.debug('User "{0}" has been removed from all groups.'
                       .format(getattr(user, user.USERNAME_FIELD)))
 
-        if settings.ADFS_GROUP_CLAIM is not None:
-            if settings.ADFS_GROUP_CLAIM in payload:
-                user_groups = payload[settings.ADFS_GROUP_CLAIM]
+        if settings.GROUP_CLAIM is not None:
+            if settings.GROUP_CLAIM in payload:
+                user_groups = payload[settings.GROUP_CLAIM]
                 if not isinstance(user_groups, list):
                     user_groups = [user_groups, ]
                 for group_name in user_groups:

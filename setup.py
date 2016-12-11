@@ -39,7 +39,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: WSGI',
         'Topic :: Software Development :: Libraries :: Application Frameworks',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
     ],
     install_requires=[
         'pyjwt >= 1.0.1',
