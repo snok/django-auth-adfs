@@ -40,7 +40,7 @@ class AdfsBackend(ModelBackend):
         if not settings.SIGNING_CERT:
             raise ImproperlyConfigured("ADFS token signing certificate not set")
         cert_exp_time = datetime.now() - timedelta(hours=settings.CERT_MAX_AGE)
-        if len(type(self)._public_keys) < 1 or type(self)._key_age < cert_exp_time:
+        if len(self.__class__._public_keys) < 1 or self.__class__._key_age < cert_exp_time:
             if settings.SIGNING_CERT is True:
                 self._autoload()
             elif isfile(settings.SIGNING_CERT):
