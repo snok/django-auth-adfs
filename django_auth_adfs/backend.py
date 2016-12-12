@@ -168,7 +168,7 @@ class AdfsBackend(ModelBackend):
 
         payload = None
 
-        for idx, key in enumerate(self._public_keys):
+        for idx, key in enumerate(self.__class__._public_keys):
             try:
                 # Explicitly define the verification option
                 # The list below is the default the jwt module uses.
@@ -199,7 +199,7 @@ class AdfsBackend(ModelBackend):
                 raise PermissionDenied
             except jwt.DecodeError as error:
                 # If it's not the last certificate in the list, skip to the next one
-                if idx < len(self._public_keys)-1:
+                if idx < len(self.__class__._public_keys) - 1:
                     continue
                 else:
                     logger.info('Error decoding signature: %s' % error)
