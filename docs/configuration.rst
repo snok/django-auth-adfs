@@ -25,7 +25,7 @@ AUTHORIZE_PATH
 Default: ``/adfs/oauth2/authorize``
 
 The path to the authorize page off your ADFS server.
-Users have to visit this page to receive a *authorization code*.
+Users have to visit this page to receive an *authorization code*.
 This value is appended to the server FQDN and used to build the full authorization URL.
 This URL is available as the variable ``ADFS_AUTH_URL`` inside templates when using the
 django-auth-adfs context processor ``adfs_url``.
@@ -76,7 +76,7 @@ CLIENT_ID
 ---------
 **Required**
 
-Set this to the value you configured on your ADFS server as ``ClientId``
+Set this to the value you configured on your ADFS server as ``ClientId``.
 
 CERT_MAX_AGE
 ------------
@@ -94,7 +94,7 @@ GROUP_CLAIM
 Default ``group``
 
 Name of the claim sent in the JWT token from ADFS that contains the groups the user is member of.
-If a entry in this claim matches a group configured in Django, the user will join it automatically.
+If an entry in this claim matches a group configured in Django, the user will join it automatically.
 
 If the returned claim is empty, or the setting is set to ``None``, users are not joined to any group.
 
@@ -111,7 +111,7 @@ LOGIN_EXEMPT_URLS
 Default: ``None``
 
 When you activate the ``LoginRequiredMiddleware`` middleware, by default every page will redirect
-an unauthenticated used to the page configured in the Django setting ``LOGIN_URL``.
+an unauthenticated user to the page configured in the Django setting ``LOGIN_URL``.
 
 If you have pages that should not trigger this redirect, add them to this setting as a list value.
 
@@ -191,7 +191,7 @@ TOKEN_PATH
 ----------
 Default: ``/adfs/oauth2/token``
 
-This is the path to the token page off your ADFS server. The authentication backand
+This is the path to the token page of your ADFS server. The authentication backend
 will try to fetch the access token by submitting the authorization code to this page.
 
 USERNAME_CLAIM
