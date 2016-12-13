@@ -28,11 +28,12 @@ backend.activate_builtin_random()
 
 class AdfsBackend(ModelBackend):
     """
-    Authentication backend to allow authenticating users against a microsoft ADFS server.
+    Authentication backend to allow authenticating users against a
+    Microsoft ADFS server.
     It's based on the ``RemoteUserBackend`` from Django.
     """
-    # globally cache keys because Django instantiates our class on every authentication.
-    # Loading keys every time would waste resources
+    # Globally cache keys because Django instantiates our class on every
+    # authentication. Loading keys every time would waste resources.
     _public_keys = []
     _key_age = None
 
@@ -56,7 +57,7 @@ class AdfsBackend(ModelBackend):
         Returns:
 
         """
-        # Fetch medata file from ADFS server
+        # Fetch metadata file from ADFS server
         metadata_url = "https://" + settings.SERVER + "/FederationMetadata/2007-06/FederationMetadata.xml"
         logger.info("Retrieving ADFS metadata file from {}".format(metadata_url))
         response = requests.get(metadata_url, verify=settings.CA_BUNDLE, timeout=10)
@@ -100,7 +101,7 @@ class AdfsBackend(ModelBackend):
     @classmethod
     def _load_from_file(cls, file):
         """
-        Load a certificate from a Base64 PEM encoded file
+        Load a certificate from a Base64 PEM encoded file.
 
         Args:
             file (str): Valid path to a certificate file
@@ -113,7 +114,8 @@ class AdfsBackend(ModelBackend):
     @classmethod
     def _load_from_string(cls, certificate):
         """
-        Load a certificate from a string
+        Load a certificate from a string.
+
         Args:
             certificate (str): A base64 PEM encoded certificate
         """
@@ -128,7 +130,7 @@ class AdfsBackend(ModelBackend):
     @classmethod
     def _reset_keys(cls):
         """
-        Remove all cached keys from the class
+        Remove all cached keys from the class.
         """
         cls._public_keys = []
 
@@ -170,10 +172,10 @@ class AdfsBackend(ModelBackend):
 
         for idx, key in enumerate(self.__class__._public_keys):
             try:
-                # Explicitly define the verification option
+                # Explicitly define the verification option.
                 # The list below is the default the jwt module uses.
                 # Explicit is better then implicit and it protects against
-                # changes is the defaults the jwt module uses
+                # changes is the defaults the jwt module uses.
                 options = {
                     'verify_signature': True,
                     'verify_exp': True,
