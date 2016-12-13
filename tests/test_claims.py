@@ -12,7 +12,7 @@ def expired_token_response(url, request):
     claims["iat"] -= 10000
     claims["exp"] -= 10000
     token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
 
 @urlmatch(path=r"^/adfs/oauth2/token$")
@@ -25,7 +25,7 @@ def invalid_token_response(url, request):
     claims = get_base_claims()
     claims.pop("iss")
     token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
 
 @urlmatch(path=r"^/adfs/oauth2/token$")
@@ -33,7 +33,7 @@ def single_group_token_response(url, request):
     claims = get_base_claims()
     claims["group"] = "group1"
     token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
 
 class ClaimTests(TestCase):

@@ -18,7 +18,7 @@ client = Client()
 def token_response(url, request):
     claims = get_base_claims()
     token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
 
 @urlmatch(path=r"^/FederationMetadata/2007-06/FederationMetadata.xml$")
