@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 # MUST come before any HTTPS request.
 # If not, the python process deadlocks and generates gateway timeouts
 #    -> Timeout when reading response headers from daemon process
-#    -> function Cryptography_rand_bytes() called, but no code was attached to it yet with @ffi.def_extern()
+#    -> function Cryptography_rand_bytes() called, but no code was attached to
+#       it yet with @ffi.def_extern()
 # REF: https://github.com/pyca/cryptography/issues/2299#issuecomment-182835098
 backend.activate_builtin_random()
 
@@ -89,7 +90,8 @@ class AdfsBackend(ModelBackend):
         # Load all found certificates
         for node in cert_nodes:
             # Convert BASE64 encoded certificate into proper PEM format
-            # Some OpenSSL versions seem to fail when the certificate is not split in 64 character lines
+            # Some OpenSSL versions seem to fail when the certificate is not
+            # split in 64 character lines
             certificate = ["-----BEGIN CERTIFICATE-----"]
             no_of_slices = int(len(node.text) / 64)
             for i in range(0, no_of_slices + 1):
@@ -150,8 +152,8 @@ class AdfsBackend(ModelBackend):
             'code': authorization_code,
         }
         logger.debug("Authorization code received. Fetching access token.")
-        logger.debug(":: token URL: "+token_url)
-        logger.debug(":: authorization code: "+authorization_code)
+        logger.debug(":: token URL: " + token_url)
+        logger.debug(":: authorization code: " + authorization_code)
         response = post(token_url, data, verify=settings.CA_BUNDLE)
 
         # 200 = valid token received
@@ -166,7 +168,7 @@ class AdfsBackend(ModelBackend):
 
         json_response = response.json()
         access_token = json_response["access_token"]
-        logger.debug("Received access token: "+access_token)
+        logger.debug("Received access token: " + access_token)
 
         payload = None
 

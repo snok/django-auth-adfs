@@ -24,7 +24,8 @@ class OAuth2View(View):
             if user.is_active:
                 login(request, user)
                 # Redirect to the "after login" page.
-                # Because we got redirected from ADFS, we can't know where the user came from
+                # Because we got redirected from ADFS, we can't know where the
+                # user came from.
                 if settings.LOGIN_REDIRECT_URL:
                     return redirect(settings.LOGIN_REDIRECT_URL)
                 else:
