@@ -109,4 +109,4 @@ In the example above you have to make the redirect url in ADFS point to ``https:
 Contributing
 ------------
 Contributions to the code are more then welcome.
-For more details have a look at the ``CONTRIBUTION.rst`` file.
+For more details have a look at the ``CONTRIBUTING.rst`` file.

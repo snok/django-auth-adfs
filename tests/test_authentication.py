@@ -12,7 +12,7 @@ from .utils import get_base_claims, encode_jwt
 def token_response(url, request):
     claims = get_base_claims()
     token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
 
 class AuthenticationTests(TestCase):

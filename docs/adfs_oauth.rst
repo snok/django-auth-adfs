@@ -32,7 +32,7 @@ This page briefly explains the way OAuth2 authentication with ADFS works.
    a authorization code in the query parameters
 #. With the code Django requests an access token from ADFS
 #. ADFS sends back an access token in JWT format including claims
-#. Django validates the token and creates the user is it doesn't exists yet
+#. Django validates the token and creates the user if it doesn't exists yet
 
 More details and a great explanation about what URL's are used in the process
 can be found here: http://blog.scottlogic.com/2015/03/09/OAUTH2-Authentication-with-ADFS-3.0.html

@@ -11,7 +11,7 @@ class OAuth2View(View):
     def get(self, request):
         """
         Handles the redirect from ADFS to our site.
-        We try to process the passed authorization code and login the user
+        We try to process the passed authorization code and login the user.
 
         Args:
             request (django.http.request.HttpRequest): A Django Request object
@@ -24,7 +24,8 @@ class OAuth2View(View):
             if user.is_active:
                 login(request, user)
                 # Redirect to the "after login" page.
-                # Because we got redirected from ADFS, we can't know where the user came from
+                # Because we got redirected from ADFS, we can't know where the
+                # user came from.
                 if settings.LOGIN_REDIRECT_URL:
                     return redirect(settings.LOGIN_REDIRECT_URL)
                 else:
@@ -33,5 +34,5 @@ class OAuth2View(View):
                 # Return a 'disabled account' error message
                 return HttpResponse("Account disabled", status=403)
         else:
-            # Return an 'invalid login' error message.
+            # Return an 'invalid login' error message
             return HttpResponse("Login failed", status=401)

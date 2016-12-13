@@ -10,7 +10,7 @@ client = Client()
 def token_response(url, request):
     claims = get_base_claims()
     token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
 
 @urlmatch(path=r"^/adfs/oauth2/token$")
@@ -18,7 +18,7 @@ def inactive_user_token_response(url, request):
     claims = get_base_claims()
     claims["winaccountname"] = "locked_user"
     token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"'+token+b'"}'}
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
 
 class ClientRequestTests(TestCase):

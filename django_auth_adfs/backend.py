@@ -21,18 +21,20 @@ logger = logging.getLogger(__name__)
 # MUST come before any HTTPS request.
 # If not, the python process deadlocks and generates gateway timeouts
 #    -> Timeout when reading response headers from daemon process
-#    -> function Cryptography_rand_bytes() called, but no code was attached to it yet with @ffi.def_extern()
+#    -> function Cryptography_rand_bytes() called, but no code was attached to
+#       it yet with @ffi.def_extern()
 # REF: https://github.com/pyca/cryptography/issues/2299#issuecomment-182835098
 backend.activate_builtin_random()
 
 
 class AdfsBackend(ModelBackend):
     """
-    Authentication backend to allow authenticating users against a microsoft ADFS server.
+    Authentication backend to allow authenticating users against a
+    Microsoft ADFS server.
     It's based on the ``RemoteUserBackend`` from Django.
     """
-    # globally cache keys because Django instantiates our class on every authentication.
-    # Loading keys every time would waste resources
+    # Globally cache keys because Django instantiates our class on every
+    # authentication. Loading keys every time would waste resources.
     _public_keys = []
     _key_age = None
 
@@ -56,7 +58,7 @@ class AdfsBackend(ModelBackend):
         Returns:
 
         """
-        # Fetch medata file from ADFS server
+        # Fetch metadata file from ADFS server
         metadata_url = "https://" + settings.SERVER + "/FederationMetadata/2007-06/FederationMetadata.xml"
         logger.info("Retrieving ADFS metadata file from {}".format(metadata_url))
         response = requests.get(metadata_url, verify=settings.CA_BUNDLE, timeout=10)
@@ -88,7 +90,8 @@ class AdfsBackend(ModelBackend):
         # Load all found certificates
         for node in cert_nodes:
             # Convert BASE64 encoded certificate into proper PEM format
-            # Some OpenSSL versions seem to fail when the certificate is not split in 64 character lines
+            # Some OpenSSL versions seem to fail when the certificate is not
+            # split in 64 character lines
             certificate = ["-----BEGIN CERTIFICATE-----"]
             no_of_slices = int(len(node.text) / 64)
             for i in range(0, no_of_slices + 1):
@@ -100,7 +103,7 @@ class AdfsBackend(ModelBackend):
     @classmethod
     def _load_from_file(cls, file):
         """
-        Load a certificate from a Base64 PEM encoded file
+        Load a certificate from a Base64 PEM encoded file.
 
         Args:
             file (str): Valid path to a certificate file
@@ -113,7 +116,8 @@ class AdfsBackend(ModelBackend):
     @classmethod
     def _load_from_string(cls, certificate):
         """
-        Load a certificate from a string
+        Load a certificate from a string.
+
         Args:
             certificate (str): A base64 PEM encoded certificate
         """
@@ -128,7 +132,7 @@ class AdfsBackend(ModelBackend):
     @classmethod
     def _reset_keys(cls):
         """
-        Remove all cached keys from the class
+        Remove all cached keys from the class.
         """
         cls._public_keys = []
 
@@ -148,8 +152,8 @@ class AdfsBackend(ModelBackend):
             'code': authorization_code,
         }
         logger.debug("Authorization code received. Fetching access token.")
-        logger.debug(":: token URL: "+token_url)
-        logger.debug(":: authorization code: "+authorization_code)
+        logger.debug(":: token URL: " + token_url)
+        logger.debug(":: authorization code: " + authorization_code)
         response = post(token_url, data, verify=settings.CA_BUNDLE)
 
         # 200 = valid token received
@@ -164,16 +168,16 @@ class AdfsBackend(ModelBackend):
 
         json_response = response.json()
         access_token = json_response["access_token"]
-        logger.debug("Received access token: "+access_token)
+        logger.debug("Received access token: " + access_token)
 
         payload = None
 
         for idx, key in enumerate(self.__class__._public_keys):
             try:
-                # Explicitly define the verification option
+                # Explicitly define the verification option.
                 # The list below is the default the jwt module uses.
                 # Explicit is better then implicit and it protects against
-                # changes is the defaults the jwt module uses
+                # changes is the defaults the jwt module uses.
                 options = {
                     'verify_signature': True,
                     'verify_exp': True,
