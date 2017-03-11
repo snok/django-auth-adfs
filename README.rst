@@ -6,6 +6,8 @@ ADFS Authentication for Django
     :alt: Documentation Status
 .. image:: https://img.shields.io/pypi/v/django-auth-adfs.svg
     :target: https://pypi.python.org/pypi/django-auth-adfs
+.. image:: https://img.shields.io/pypi/pyversions/django-auth-adfs.svg
+    :target: https://pypi.python.org/pypi/django-auth-adfs#downloads
 .. image:: https://travis-ci.org/jobec/django-auth-adfs.svg?branch=master
     :target: https://travis-ci.org/jobec/django-auth-adfs
 .. image:: https://codecov.io/github/jobec/django-auth-adfs/coverage.svg?branch=master
