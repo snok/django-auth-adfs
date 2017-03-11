@@ -1,11 +1,16 @@
 Changelog
 ---------
 
+0.1.2 (2017-13-11)
+~~~~~~~~~~~~~~~~~~
+
+* Support for django 1.10 new style middleware using the ``MIDDLEWARE`` setting.
+
 0.1.1 (2016-12-13)
 ~~~~~~~~~~~~~~~~~~
 
 * Numerous typos fixed in code and documentation.
-* Proper handling of class variables to allow inheriting from the class `AdfsBackend`.
+* Proper handling of class variables to allow inheriting from the class ``AdfsBackend``.
 
 0.1.0 (2016-12-11)
 ~~~~~~~~~~~~~~~~~~

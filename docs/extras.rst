@@ -12,15 +12,15 @@ By default it's disabled for the page defined in the ``LOGIN_URL`` setting and t
 But by setting the ``LOGIN_EXEMPT_URLS`` setting, you can exclude other pages from authentication.
 Have a look at the :ref:`configuration documentation <configuration>` for more information.
 
-To enable the middleware, add it to ``MIDLEWARE_CLASSES`` in ``settings.py``. make sure to add it after
-any other session or authentication middleware to be sure all other methods of identifying the user are
-tried first.
+To enable the middleware, add it to ``MIDLEWARE`` in ``settings.py`` (or ``MIDDLEWARE_CLASSES`` if using Django <1.10.
+make sure to add it after any other session or authentication middleware to be sure all other methods of identifying
+the user are tried first.
 
 In your ``settings.py`` file, add the following:
 
 .. code-block:: python
 
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         ...
         'django_auth_adfs.middleware.LoginRequiredMiddleware',
     )

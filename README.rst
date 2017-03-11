@@ -79,8 +79,7 @@ In your project's ``settings.py``
         },
     ]
 
-
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         ...
         # With this you can force a user to login without using
         # the @login_required decorator for every view function
@@ -88,6 +87,12 @@ In your project's ``settings.py``
         # You can specify URLs for which login is not forced by
         # specifying them in LOGIN_EXEMPT_URLS in setting.py.
         # The values in LOGIN_EXEMPT_URLS are interpreted as regular expressions.
+        'django_auth_adfs.middleware.LoginRequiredMiddleware',
+    )
+
+    # Or, when using django <1.10
+    MIDDLEWARE_CLASSES = (
+        ...
         'django_auth_adfs.middleware.LoginRequiredMiddleware',
     )
 
