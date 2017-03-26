@@ -11,12 +11,14 @@ This package has been tested on the following Python versions:
 * 2.7
 * 3.4
 * 3.5
+* 3.6
 
 And with the following Django versions:
 
 * 1.8
 * 1.9
 * 1.10
+* 1.11
 
 You will also need the following:
 

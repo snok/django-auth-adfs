@@ -24,6 +24,7 @@ setup(
         'Framework :: Django :: 1.8',
         'Framework :: Django :: 1.9',
         'Framework :: Django :: 1.10',
+        'Framework :: Django :: 1.11',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Operating System :: OS Independent',
