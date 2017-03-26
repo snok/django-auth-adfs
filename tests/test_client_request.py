@@ -43,6 +43,12 @@ class ClientRequestTests(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.content, b"Login failed")
 
+    @with_httmock(token_response)
+    def test_missing_code(self):
+        response = client.get("/oauth2/login")
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.content, b"Login failed")
+
     @with_httmock(inactive_user_token_response)
     def test_inactive_user(self):
         response = client.get("/oauth2/login", {'code': 'testcode'})

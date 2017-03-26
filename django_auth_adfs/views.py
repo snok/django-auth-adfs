@@ -16,7 +16,7 @@ class OAuth2View(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        code = request.GET["code"]
+        code = request.GET.get("code", None)
 
         user = authenticate(authorization_code=code)
 
