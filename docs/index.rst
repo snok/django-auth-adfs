@@ -37,6 +37,7 @@ Contents
 
    install
    configuration
+   adfs_config_guide
    extras
    troubleshooting
    adfs_oauth

@@ -3,12 +3,17 @@
 Settings
 ========
 
+.. _audience_setting:
+
 AUDIENCE
 --------
 Default: ``None``
 
 Set this to the value of the ``aud`` claim your ADFS server sends back in the JWT token.
 If you leave this set to ``None`` this claim will not be verified.
+
+You can lookup this value by executing the powershell command ``Get-AdfsRelyingPartyTrust`` on the ADFS server
+and taking the ``Identifier`` value. But beware, it doesn't match exactly if it's not a URL.
 
 Examples
 
@@ -48,6 +53,8 @@ It allows you to control the webserver certificate verification of the ADFS serv
 Have a look at the `Requests documentation
 <http://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for more details.
 
+.. _claim_mapping_setting:
+
 CLAIM_MAPPING
 -------------
 Default: ``None``
@@ -72,11 +79,16 @@ example
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
+.. _client_id_setting:
+
 CLIENT_ID
 ---------
 **Required**
 
-Set this to the value you configured on your ADFS server as ``ClientId``.
+Set this to the value you configured on your ADFS server as ``ClientId`` when executing the ``Add-AdfsClient`` command.
+
+You can lookup this value by executing the powershell command ``Get-AdfsClient`` on the ADFS server
+and taking the ``ClientId`` value.
 
 CERT_MAX_AGE
 ------------
@@ -88,6 +100,8 @@ because only then the backend class is loaded for the first time.
 
 .. NOTE::
    This setting is related with the ``SIGNING_CERT`` setting.
+
+.. _group_claim_setting:
 
 GROUP_CLAIM
 -----------
@@ -138,9 +152,14 @@ Usually this is something like ``http://adfs.yourcompany.com/adfs/services/trust
 
 If you leave this set to ``None`` this claim will not be verified.
 
+You can lookup this value by executing the powershell command ``Get-AdfsProperties`` on the ADFS server
+and taking the ``Identifier`` value.
+
 .. IMPORTANT::
-   The issuer isn't necessarily the same as the URL of your ADFS server.
-   It also usually starts with ``HTTP`` instead of ``HTTPS``
+    The issuer isn't necessarily the same as the URL of your ADFS server.
+    It usually starts with ``HTTP`` instead of ``HTTPS``
+
+.. _redir_uri_setting:
 
 REDIR_URI
 ---------
@@ -151,17 +170,25 @@ Sets the **redirect uri** configured for your client id in ADFS.
 Because we need this value in a context without access to a Django ``request`` object,
 it needs to be explicitly configured.
 
+You can lookup this value by executing the powershell command ``Get-AdfsClient`` on the ADFS server
+and taking the ``RedirectUri`` value (without the ``{}`` brackets).
+
 .. IMPORTANT::
    Make sure both this setting and the setting on your ADFS server
    matches with the url pattern configured in your ``urls.py`` file.
 
    See the :ref:`install documentation <install>` for more details.
 
+.. _resource_setting:
+
 RESOURCE
 --------
 **Required**
 
-Set this to the name of the ``Relying Party Trust`` you configured in ADFS.
+Set this to the ``Relying party trust identifier`` value of the ``Relying Party Trust`` you configured in ADFS.
+
+You can lookup this value by executing the powershell command ``Get-AdfsRelyingPartyTrust`` on the ADFS server
+and taking the ``Identifier`` value.
 
 SIGNING_CERT
 ------------
@@ -193,6 +220,8 @@ Default: ``/adfs/oauth2/token``
 
 This is the path to the token page of your ADFS server. The authentication backend
 will try to fetch the access token by submitting the authorization code to this page.
+
+.. _username_claim_setting:
 
 USERNAME_CLAIM
 --------------
