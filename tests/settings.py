@@ -95,5 +95,7 @@ aK7TCdKeEyDaHh6/Dg==
     "CLAIM_MAPPING": {"first_name": "given_name",
                       "last_name": "family_name",
                       "email": "email"},
+    "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
+                              "is_superuser": "user_is_superuser"},
     "LOGIN_EXEMPT_URLS": ["^context_processor/$"]
 }

@@ -229,6 +229,7 @@ class AdfsBackend(ModelBackend):
             logging.debug('User "{0}" has been created.'.format(username_claim))
         self.update_users_attributes(user, payload)
         self.update_users_groups(user, payload)
+        self.update_users_flags(user, payload)
         user.save()
 
         return user
@@ -294,3 +295,22 @@ class AdfsBackend(ModelBackend):
                 except ObjectDoesNotExist:
                     # Silently fail for non-existing groups.
                     pass
+
+    def update_users_flags(self, user, payload):
+        """
+        Updates users group memberships based on the GROUP_CLAIM setting.
+
+        Args:
+            user (django.contrib.auth.models.User): User model instance
+            payload (dict): decoded JSON web token
+        """
+        for field, claim in settings.BOOLEAN_CLAIM_MAPPING.items():
+            if hasattr(user, field):
+                bool_val = False
+                if claim in payload and payload[claim] in ['y', 'yes', 't', 'true', 'on', '1', 1, True]:
+                    bool_val = True
+                setattr(user, field, bool_val)
+            else:
+                msg = "User model has no field named '{0}'. Check ADFS boolean claims mapping."
+                raise ImproperlyConfigured(msg.format(field))
+

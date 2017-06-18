@@ -31,6 +31,8 @@ def get_base_claims():
         "family_name":"Doe",
         "email":"john.doe@example.com",
         "sub": "john.doe@example.com",
+        "user_is_staff": "yes",
+        "user_is_superuser": "yes",
         "appid": "your-configured-client-id",
         "auth_time": "2016-02-16T06:42:21.629Z",
         "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",

@@ -53,6 +53,33 @@ It allows you to control the webserver certificate verification of the ADFS serv
 Have a look at the `Requests documentation
 <http://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for more details.
 
+.. _boolean_claim_mapping_setting:
+
+BOOLEAN_CLAIM_MAPPING
+---------------------
+Default: ``None``
+
+A dictionary of claim/field mappings that is used to set boolean fields of the user account in Django.
+
+The **key** represents user model field (e.g. ``first_name``)
+and the **value** represents the claim short name (e.g. ``given_name``).
+
+If the value is any of ``y, yes, t, true, on, 1``, the field will be set to ``True``. All other values, or the absence of
+the claim, will result in a value of ``False``
+
+example
+
+.. code-block:: python
+
+    AUTH_ADFS = {
+        "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
+                               "is_superuser": "user_is_superuser"},
+    }
+
+.. NOTE::
+   You can find the short name for the claims you configure in the ADFS management console underneath
+   **ADFS** ➜ **Service** ➜ **Claim Descriptions**
+
 .. _claim_mapping_setting:
 
 CLAIM_MAPPING

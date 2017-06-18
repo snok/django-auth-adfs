@@ -7,6 +7,13 @@ from django_auth_adfs.backend import AdfsBackend
 
 
 @urlmatch(path=r"^/adfs/oauth2/token$")
+def token_response(url, request):
+    claims = get_base_claims()
+    token = encode_jwt(claims)
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
+
+
+@urlmatch(path=r"^/adfs/oauth2/token$")
 def expired_token_response(url, request):
     claims = get_base_claims()
     claims["iat"] -= 10000
@@ -32,6 +39,14 @@ def invalid_token_response(url, request):
 def single_group_token_response(url, request):
     claims = get_base_claims()
     claims["group"] = "group1"
+    token = encode_jwt(claims)
+    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
+
+
+@urlmatch(path=r"^/adfs/oauth2/token$")
+def is_staff_token_response(url, request):
+    claims = get_base_claims()
+    claims["user_is_superuser"] = "x"
     token = encode_jwt(claims)
     return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
 
@@ -67,3 +82,25 @@ class ClaimTests(TestCase):
         self.assertEqual(user.email, "john.doe@example.com")
         self.assertEqual(len(user.groups.all()), 1)
         self.assertEqual(user.groups.all()[0].name, "group1")
+
+    @with_httmock(token_response)
+    def test_bool_claim(self):
+        backend = AdfsBackend()
+        user = backend.authenticate(authorization_code="dummycode")
+        self.assertIsInstance(user, User)
+        self.assertEqual(user.first_name, "John")
+        self.assertEqual(user.last_name, "Doe")
+        self.assertEqual(user.email, "john.doe@example.com")
+        self.assertEqual(user.is_staff, True)
+        self.assertEqual(user.is_superuser, True)
+
+    @with_httmock(is_staff_token_response)
+    def test_is_staff_bool_claim(self):
+        backend = AdfsBackend()
+        user = backend.authenticate(authorization_code="dummycode")
+        self.assertIsInstance(user, User)
+        self.assertEqual(user.first_name, "John")
+        self.assertEqual(user.last_name, "Doe")
+        self.assertEqual(user.email, "john.doe@example.com")
+        self.assertEqual(user.is_staff, True)
+        self.assertEqual(user.is_superuser, False)

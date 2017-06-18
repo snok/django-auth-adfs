@@ -85,6 +85,15 @@ class InvalidConfigurationTests(TestCase):
             self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
 
     @with_httmock(token_response)
+    def test_bool_claim_mapping_non_existing_model_field(self):
+        backend = AdfsBackend()
+        mock_claim_mapping = {
+            "is_staffffffffff": "user_is_staff",
+        }
+        with patch("django_auth_adfs.backend.settings.BOOLEAN_CLAIM_MAPPING", mock_claim_mapping):
+            self.assertRaises(ImproperlyConfigured, backend.authenticate, authorization_code="dummycode")
+
+    @with_httmock(token_response)
     def test_claim_mapping_non_existing_claim(self):
         backend = AdfsBackend()
         mock_claim_mapping = {

@@ -20,6 +20,7 @@ class Settings(object):
         self.USERNAME_CLAIM = "winaccountname"
         self.GROUP_CLAIM = "group"
         self.CLAIM_MAPPING = {}
+        self.BOOLEAN_CLAIM_MAPPING = {}
         self.LOGIN_EXEMPT_URLS = []
 
         required_settings = [
