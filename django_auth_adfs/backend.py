@@ -307,7 +307,7 @@ class AdfsBackend(ModelBackend):
         for field, claim in settings.BOOLEAN_CLAIM_MAPPING.items():
             if hasattr(user, field):
                 bool_val = False
-                if claim in payload and payload[claim] in ['y', 'yes', 't', 'true', 'on', '1', 1, True]:
+                if claim in payload and str(payload[claim]).lower() in ['y', 'yes', 't', 'true', 'on', '1']:
                     bool_val = True
                 setattr(user, field, bool_val)
             else:
