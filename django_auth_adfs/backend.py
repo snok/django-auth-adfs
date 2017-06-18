@@ -227,16 +227,16 @@ class AdfsBackend(ModelBackend):
         })
         if created:
             logging.debug('User "{0}" has been created.'.format(username_claim))
-        self.update_users_attributes(user, payload)
-        self.update_users_groups(user, payload)
-        self.update_users_flags(user, payload)
+        self.update_user_attributes(user, payload)
+        self.update_user_groups(user, payload)
+        self.update_user_flags(user, payload)
         user.save()
 
         return user
 
-    def update_users_attributes(self, user, payload):
+    def update_user_attributes(self, user, payload):
         """
-        Updates users attributes based on the CLAIM_MAPPING setting.
+        Updates user attributes based on the CLAIM_MAPPING setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
@@ -253,9 +253,9 @@ class AdfsBackend(ModelBackend):
                 msg = "User model has no field named '{0}'. Check ADFS claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
 
-    def update_users_groups(self, user, payload):
+    def update_user_groups(self, user, payload):
         """
-        Updates users group memberships based on the GROUP_CLAIM setting.
+        Updates user group memberships based on the GROUP_CLAIM setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
@@ -296,9 +296,9 @@ class AdfsBackend(ModelBackend):
                     # Silently fail for non-existing groups.
                     pass
 
-    def update_users_flags(self, user, payload):
+    def update_user_flags(self, user, payload):
         """
-        Updates users group memberships based on the GROUP_CLAIM setting.
+        Updates user boolean attributes based on the BOOLEAN_CLAIM_MAPPING setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
