@@ -313,4 +313,3 @@ class AdfsBackend(ModelBackend):
             else:
                 msg = "User model has no field named '{0}'. Check ADFS boolean claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
-
