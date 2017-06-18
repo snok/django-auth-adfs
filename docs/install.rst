@@ -63,8 +63,10 @@ In your project's ``settings.py``
         "ISSUER": "http://adfs.yourcompany.com/adfs/services/trust",
         "CA_BUNDLE": "/path/to/ca-bundle.pem",
         "CLAIM_MAPPING": {"first_name": "given_name",
-                               "last_name": "family_name",
-                               "email": "email"},
+                          "last_name": "family_name",
+                          "email": "email"},
+        "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
+                                  "is_superuser": "user_is_superuser"},
         "REDIR_URI": "https://www.yourcompany.com/oauth2/login",
     }
 

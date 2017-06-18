@@ -1,8 +1,3 @@
-.. django-auth-adfs documentation master file, created by
-   sphinx-quickstart on Fri Jan 29 11:23:45 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ADFS Authentication for Django
 ==============================
 
@@ -16,7 +11,7 @@ ADFS Authentication for Django
 .. image:: https://codecov.io/github/jobec/django-auth-adfs/coverage.svg?branch=master
     :target: https://codecov.io/github/jobec/django-auth-adfs?branch=master
 
-A Django authentication backend for Microsoft ADFS
+A Django authentication backend for Microsoft ADFS 3.0
 
 * Free software: BSD License
 * Homepage: https://github.com/jobec/django-auth-adfs
@@ -25,7 +20,7 @@ A Django authentication backend for Microsoft ADFS
 Features
 --------
 
-* Integrates Django with Active Directory through Microsoft ADFS by using OAuth2.
+* Integrates Django with Active Directory through Microsoft ADFS 3.0 by using OAuth2.
 * Provides seamless single sign on (SSO) for your Django project on intranet environments.
 * Auto creates users and adds them to Django groups based on info in JWT claims received from ADFS.
 
