@@ -199,6 +199,8 @@ class AdfsBackend(ModelBackend):
                     issuer=settings.ISSUER,
                     options=options,
                 )
+                # Don't try next key if this one is valid
+                break
             except jwt.ExpiredSignature as error:
                 logger.info("Signature has expired: %s" % error)
                 raise PermissionDenied
