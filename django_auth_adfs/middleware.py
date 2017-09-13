@@ -1,14 +1,17 @@
 """
 Based on https://djangosnippets.org/snippets/1179/
 """
-from re import compile
-
 from django.conf import settings as django_settings
-from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
+from re import compile
 
 from .config import settings
 from .util import get_adfs_auth_url
+
+try:
+    from django.urls import reverse
+except ImportError:  # Django < 1.10
+    from django.core.urlresolvers import reverse
 
 try:
     from django.utils.deprecation import MiddlewareMixin
