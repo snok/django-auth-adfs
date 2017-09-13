@@ -105,8 +105,9 @@ In your project's ``urls.py``
     urlpatterns = [
         ...
         # Needed for the redirect URL to function
-        # The namespace is important and shouldn't be changed
-        url(r'^oauth2/', include('django_auth_adfs.urls', namespace='auth_adfs')),
+        url(r'^oauth2/', include('django_auth_adfs.urls')),
+        # If you're using Django 1.8, this code should be used instead
+        url(r'^oauth2/', include('django_auth_adfs.urls', namespace='django_auth_adfs')),
         ...
     ]
 

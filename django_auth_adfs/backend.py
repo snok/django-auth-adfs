@@ -41,7 +41,9 @@ class AdfsBackend(ModelBackend):
     def __init__(self):
         if not settings.SIGNING_CERT:
             raise ImproperlyConfigured("ADFS token signing certificate not set")
+
         cert_exp_time = datetime.now() - timedelta(hours=settings.CERT_MAX_AGE)
+
         if len(self.__class__._public_keys) < 1 or self.__class__._key_age < cert_exp_time:
             if settings.SIGNING_CERT is True:
                 self._autoload()
@@ -54,9 +56,6 @@ class AdfsBackend(ModelBackend):
     def _autoload(cls):
         """
         Autoloads certificates from the ADFS meta data file.
-
-        Returns:
-
         """
         # Fetch metadata file from ADFS server
         metadata_url = "https://" + settings.SERVER + "/FederationMetadata/2007-06/FederationMetadata.xml"
