@@ -22,7 +22,7 @@ def token_response(url, request):
 
 @urlmatch(path=r"^/FederationMetadata/2007-06/FederationMetadata.xml$")
 def metadata_response(url, request):
-    with open(os.path.join(os.path.dirname(__file__), "FederationMetadata.xml")) as f:
+    with open(os.path.join(os.path.dirname(__file__), "FederationMetadata_valid_cert_first.xml")) as f:
         return {'status_code': 200, 'content': f.read()}
 
 
