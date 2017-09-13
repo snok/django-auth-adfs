@@ -4,11 +4,15 @@ Changelog
 Unreleased_
 -----------
 
+* Fixed a bug were authentication failed when the last ADFS signing key was not the one that signed the JWT token.
 * Django 1.11 support and tests.
 * Proper handling the absence of 'code' query parameter after ADFS redirect.
-* Added ADFS configuration guide to docs
+* Added ADFS configuration guide to docs.
+* Allow boolean user model fields to be set based on claims.
+* The ``namespace`` argument for ``include()`` is not needed anymore on Django >=1.9.
+* Fixed some Django 2.0 deprecation warnings, improving future django support.
 
-`0.1.2`_ - 2017-13-11
+`0.1.2`_ - 2017-03-11
 ---------------------
 
 * Support for django 1.10 new style middleware using the ``MIDDLEWARE`` setting.
