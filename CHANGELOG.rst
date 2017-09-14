@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Unreleased_
------------
+`0.2.0`_ - 2017-09-14
+---------------------
 
 * Fixed a bug were authentication failed when the last ADFS signing key was not the one that signed the JWT token.
 * Django 1.11 support and tests.
@@ -69,7 +69,7 @@ Unreleased_
 
 * Initial release
 
-.. _Unreleased: https://github.com/jobec/django-auth-adfs/compare/0.1.2...master
+.. _0.2.0: https://github.com/jobec/django-auth-adfs/compare/0.1.2...0.2.0
 .. _0.1.2: https://github.com/jobec/django-auth-adfs/compare/0.1.1...0.1.2
 .. _0.1.1: https://github.com/jobec/django-auth-adfs/compare/0.1.0...0.1.1
 .. _0.1.0: https://github.com/jobec/django-auth-adfs/compare/0.0.5...0.1.0
