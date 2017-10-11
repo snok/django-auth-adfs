@@ -41,9 +41,9 @@ matrix:
           env: TOXENV=py36-django111
         - python: 3.6
           env: TOXENV=py36-django20a1
-        - python: 3.6
+        - python: 3.5
           env: TOXENV=flake8
-        - python: 3.6
+        - python: 3.5
           env: TOXENV=docs
 
 # command to install dependencies for getting Tox running, other dependencies are installed by Tox
