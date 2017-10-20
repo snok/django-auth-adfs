@@ -19,6 +19,7 @@ And with the following Django versions:
 * 1.9
 * 1.10
 * 1.11
+* 2.0
 
 You will also need the following:
 
