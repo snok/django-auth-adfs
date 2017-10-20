@@ -55,7 +55,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'django_auth_adfs'
-copyright = '2016, Joris Beckers'
+import datetime
+copyright = str(datetime.date.today().year) + ', Joris Beckers'
 author = 'Joris Beckers'
 
 # The version info for the project you're documenting, acts as replacement for
