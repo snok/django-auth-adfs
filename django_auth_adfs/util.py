@@ -1,4 +1,4 @@
-from .config import settings
+from django_auth_adfs.config import settings
 
 
 def get_adfs_auth_url():

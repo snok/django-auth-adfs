@@ -6,8 +6,8 @@ from django.conf import settings as django_settings
 from django.http import HttpResponseRedirect
 from re import compile
 
-from .config import settings
-from .util import get_adfs_auth_url
+from django_auth_adfs.config import settings
+from django_auth_adfs.util import get_adfs_auth_url
 
 try:
     from django.urls import reverse

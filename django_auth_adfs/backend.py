@@ -14,7 +14,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
 from requests import post
 
-from .config import settings
+from django_auth_adfs.config import settings
 
 logger = logging.getLogger(__name__)
 

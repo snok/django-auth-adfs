@@ -1,5 +1,6 @@
 from django.conf.urls import url
-from . import views
+
+from django_auth_adfs import views
 
 app_name = "django_auth_adfs"
 urlpatterns = [

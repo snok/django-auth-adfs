@@ -4,7 +4,7 @@ from django.http.response import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic import View
 
-from .config import settings
+from django_auth_adfs.config import settings
 
 
 class OAuth2View(View):
