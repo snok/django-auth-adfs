@@ -1,18 +1,17 @@
-import logging
-from datetime import datetime, timedelta
-from os.path import isfile
-from pprint import pformat
-from xml.etree import ElementTree
-
 import jwt
+import logging
 import requests
 from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.x509 import load_pem_x509_certificate
+from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
+from os.path import isfile
+from pprint import pformat
 from requests import post
+from xml.etree import ElementTree
 
 from django_auth_adfs.config import settings
 
