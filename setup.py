@@ -46,7 +46,7 @@ setup(
     ],
     install_requires=[
         'pyjwt >= 1.0.1',
-        'cryptography',
+        'cryptography>=1.7',
         'django >= 1.8',
         'requests',
     ],

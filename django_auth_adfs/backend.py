@@ -18,14 +18,6 @@ from .config import settings
 
 logger = logging.getLogger(__name__)
 
-# MUST come before any HTTPS request.
-# If not, the python process deadlocks and generates gateway timeouts
-#    -> Timeout when reading response headers from daemon process
-#    -> function Cryptography_rand_bytes() called, but no code was attached to
-#       it yet with @ffi.def_extern()
-# REF: https://github.com/pyca/cryptography/issues/2299#issuecomment-182835098
-backend.activate_builtin_random()
-
 
 class AdfsBackend(ModelBackend):
     """
