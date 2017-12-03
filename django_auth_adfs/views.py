@@ -23,13 +23,11 @@ class OAuth2View(View):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                # Redirect to the "after login" page.
-                # Because we got redirected from ADFS, we can't know where the
-                # user came from.
-                if settings.LOGIN_REDIRECT_URL:
-                    return redirect(settings.LOGIN_REDIRECT_URL)
-                else:
-                    return redirect(django_settings.LOGIN_REDIRECT_URL)
+                return redirect(
+                    request.COOKIES.get('AUTH_ADFS_REDIRECT_BACK_COOKIE',
+                                        settings.LOGIN_REDIRECT_URL
+                                        if settings.LOGIN_REDIRECT_URL else
+                                        django_settings.LOGIN_REDIRECT_URL))
             else:
                 # Return a 'disabled account' error message
                 return HttpResponse("Account disabled", status=403)
