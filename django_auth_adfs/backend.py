@@ -211,6 +211,15 @@ class AdfsBackend(ModelBackend):
 
         logger.debug("JWT payload:\n"+pformat(payload))
 
+        user = self.create_user(payload)
+        self.update_user_attributes(user, payload)
+        self.update_user_groups(user, payload)
+        self.update_user_flags(user, payload)
+        user.save()
+
+        return user
+
+    def create_user(self, payload):
         # Create the user
         username_claim = settings.USERNAME_CLAIM
         usermodel = get_user_model()
@@ -219,10 +228,6 @@ class AdfsBackend(ModelBackend):
         })
         if created:
             logging.debug('User "{0}" has been created.'.format(username_claim))
-        self.update_user_attributes(user, payload)
-        self.update_user_groups(user, payload)
-        self.update_user_flags(user, payload)
-        user.save()
 
         return user
 
