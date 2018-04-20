@@ -18,15 +18,15 @@ class OAuth2View(View):
         """
         code = request.GET.get("code", None)
 
-        user = authenticate(authorization_code=code)
+        user = authenticate(request=request, authorization_code=code)
 
         if user is not None:
             if user.is_active:
                 login(request, user)
+                if request.GET.get(settings.REDIRECT_FIELD_NAME):
+                    return redirect(request.GET.get(settings.REDIRECT_FIELD_NAME))
                 # Redirect to the "after login" page.
-                # Because we got redirected from ADFS, we can't know where the
-                # user came from.
-                if settings.LOGIN_REDIRECT_URL:
+                elif settings.LOGIN_REDIRECT_URL:
                     return redirect(settings.LOGIN_REDIRECT_URL)
                 else:
                     return redirect(django_settings.LOGIN_REDIRECT_URL)
