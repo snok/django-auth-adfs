@@ -38,6 +38,12 @@ class ClientRequestTests(TestCase):
         self.assertTrue(response['Location'].endswith('/accounts/profile/'))
 
     @with_httmock(token_response)
+    def test_authentication_with_next_field(self):
+        response = client.get("/oauth2/login", {'code': 'testcode', 'next': '/other/url'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].endswith('/other/url'))
+
+    @with_httmock(token_response)
     def test_empty_authentication(self):
         response = client.get("/oauth2/login", {'code': ''})
         self.assertEqual(response.status_code, 401)
