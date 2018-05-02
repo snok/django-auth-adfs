@@ -17,6 +17,7 @@ def get_redirect_uri(hostname=None):
 
     return settings.REDIR_URI
 
+
 def get_adfs_auth_url(hostname=None):
     """
     This function returns the ADFS authorization URL.
@@ -25,7 +26,7 @@ def get_adfs_auth_url(hostname=None):
         str: The redirect URI
 
     """
-    
+
     return "https://{0}{1}?response_type=code&client_id={2}&resource={3}&redirect_uri={4}".format(
         settings.SERVER,
         settings.AUTHORIZE_PATH,
