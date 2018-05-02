@@ -19,7 +19,7 @@ def get_adfs_auth_url(hostname=None):
             for uri in settings.REDIR_URI:
                 tmp_uri = uri if '://' in uri else 'x://%s' % uri
                 parsed_uri = urlparse.urlparse(tmp_uri)
-                if parsed_uri.netloc and parsed_uri.netloc.split(':')[0] == hostname:
+                if parsed_uri.netloc == hostname:
                     redir_uri = uri
                     break
 
