@@ -66,29 +66,30 @@ class ClientRequestTests(TestCase):
 
     @with_httmock(token_response)
     def test_login_redir_multiple(self):
-        with patch("django_auth_adfs.backend.settings.REDIR_URI", ["example.com", "other-example.com", "example.com:8080"]):
-            response = client.get("/context_processor/", HTTP_HOST="other-example.com")
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
-                                               b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
-                                               b'redirect_uri=other-example.com\n')
-            response = client.get("/testMiddleware/", HTTP_HOST="other-example.com")
-            response = client.get("/context_processor/", HTTP_HOST="example.com")
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
-                                               b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
-                                               b'redirect_uri=example.com\n')
-            response = client.get("/context_processor/", HTTP_HOST="something-else-example.com")
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
-                                               b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
-                                               b'redirect_uri=example.com\n')
+        with self.settings(ALLOWED_HOSTS=['*']):
+            with patch("django_auth_adfs.backend.settings.REDIR_URI", ["example.com", "other-example.com", "example.com:8080"]):
+                response = client.get("/context_processor/", HTTP_HOST="other-example.com")
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                                   b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                                   b'redirect_uri=other-example.com\n')
+                response = client.get("/testMiddleware/", HTTP_HOST="other-example.com")
+                response = client.get("/context_processor/", HTTP_HOST="example.com")
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                                   b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                                   b'redirect_uri=example.com\n')
+                response = client.get("/context_processor/", HTTP_HOST="something-else-example.com")
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                                   b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                                   b'redirect_uri=example.com\n')
 
-            response = client.get("/testMiddleware/", HTTP_HOST="example.com:8080")
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&'
-                                               'client_id=your-configured-client-id&resource=your-adfs-RPT-name&'
-                                               'redirect_uri=example.com:8080')
+                response = client.get("/testMiddleware/", HTTP_HOST="example.com:8080")
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&'
+                                                   'client_id=your-configured-client-id&resource=your-adfs-RPT-name&'
+                                                   'redirect_uri=example.com:8080')
 
     @with_httmock(token_response)
     def test_context_processor(self):
