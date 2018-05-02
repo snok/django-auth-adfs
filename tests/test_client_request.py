@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from httmock import with_httmock, urlmatch
 from .utils import get_base_claims, encode_jwt
 from django.contrib.auth.models import User, Group
+from mock import patch
 
 client = Client()
 
@@ -62,6 +63,25 @@ class ClientRequestTests(TestCase):
         self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&'
                                                'client_id=your-configured-client-id&resource=your-adfs-RPT-name&'
                                                'redirect_uri=example.com')
+
+    @with_httmock(token_response)
+    def test_login_redir_multiple(self):
+        with patch("django_auth_adfs.backend.settings.REDIR_URI", ["example.com", "other-example.com"]):
+            response = client.get("/context_processor/", HTTP_HOST="other-example.com")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                               b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                               b'redirect_uri=other-example.com\n')
+            response = client.get("/context_processor/", HTTP_HOST="example.com")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                               b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                               b'redirect_uri=example.com\n')
+            response = client.get("/context_processor/", HTTP_HOST="something-else-example.com")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                               b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                               b'redirect_uri=example.com\n')
 
     @with_httmock(token_response)
     def test_context_processor(self):
