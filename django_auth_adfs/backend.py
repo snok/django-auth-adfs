@@ -12,7 +12,6 @@ from os.path import isfile
 from pprint import pformat
 from requests import post
 from xml.etree import ElementTree
-from django.utils.http import urlencode
 
 from django_auth_adfs.config import settings
 
@@ -136,18 +135,11 @@ class AdfsBackend(ModelBackend):
         if settings.REDIR_URI is None:
             raise ImproperlyConfigured("ADFS Redirect URI is not configured")
 
-        redirect_uri = settings.REDIR_URI
-        if request and request.GET.get(settings.REDIRECT_FIELD_NAME):
-            redirect_uri = '{}?{}'.format(
-                redirect_uri,
-                urlencode({settings.REDIRECT_FIELD_NAME: request.GET.get(settings.REDIRECT_FIELD_NAME)})
-            )
-
         token_url = "https://{0}{1}".format(settings.SERVER, settings.TOKEN_PATH)
         data = {
             'grant_type': 'authorization_code',
             'client_id': settings.CLIENT_ID,
-            'redirect_uri': redirect_uri,
+            'redirect_uri': settings.REDIR_URI,
             'code': authorization_code,
         }
         logger.debug("Authorization code received. Fetching access token.")

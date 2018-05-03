@@ -38,10 +38,10 @@ class ClientRequestTests(TestCase):
         self.assertTrue(response['Location'].endswith('/accounts/profile/'))
 
     @with_httmock(token_response)
-    def test_authentication_with_next_field(self):
-        response = client.get("/oauth2/login", {'code': 'testcode', 'next': '/other/url'})
+    def test_authentication_with_state(self):
+        response = client.get("/oauth2/login", {'code': 'testcode', 'state': 'L3Rlc3Qv'})
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response['Location'].endswith('/other/url'))
+        self.assertTrue(response['Location'].endswith('/test/'))
 
     @with_httmock(token_response)
     def test_empty_authentication(self):
@@ -67,7 +67,7 @@ class ClientRequestTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&'
                                                'client_id=your-configured-client-id&resource=your-adfs-RPT-name&'
-                                               'redirect_uri=example.com')
+                                               'redirect_uri=example.com&state=L3Rlc3Qv')
 
     @with_httmock(token_response)
     def test_context_processor(self):
