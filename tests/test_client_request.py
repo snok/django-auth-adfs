@@ -81,14 +81,13 @@ class ClientRequestTests(TestCase):
             ):
                 response = client.get("/context_processor/", HTTP_HOST="other-example.com")
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.content, base_content % 'other-example.com')
-                response = client.get("/testMiddleware/", HTTP_HOST="other-example.com")
+                self.assertEqual(response.content, base_content % b'other-example.com')
                 response = client.get("/context_processor/", HTTP_HOST="example.com")
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.content, base_content % 'example.com')
+                self.assertEqual(response.content, base_content % b'example.com')
                 response = client.get("/context_processor/", HTTP_HOST="something-else-example.com")
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.content, base_content % 'example.com')
+                self.assertEqual(response.content, base_content % b'example.com')
 
                 response = client.get("/testMiddleware/", HTTP_HOST="example.com:8080")
                 self.assertEqual(response.status_code, 302)
