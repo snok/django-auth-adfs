@@ -66,9 +66,9 @@ class ClientRequestTests(TestCase):
 
     @with_httmock(token_response)
     def test_login_redir_multiple(self):
-        base_content = b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
-        base_content += b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
-        base_content += b'redirect_uri=%s\n'
+        base_content = 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+        base_content += 'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+        base_content += 'redirect_uri=%s\n'
 
         base_location = 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&'
         base_location += 'client_id=your-configured-client-id&resource=your-adfs-RPT-name&'
@@ -81,13 +81,13 @@ class ClientRequestTests(TestCase):
             ):
                 response = client.get("/context_processor/", HTTP_HOST="other-example.com")
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.content, base_content % b'other-example.com')
+                self.assertEqual(response.content, (base_content % 'other-example.com').encode())
                 response = client.get("/context_processor/", HTTP_HOST="example.com")
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.content, base_content % b'example.com')
+                self.assertEqual(response.content, (base_content % 'example.com').encode())
                 response = client.get("/context_processor/", HTTP_HOST="something-else-example.com")
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.content, base_content % b'example.com')
+                self.assertEqual(response.content, (base_content % 'example.com').encode())
 
                 response = client.get("/testMiddleware/", HTTP_HOST="example.com:8080")
                 self.assertEqual(response.status_code, 302)
