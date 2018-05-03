@@ -76,3 +76,11 @@ class ClientRequestTests(TestCase):
         self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
                                            b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
                                            b'redirect_uri=example.com\n')
+
+    @with_httmock(token_response)
+    def test_context_processor_with_next(self):
+        response = client.get("/context_processor/?next=/other")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                           b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                           b'redirect_uri=example.com&amp;state=L290aGVy\n')
