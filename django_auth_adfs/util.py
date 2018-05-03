@@ -20,5 +20,5 @@ def get_adfs_auth_url(next_url=None):
         settings.REDIR_URI,
     )
     if next_url:
-        url += "&state={0}".format(urlsafe_base64_encode(next_url))
+        url += "&state={0}".format(urlsafe_base64_encode(next_url.encode()).decode())
     return url

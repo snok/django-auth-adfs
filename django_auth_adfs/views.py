@@ -27,8 +27,8 @@ class OAuth2View(View):
                 login(request, user)
 
                 if request.GET.get('state'):  # currently this is only the "next" URL
-                    next_url = urlsafe_base64_decode(request.GET.get('state'))
-                    if django.VERSION < (1,11):
+                    next_url = urlsafe_base64_decode(request.GET.get('state')).decode()
+                    if django.VERSION < (1, 11):
                         hosts_arg = {'host': request.get_host()}
                     else:
                         hosts_arg = {
@@ -45,7 +45,7 @@ class OAuth2View(View):
                 # Redirect to the "after login" page.
                 if settings.LOGIN_REDIRECT_URL:
                     return redirect(settings.LOGIN_REDIRECT_URL)
-                
+
                 return redirect(django_settings.LOGIN_REDIRECT_URL)
             else:
                 # Return a 'disabled account' error message
