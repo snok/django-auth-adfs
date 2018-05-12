@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>{{ question.question_text }}</h3>
+<div class="row">
+  <div class="col">
+    <ul class="list-group" style="max-width: 400px">
+    {% for choice in question.choice_set.all %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">{{ choice.choice_text }} <span class="badge badge-primary badge-pill">{{ choice.votes }}</span></li>
+    {% endfor %}
+    </ul>
+  </div>
+</div>
+<div class="row mt-2">
+  <div class="col">
+    <a class="btn btn-primary" role="button" href="{% url 'polls:vote' question.id %}">Vote</a>
+  </div>
+</div>
+{% endblock %}

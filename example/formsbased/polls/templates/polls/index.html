@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+  <h3>Available polls</h3>
+  {% if latest_question_list %}
+    <div class="list-group">
+    {% for question in latest_question_list %}
+        <a class="list-group-item list-group-item-action" href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
+    {% endfor %}
+    </div>
+  {% else %}
+    <p>No polls are available.</p>
+  {% endif %}
+{% endblock %}
