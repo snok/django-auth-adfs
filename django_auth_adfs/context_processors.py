@@ -1,4 +1,5 @@
 from django_auth_adfs.util import get_adfs_auth_url
+from django_auth_adfs.config import settings
 
 
 def adfs_url(request):
@@ -13,4 +14,4 @@ def adfs_url(request):
         dict: A dictionary with the ADFS authorization URL
     """
 
-    return {"ADFS_AUTH_URL": get_adfs_auth_url()}
+    return {"ADFS_AUTH_URL": get_adfs_auth_url(next_url=request.GET.get(settings.REDIRECT_FIELD_NAME))}

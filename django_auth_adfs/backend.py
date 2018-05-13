@@ -126,7 +126,7 @@ class AdfsBackend(ModelBackend):
         """
         cls._public_keys = []
 
-    def authenticate(self, authorization_code=None):
+    def authenticate(self, request=None, authorization_code=None):
         # If there's no token or code, we pass control to the next authentication backend
         if authorization_code is None or authorization_code == '':
             logger.debug("django_auth_adfs was called but no authorization code was received")

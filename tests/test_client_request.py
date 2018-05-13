@@ -38,6 +38,12 @@ class ClientRequestTests(TestCase):
         self.assertTrue(response['Location'].endswith('/accounts/profile/'))
 
     @with_httmock(token_response)
+    def test_authentication_with_state(self):
+        response = client.get("/oauth2/login", {'code': 'testcode', 'state': 'L3Rlc3Qv'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].endswith('/test/'))
+
+    @with_httmock(token_response)
     def test_empty_authentication(self):
         response = client.get("/oauth2/login", {'code': ''})
         self.assertEqual(response.status_code, 401)
@@ -61,7 +67,7 @@ class ClientRequestTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&'
                                                'client_id=your-configured-client-id&resource=your-adfs-RPT-name&'
-                                               'redirect_uri=example.com')
+                                               'redirect_uri=example.com&state=L3Rlc3Qv')
 
     @with_httmock(token_response)
     def test_context_processor(self):
@@ -70,3 +76,11 @@ class ClientRequestTests(TestCase):
         self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
                                            b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
                                            b'redirect_uri=example.com\n')
+
+    @with_httmock(token_response)
+    def test_context_processor_with_next(self):
+        response = client.get("/context_processor/?next=/other")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&amp;'
+                                           b'client_id=your-configured-client-id&amp;resource=your-adfs-RPT-name&amp;'
+                                           b'redirect_uri=example.com&amp;state=L290aGVy\n')

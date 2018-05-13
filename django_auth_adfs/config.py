@@ -22,6 +22,7 @@ class Settings(object):
         self.CLAIM_MAPPING = {}
         self.BOOLEAN_CLAIM_MAPPING = {}
         self.LOGIN_EXEMPT_URLS = []
+        self.REDIRECT_FIELD_NAME = 'next'  # same as django auth
 
         required_settings = [
             "SERVER",
