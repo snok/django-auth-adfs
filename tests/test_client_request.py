@@ -38,6 +38,13 @@ class ClientRequestTests(TestCase):
         self.assertTrue(response['Location'].endswith('/accounts/profile/'))
 
     @with_httmock(token_response)
+    def test_authentication_with_cookie(self):
+        client.cookies.load({'AUTH_ADFS_REDIRECT_BACK_COOKIE': '/hello_world/'})
+        response = client.get("/oauth2/login", {'code': 'testcode'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].endswith('/hello_world/'))
+
+    @with_httmock(token_response)
     def test_empty_authentication(self):
         response = client.get("/oauth2/login", {'code': ''})
         self.assertEqual(response.status_code, 401)
@@ -62,6 +69,7 @@ class ClientRequestTests(TestCase):
         self.assertEqual(response["Location"], 'https://adfs.example.com/adfs/oauth2/authorize?response_type=code&'
                                                'client_id=your-configured-client-id&resource=your-adfs-RPT-name&'
                                                'redirect_uri=example.com')
+        self.assertEqual(client.cookies.get('AUTH_ADFS_REDIRECT_BACK_COOKIE').value, "/test/")
 
     @with_httmock(token_response)
     def test_context_processor(self):

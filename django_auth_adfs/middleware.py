@@ -51,6 +51,9 @@ class LoginRequiredMiddleware(MiddlewareMixin):
             user_authenticated = request.user.is_authenticated
 
         if not user_authenticated:
+
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in LOGIN_EXEMPT_URLS):
-                return HttpResponseRedirect(get_adfs_auth_url())
+                response = HttpResponseRedirect(get_adfs_auth_url())
+                response.set_cookie('AUTH_ADFS_REDIRECT_BACK_COOKIE', request.path_info)
+                return response
