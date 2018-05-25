@@ -25,18 +25,6 @@ Examples
 | https://adfs.yourcompany.com/adfs/services/trust | https://adfs.yourcompany.com/adfs/services/trust           |
 +--------------------------------------------------+------------------------------------------------------------+
 
-AUTHORIZE_PATH
---------------
-Default: ``/adfs/oauth2/authorize``
-
-The path to the authorize page off your ADFS server.
-Users have to visit this page to receive an *authorization code*.
-This value is appended to the server FQDN and used to build the full authorization URL.
-This URL is available as the variable ``ADFS_AUTH_URL`` inside templates when using the
-django-auth-adfs context processor ``adfs_url``.
-
-The default value matches the default for ADFS 3.0.
-
 CA_BUNDLE
 ---------
 Default: ``True``
@@ -73,7 +61,7 @@ example
 
     AUTH_ADFS = {
         "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
-                               "is_superuser": "user_is_superuser"},
+                                  "is_superuser": "user_is_superuser"},
     }
 
 .. NOTE::
@@ -89,7 +77,7 @@ Default: ``None``
 A dictionary of claim/field mappings that will be used to populate the user account in Django.
 The user's details will be set according to this setting upon each login.
 
-The **key** represents user model field (e.g. ``first_name``)
+The **key** represents the user model field (e.g. ``first_name``)
 and the **value** represents the claim short name (e.g. ``given_name``).
 
 example
@@ -117,35 +105,58 @@ Set this to the value you configured on your ADFS server as ``ClientId`` when ex
 You can lookup this value by executing the powershell command ``Get-AdfsClient`` on the ADFS server
 and taking the ``ClientId`` value.
 
-CERT_MAX_AGE
-------------
+CONFIG_RELOAD_INTERVAL
+----------------------
 Default: ``24``
 
-The number of hours the ADFS token signing certificate is cached.
-This timer gets started the first time someone logs in using a ADFS JWT token
-because only then the backend class is loaded for the first time.
+When starting Django, some settings are retrieved from the ADFS metadata file or the OpenID Connect configuration on the
+ADFS server. Based on this information, certain configuration for this module is calculated.
 
-.. NOTE::
-   This setting is related with the ``SIGNING_CERT`` setting.
+This setting determines the interval after which the configuration is reloaded. This allows to automatically follow the
+token signing certificate rollover on ADFS.
 
 .. _group_claim_setting:
 
 GROUP_CLAIM
 -----------
-Default ``group``
+Default ``group`` for windows server or ``groups`` for Azure AD.
 
-Name of the claim sent in the JWT token from ADFS that contains the groups the user is member of.
+Name of the claim in the JWT access token from ADFS that contains the groups the user is member of.
 If an entry in this claim matches a group configured in Django, the user will join it automatically.
 
-If the returned claim is empty, or the setting is set to ``None``, users are not joined to any group.
+Set this setting to ``None`` to disable automatic group handling. The group memberships of the user
+will not be touched.
 
 .. IMPORTANT::
-   User's group membership in Django will be reset to math this claim's value.
-   If there's no value, the user will end up being member of no groups.
+   A user's group membership in Django will be reset to math this claim's value.
+   If there's no value in the access token, the user will end up being a member of no group at all.
 
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
+
+GROUP_FLAG_MAPPING
+------------------
+This settings allows you to set flags on a user based on his group membership in Active Directory.
+
+For example, if a user is a member of the group ``Django Staff``, you can automatically set the ``is_staff``
+field of the user to ``True``.
+
+The **key** represents the boolean user model field (e.g. ``is_staff``)
+and the **value** represents the group name (e.g. ``Django Staff``).
+
+example
+
+.. code-block:: python
+
+    AUTH_ADFS = {
+        "GROUP_FLAG_MAPPING": {"is_staff": "Django Staff",
+                               "is_superuser": "Django Admins"},
+    }
+
+.. NOTE::
+   The group doesn't need to exist in Django for this to work. This will work as long as it's in the groups claim
+   in the access token.
 
 LOGIN_EXEMPT_URLS
 -----------------
@@ -158,54 +169,6 @@ If you have pages that should not trigger this redirect, add them to this settin
 
 Every item it the list is interpreted as a regular expression.
 
-LOGIN_REDIRECT_URL
-------------------
-Default: ``None``
-
-The URL users are redirected to when their authentication is successful.
-
-Because we redirect users to and from the ADFS server, we can't pass along
-a parameters telling us what page the user tried accessing before he got redirected.
-Thet's why we redirect to a fixed page.
-
-If you leave this set to ``None``, the Django setting named ``LOGIN_REDIRECT_URL`` will be used instead.
-
-ISSUER
-------
-Default: ``None``
-
-Set this to the value of the ``iss`` claim your ADFS server sends back in the JWT token.
-Usually this is something like ``http://adfs.yourcompany.com/adfs/services/trust``.
-
-If you leave this set to ``None`` this claim will not be verified.
-
-You can lookup this value by executing the powershell command ``Get-AdfsProperties`` on the ADFS server
-and taking the ``Identifier`` value.
-
-.. IMPORTANT::
-    The issuer isn't necessarily the same as the URL of your ADFS server.
-    It usually starts with ``HTTP`` instead of ``HTTPS``
-
-.. _redir_uri_setting:
-
-REDIR_URI
----------
-**Required**
-
-Sets the **redirect uri** configured for your client id in ADFS.
-
-Because we need this value in a context without access to a Django ``request`` object,
-it needs to be explicitly configured.
-
-You can lookup this value by executing the powershell command ``Get-AdfsClient`` on the ADFS server
-and taking the ``RedirectUri`` value (without the ``{}`` brackets).
-
-.. IMPORTANT::
-   Make sure both this setting and the setting on your ADFS server
-   matches with the url pattern configured in your ``urls.py`` file.
-
-   See the :ref:`install documentation <install>` for more details.
-
 .. _resource_setting:
 
 RESOURCE
@@ -217,42 +180,23 @@ Set this to the ``Relying party trust identifier`` value of the ``Relying Party 
 You can lookup this value by executing the powershell command ``Get-AdfsRelyingPartyTrust`` on the ADFS server
 and taking the ``Identifier`` value.
 
-SIGNING_CERT
-------------
-Default: ``True``
-
-Can be one of the following values:
-
-* ``True`` for autoloading the certificate from the ``FederationMetadata.xml`` file on the ADFS server.
-* The base64 PEM representation of the ``Token Signing Certificate`` configured in your ADFS server.
-* The path to a certificate file in base64 PEM format.
-
-The default value allows you to automatically load new certificates when they get changed on the ADFS server.
-For more details see the ``AutoCertificateRollover`` setting of your ADFS server.
-
-.. NOTE::
-   This setting is related with the ``CERT_MAX_AGE`` setting.
-
 SERVER
 ------
-**Required**
-
-Default: ``None``
+**Required** when your ADFS server is an on premises ADFS server.
 
 The FQDN of the ADFS server you want users to authenticate against.
 
-TOKEN_PATH
-----------
-Default: ``/adfs/oauth2/token``
+TENANT_ID
+---------
+**Required** when your ADFS server is an Azure AD instance.
 
-This is the path to the token page of your ADFS server. The authentication backend
-will try to fetch the access token by submitting the authorization code to this page.
+The FQDN of the ADFS server you want users to authenticate against.
 
 .. _username_claim_setting:
 
 USERNAME_CLAIM
 --------------
-Default: ``winaccountname``
+Default: ``winaccountname`` on Windows Server or ``upn`` on Azure AD.
 
 Name of the claim sent in the JWT token from ADFS that contains the username.
 If the user doesn't exist yet, this field will be used as it's username.

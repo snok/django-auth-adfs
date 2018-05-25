@@ -1,13 +1,15 @@
+import base64
+
 from django.conf import settings as django_settings
-from django.contrib.auth import authenticate, login
-from django.http.response import HttpResponse
-from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import redirect, render
+from django.utils.http import is_safe_url
 from django.views.generic import View
 
-from django_auth_adfs.config import settings
+from django_auth_adfs.config import provider_config
 
 
-class OAuth2View(View):
+class OAuth2CallbackView(View):
     def get(self, request):
         """
         Handles the redirect from ADFS to our site.
@@ -17,8 +19,9 @@ class OAuth2View(View):
             request (django.http.request.HttpRequest): A Django Request object
         """
         code = request.GET.get("code", None)
+        redirect_to = request.GET.get("state", None)
 
-        user = authenticate(authorization_code=code)
+        user = authenticate(request, authorization_code=code)
 
         if user is not None:
             if user.is_active:
@@ -26,13 +29,47 @@ class OAuth2View(View):
                 # Redirect to the "after login" page.
                 # Because we got redirected from ADFS, we can't know where the
                 # user came from.
-                if settings.LOGIN_REDIRECT_URL:
-                    return redirect(settings.LOGIN_REDIRECT_URL)
+                if redirect_to:
+                    redirect_to = base64.urlsafe_b64decode(redirect_to.encode()).decode()
                 else:
-                    return redirect(django_settings.LOGIN_REDIRECT_URL)
+                    redirect_to = django_settings.LOGIN_REDIRECT_URL
+                url_is_safe = is_safe_url(
+                    url=redirect_to,
+                    allowed_hosts=[request.get_host()],
+                    require_https=request.is_secure(),
+                )
+                redirect_to = redirect_to if url_is_safe else '/'
+                return redirect(redirect_to)
             else:
                 # Return a 'disabled account' error message
-                return HttpResponse("Account disabled", status=403)
+                return render(request, 'django_auth_adfs/login_failed.html', {
+                    'error_message': "Your account is disabled.",
+                }, status=403)
         else:
             # Return an 'invalid login' error message
-            return HttpResponse("Login failed", status=401)
+            return render(request, 'django_auth_adfs/login_failed.html', {
+                'error_message': "Login failed.",
+            }, status=401)
+
+
+class OAuth2LoginView(View):
+    def get(self, request):
+        """
+        Initiates the OAuth2 flow and redirect the user agent to ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        return redirect(provider_config.build_authorization_endpoint(request))
+
+
+class OAuth2LogoutView(View):
+    def get(self, request):
+        """
+        Logs out the user from both Django and ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        logout(request)
+        return redirect(provider_config.end_session_endpoint)

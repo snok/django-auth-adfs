@@ -33,25 +33,25 @@ class ClientRequestTests(TestCase):
 
     @with_httmock(token_response)
     def test_authentication(self):
-        response = client.get("/oauth2/login", {'code': 'testcode'})
+        response = client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response['Location'].endswith('/accounts/profile/'))
 
     @with_httmock(token_response)
     def test_empty_authentication(self):
-        response = client.get("/oauth2/login", {'code': ''})
+        response = client.get("/oauth2/callback", {'code': ''})
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.content, b"Login failed")
 
     @with_httmock(token_response)
     def test_missing_code(self):
-        response = client.get("/oauth2/login")
+        response = client.get("/oauth2/callback")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.content, b"Login failed")
 
     @with_httmock(inactive_user_token_response)
     def test_inactive_user(self):
-        response = client.get("/oauth2/login", {'code': 'testcode'})
+        response = client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.content, b"Account disabled")
 

@@ -75,6 +75,7 @@ Vagrant.configure("2") do |config|
 
     # If you change this IP, you also have to change it in the file 03-example-adfs-config.ps1
     web.vm.network "private_network", ip: "10.0.0.10"
+    web.vm.network "forwarded_port", guest: 8000, host: 8000
 
     # Install all needed tools and migrate the 2 example django projects
     web.vm.provision "shell", privileged: true, inline: <<-SHELL
@@ -84,20 +85,12 @@ Vagrant.configure("2") do |config|
       # Install django-auth-adfs in editable mode
       pip3 install -e /vagrant
       # run migrate command for both example projects
-      python3 /vagrant/example/adfs/manage.py makemigrations
+      python3 /vagrant/example/adfs/manage.py makemigrations polls
       python3 /vagrant/example/adfs/manage.py migrate
-      python3 /vagrant/example/formsbased/manage.py makemigrations
+      python3 /vagrant/example/formsbased/manage.py makemigrations polls
       python3 /vagrant/example/formsbased/manage.py migrate
+      # Set fixed hosts entry to ADFS server
+      echo "10.0.0.2 adfs.example.com" >> /etc/hosts
     SHELL
-
-    # Point the DNS server to the domain controller
-    # It's ran every "up" because it's overwritten by DHCP
-    web.vm.provision "shell", privileged: true, run: 'always', inline: <<-SHELL
-      set -x
-      echo "domain example.com" > /etc/resolv.conf
-      echo "domain example.com" >> /etc/resolv.conf
-      echo "nameserver 10.0.0.2" >> /etc/resolv.conf
-    SHELL
-
   end
 end
