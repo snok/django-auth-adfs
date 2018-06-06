@@ -21,8 +21,8 @@ except ImportError:  # Django < 1.10
 
 LOGIN_EXEMPT_URLS = [
     compile(django_settings.LOGIN_URL.lstrip('/')),
-    compile(django_settings.LOOUT_URL.lstrip('/')),
     compile(reverse("django_auth_adfs:login").lstrip('/')),
+    compile(reverse("django_auth_adfs:logout").lstrip('/')),
 ]
 if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
     LOGIN_EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
