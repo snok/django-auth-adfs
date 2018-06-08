@@ -5,7 +5,7 @@ from re import compile
 
 import django
 from django.conf import settings as django_settings
-from django.http import HttpResponseRedirect
+from django.contrib.auth.views import redirect_to_login
 
 from django_auth_adfs.config import settings
 
@@ -23,6 +23,7 @@ LOGIN_EXEMPT_URLS = [
     compile(django_settings.LOGIN_URL.lstrip('/')),
     compile(reverse("django_auth_adfs:login").lstrip('/')),
     compile(reverse("django_auth_adfs:logout").lstrip('/')),
+    compile(reverse("django_auth_adfs:callback").lstrip('/')),
 ]
 if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
     LOGIN_EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
@@ -54,4 +55,4 @@ class LoginRequiredMiddleware(MiddlewareMixin):
         if not user_authenticated:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in LOGIN_EXEMPT_URLS):
-                return HttpResponseRedirect(django_settings.LOGIN_URL)
+                return redirect_to_login(request.get_full_path())
