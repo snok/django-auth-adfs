@@ -10,6 +10,7 @@ from cryptography.x509 import load_der_x509_certificate
 from django.conf import settings as django_settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.core.exceptions import ImproperlyConfigured
+from django.http import QueryDict
 
 try:
     from django.urls import reverse
@@ -227,13 +228,15 @@ class ProviderConfig(object):
         if not redirect_to:
             redirect_to = django_settings.LOGIN_REDIRECT_URL
         redirect_to = base64.urlsafe_b64encode(redirect_to.encode()).decode()
-        return "{0}?response_type=code&client_id={1}&resource={2}&redirect_uri={3}&state={4}".format(
-            self.authorization_endpoint,
-            settings.CLIENT_ID,
-            settings.RESOURCE,
-            self.redirect_uri(request),
-            redirect_to,
-        )
+        query = QueryDict(mutable=True)
+        query.update({
+            "response_type": "code",
+            "client_id": settings.CLIENT_ID,
+            "resource": settings.RESOURCE,
+            "redirect_uri": self.redirect_uri(request),
+            "state": redirect_to,
+        })
+        return "{0}?{1}".format(self.authorization_endpoint, query.urlencode())
 
 
 settings = Settings()
