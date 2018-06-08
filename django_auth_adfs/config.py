@@ -163,7 +163,7 @@ class ProviderConfig(object):
         self.authorization_endpoint = openid_cfg["authorization_endpoint"]
         self.token_endpoint = openid_cfg["token_endpoint"]
         self.end_session_endpoint = openid_cfg["end_session_endpoint"]
-        if settings.TENANT_ID is not None:
+        if settings.TENANT_ID is not 'adfs':
             self.issuer = openid_cfg["issuer"]
         else:
             self.issuer = openid_cfg["access_token_issuer"]
