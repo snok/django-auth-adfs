@@ -93,6 +93,7 @@ In your project's ``urls.py`` add these paths:
     ]
 
 This will add 3 paths to Django:
+
 * ``/oauth2/login`` where users are redirected to, to initiate the login with ADFS.
 * ``/oauth2/callback`` where ADFS redirects back to after login. So make sure you set the redirect URI on ADFS to this.
 * ``/oauth2/logout`` which logs out the user from both Django and ADFS.

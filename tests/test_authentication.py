@@ -1,18 +1,11 @@
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import PermissionDenied
-from django.test import TestCase
-from httmock import with_httmock, urlmatch
+from django.test import TestCase, RequestFactory
 from mock import patch
 
 from django_auth_adfs.backend import AdfsBackend
-from .utils import get_base_claims, encode_jwt
-
-
-@urlmatch(path=r"^/adfs/oauth2/token$")
-def token_response(url, request):
-    claims = get_base_claims()
-    token = encode_jwt(claims)
-    return {'status_code': 200, 'content': b'{"access_token":"' + token + b'"}'}
+from django_auth_adfs.config import ProviderConfig
+from .utils import mock_adfs
 
 
 class AuthenticationTests(TestCase):
@@ -20,11 +13,12 @@ class AuthenticationTests(TestCase):
         Group.objects.create(name='group1')
         Group.objects.create(name='group2')
         Group.objects.create(name='group3')
+        self.request = RequestFactory().get('/oauth2/callback')
 
-    @with_httmock(token_response)
-    def test_with_auth_code(self):
+    @mock_adfs("2012")
+    def test_with_auth_code_2012(self):
         backend = AdfsBackend()
-        user = backend.authenticate(authorization_code="dummycode")
+        user = backend.authenticate(self.request, authorization_code="dummycode")
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
         self.assertEqual(user.last_name, "Doe")
@@ -33,29 +27,55 @@ class AuthenticationTests(TestCase):
         self.assertEqual(user.groups.all()[0].name, "group1")
         self.assertEqual(user.groups.all()[1].name, "group2")
 
-    @with_httmock(token_response)
+    @mock_adfs("2016")
+    def test_with_auth_code_2016(self):
+        backend = AdfsBackend()
+        user = backend.authenticate(self.request, authorization_code="dummycode")
+        self.assertIsInstance(user, User)
+        self.assertEqual(user.first_name, "John")
+        self.assertEqual(user.last_name, "Doe")
+        self.assertEqual(user.email, "john.doe@example.com")
+        self.assertEqual(len(user.groups.all()), 2)
+        self.assertEqual(user.groups.all()[0].name, "group1")
+        self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("azure")
+    def test_with_auth_code_azure(self):
+        with patch("django_auth_adfs.config.settings.TENANT_ID", "dummy_tenant_id"):
+            with patch("django_auth_adfs.config.provider_config", ProviderConfig()):
+                backend = AdfsBackend()
+                user = backend.authenticate(self.request, authorization_code="dummycode")
+                self.assertIsInstance(user, User)
+                self.assertEqual(user.first_name, "John")
+                self.assertEqual(user.last_name, "Doe")
+                self.assertEqual(user.email, "john.doe@example.com")
+                self.assertEqual(len(user.groups.all()), 2)
+                self.assertEqual(user.groups.all()[0].name, "group1")
+                self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("2016")
     def test_empty(self):
         backend = AdfsBackend()
-        self.assertIsNone(backend.authenticate())
+        self.assertIsNone(backend.authenticate(self.request))
 
-    @with_httmock(token_response)
+    @mock_adfs("2016")
     def test_group_claim(self):
         backend = AdfsBackend()
         with patch("django_auth_adfs.backend.settings.GROUP_CLAIM", "nonexisting"):
-            user = backend.authenticate(authorization_code="dummycode")
+            user = backend.authenticate(self.request, authorization_code="dummycode")
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
             self.assertEqual(user.email, "john.doe@example.com")
             self.assertEqual(len(user.groups.all()), 0)
 
-    @with_httmock(token_response)
+    @mock_adfs("2016")
     def test_empty_keys(self):
         backend = AdfsBackend()
-        with patch("django_auth_adfs.backend.AdfsBackend._public_keys", []):
-            self.assertRaises(PermissionDenied, backend.authenticate, authorization_code='testcode')
+        with patch("django_auth_adfs.config.provider_config.signing_keys", []):
+            self.assertRaises(PermissionDenied, backend.authenticate, self.request, authorization_code='testcode')
 
-    @with_httmock(token_response)
+    @mock_adfs("2016")
     def test_group_removal(self):
         user, created = User.objects.get_or_create(**{
             User.USERNAME_FIELD: "testuser"
@@ -68,7 +88,7 @@ class AuthenticationTests(TestCase):
 
         backend = AdfsBackend()
 
-        user = backend.authenticate(authorization_code="dummycode")
+        user = backend.authenticate(self.request, authorization_code="dummycode")
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
         self.assertEqual(user.last_name, "Doe")

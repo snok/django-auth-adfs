@@ -32,11 +32,11 @@ Default: ``True``
 The value of this setting is passed to the call to the ``Requests`` package when fetching the access token from ADFS.
 It allows you to control the webserver certificate verification of the ADFS server.
 
-``True`` makes it use the default CA bundle of your system.
-
-``False`` disables the certificate check.
+``True`` to use the default CA bundle of the ``requests`` package.
 
 ``/path/to/ca-bundle.pem`` allows you to specify a path to a CA bundle file.
+
+``False`` disables the certificate check.
 
 Have a look at the `Requests documentation
 <http://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for more details.
@@ -184,11 +184,15 @@ SERVER
 ------
 **Required** when your ADFS server is an on premises ADFS server.
 
+Only one of ``SERVER`` or ``TENANT_ID`` can be set.
+
 The FQDN of the ADFS server you want users to authenticate against.
 
 TENANT_ID
 ---------
 **Required** when your ADFS server is an Azure AD instance.
+
+Only one of ``TENANT_ID`` or ``SERVER`` can be set.
 
 The FQDN of the ADFS server you want users to authenticate against.
 

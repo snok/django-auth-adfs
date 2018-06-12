@@ -1,81 +1,232 @@
+import base64
 import json
+import os
+import re
 import time
 from datetime import datetime, tzinfo, timedelta
 
 import jwt
+import requests
+import responses
+from cryptography.hazmat.backends import default_backend as crypto_default_backend
+from cryptography.hazmat.primitives import serialization as crypto_serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives import hashes
+
+
+def generate_key_and_cert():
+    signing_key = rsa.generate_private_key(
+        backend=crypto_default_backend(),
+        public_exponent=65537,
+        key_size=2048
+    )
+    # private_key = signing_key.private_bytes(
+    #     crypto_serialization.Encoding.DER,
+    #     crypto_serialization.PrivateFormat.PKCS8,
+    #     crypto_serialization.NoEncryption())
+    # public_key = signing_key.public_key().public_bytes(
+    #     crypto_serialization.Encoding.DER,
+    #     crypto_serialization.PublicFormat.PKCS1
+    # )
+    # Various details about who we are. For a self-signed certificate the
+    # subject and issuer are always the same.
+    subject = issuer = x509.Name([
+        x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"CA"),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, u"San Francisco"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"My Company"),
+        x509.NameAttribute(NameOID.COMMON_NAME, u"example.com"),
+    ])
+    signing_cert = x509.CertificateBuilder().subject_name(
+        subject
+    ).issuer_name(
+        issuer
+    ).public_key(
+        signing_key.public_key()
+    ).serial_number(
+        x509.random_serial_number()
+    ).not_valid_before(
+        datetime.utcnow()
+    ).not_valid_after(
+        # Our certificate will be valid for 10 days
+        datetime.utcnow() + timedelta(days=10)
+        # Sign our certificate with our private key
+    ).sign(
+        signing_key, hashes.SHA256(), crypto_default_backend()
+    ).public_bytes(crypto_serialization.Encoding.DER)
+    return signing_key, signing_cert
 
 
 class SimpleUtc(tzinfo):
-    def tzname(self):
+    def tzname(self, dt):
         return "UTC"
 
     def utcoffset(self, dt):
         return timedelta(0)
 
 
-def get_base_claims():
-    """
-    Returns:
-        dict
-    """
+def load_json(file):
+    with open(os.path.join(os.path.dirname(__file__), file), mode="r") as f:
+        data = json.load(f)
+    return data
 
-    claims = json.loads("""
-    {
-        "aud":"microsoft:identityserver:your-RelyingPartyTrust-identifier",
-        "iss":"http://adfs.example.com/adfs/services/trust",
-        "iat":1,
-        "exp":1,
-        "winaccountname":"testuser",
-        "group":["group1","group2"],
-        "given_name":"John",
-        "family_name":"Doe",
-        "email":"john.doe@example.com",
+
+def build_access_token_adfs(request):
+    issuer = "http://adfs.example.com/adfs/services/trust"
+    return do_build_access_token(request, issuer)
+
+
+def build_access_token_azure(request):
+    issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
+    return do_build_access_token(request, issuer)
+
+
+def do_build_access_token(request, issuer):
+    issued_at = int(time.time())
+    expires = issued_at + 3600
+    auth_time = datetime.utcnow()
+    auth_time = auth_time.replace(tzinfo=SimpleUtc(), microsecond=0)
+    claims = {
+        "aud": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
+        "iss": issuer,
+        "iat": issued_at,
+        "exp": expires,
+        "winaccountname": "testuser",
+        "group": ["group1", "group2"],
+        "given_name": "John",
+        "family_name": "Doe",
+        "email": "john.doe@example.com",
         "sub": "john.doe@example.com",
         "user_is_staff": "True",
         "user_is_superuser": "yes",
         "appid": "your-configured-client-id",
-        "auth_time": "2016-02-16T06:42:21.629Z",
+        "auth_time": auth_time.isoformat(),
         "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
         "ver": "1.0"
-    }""")
-    claims["iat"] = int(time.time())
-    claims["exp"] = claims["iat"]+3600
+    }
+    token = jwt.encode(claims, signing_key_B, algorithm="RS256")
+    response = {
+        'resource': 'django_website.adfs.relying_party_id',
+        'token_type': 'bearer',
+        'refresh_token_expires_in': 28799,
+        'refresh_token': 'random_refresh_token',
+        'expires_in': 3600,
+        'id_token': 'not_used',
+        'access_token': token.decode()
+    }
+    return 200, [], json.dumps(response)
 
-    auth_time = datetime.utcnow()
-    auth_time = auth_time.replace(tzinfo=SimpleUtc(), microsecond=0)
-    claims["auth_time"] = auth_time.isoformat()
 
-    return claims
+def build_openid_keys(request):
+    keys = {
+        "keys": [
+            {
+                "kty": "RSA",
+                "use": "sig",
+                "kid": "dummythumbprint",
+                "x5t": "dummythumbprint",
+                "n": "somebase64encodedmodulus",
+                "e": "somebase64encodedexponent",
+                "x5c": [base64.b64encode(signing_cert_A).decode(), ]
+            },
+            {
+                "kty": "RSA",
+                "use": "sig",
+                "kid": "dummythumbprint",
+                "x5t": "dummythumbprint",
+                "n": "somebase64encodedmodulus",
+                "e": "somebase64encodedexponent",
+                "x5c": [base64.b64encode(signing_cert_B).decode(), ]
+            },
+        ]
+    }
+    return 200, [], json.dumps(keys)
 
 
-def encode_jwt(claims):
-    rsa_key = """
------BEGIN RSA PRIVATE KEY-----
-MIIEpQIBAAKCAQEAy3JZC0ZF+8XpDQxQQDZEtmThOLnhld1TlLTBSEX7lLLoDvlT
-Vfop3LgWhdGhW1gM3Wa47oR3ni3JoXrbky+cAkMkslzu+p4xMS1ApZApZUFh9ZL9
-eEXrvqZLYG0N20ffHkKd8XVN4w5nYQWHxp2uSECrStVAnL2m6DH1/TlaDQAmrmay
-e+djXAxZjR6m/SQxQXOn6tLL9BMEF/UVt8GocSuATJdrXaKg9ubwR3j7GRfRNNy1
-v+5LYfcRVFrFmupbL/6k8fUHeQ1qKNAhAvpcZl+4df1phUZJMnwcQncXI3zqypz8
-bTTjTvu//iKr2U7Ih3TJdf/F51lPF0JaVB30jQIDAQABAoIBAQCx/pc9L/xmrN6b
-FdzYcSJo2ZXaxXZCYeOQRRydmOzlSimRgD2TCU262CyMY73iZwTKZ+cAd1EYSUMR
-TqXw/kRmDkx66KgFCIZNWiQnNhuhhTSpYDL3GWWJ5YApGwB2i0j/9pSs/k5oit+T
-mP0Tnj0u5bV3wV/IQn1WxO9M3vKUT66Hi0iVhk0UP2Gzpp6Yl02UhrWMmfaJehvR
-bDN/98zfBmMCRd59wA+o+501oc86S0kWaGPljvbs5CqPyhjidTgYRalfZq+bpFk5
-Mh2viYzK/0ihk+j4zEef6I/q6qWfY40UxT550uT/0FjkI+TOS0RUmmt9zzsqP+ig
-6ZIBqoBZAoGBAPoJxyrvI+ubY4td+6cHm2e32q1dpepvdgsfbwvIb4spTSUuC74D
-hPzC+umtwCP++3FTFGeluDQgqH9YaA6QM5UeoeztQiuenmrbMR5p5wCPNQ67F4Ys
-NGQrMOqjfaxSZ0npRIfv44vo1KOri4y5zY2E0LpHUenqQ5pKUUa1WkUfAoGBANBM
-LV/GM/6l7muJB1OB0TtIRJzG4UUMfZambPXsTkMTXcw1ZG22j3x/YSmEqWW0q1tG
-lL6otqNJy0Op5p8XJv0DalaA30K/Gb5Q+P9t9Vzx/92UcfQvkaNlUhIBAkFLXCI7
-TMdS4zXLTNo9+j5pRWixui1hgvdwswEnMPsjjYTTAoGBAOQgm7kOawWBxrbXTs08
-YYul8TyP3tsgSuEnEtf7Tdn4Gsy7UDdTWriK5QbjYhT1hVAF7u4KAyB8U3+sl3QC
-GS4Kvs4+Qkst83em+Q+4q+yUvGHuTS47kql5xq2t8PGSVW7YB5DHTCLQkYGq+C2z
-MFnYPeBXReNXu8o/2BvdRrkdAoGAK7yjFmYmysSKsHfAWw96IImHJqg36ui5giWF
-4Ylx0XHCkztuz/6yWEDi5PXfH+T0yiCi4PnKB7VaAeYt75/L5vqNnIZI2toHjMex
-0OiEybRitmMSHmTSns2Kkw81KwKo4OM0tvG3lbcPdw/meK5gDaCr6BV+i3hVjdtt
-1H3dnFMCgYEApjfUKue/qbV/P9CUfu8+CCHLjQo00cKljZXtzagChIO5bMZ+jeIR
-h7wYqFo4fHj8QnfvaNmeoorfCAipwpMW6wOZz62DbYMbRrkbPM0QaMD1RFr+St8x
-AfJq5XYuxoMS4jr4GsaBdoW1aSldBsTcn971LTW2g/QyapTYlUjThi0=
------END RSA PRIVATE KEY-----
-    """
-    return jwt.encode(claims, rsa_key, algorithm="RS256")
+def build_adfs_meta(request):
+    with open(os.path.join(os.path.dirname(__file__), "mock_files/FederationMetadata.xml"), mode="r") as f:
+        data = "".join(f.readlines())
+    data = data.replace("REPLACE_WITH_CERT_A", base64.b64encode(signing_cert_A).decode())
+    data = data.replace("REPLACE_WITH_CERT_B", base64.b64encode(signing_cert_B).decode())
+    return 200, [], data
+
+
+def mock_adfs(adfs_version):
+    if adfs_version not in ["2012", "2016", "azure"]:
+        raise NotImplementedError("This version of ADFS is not implemented")
+
+    def do_mock(test_func):
+        def wrapper(*original_args, **original_kwargs):
+            openid_cfg = re.compile(r".*\.well-known/openid-configuration")
+            openid_keys = re.compile(r".*/discovery/keys")
+            adfs_meta = re.compile(r".*/FederationMetadata/2007-06/FederationMetadata\.xml")
+            token_endpoint = re.compile(r".*/oauth2/token")
+            with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
+                # https://github.com/getsentry/responses
+                if adfs_version == "2016":
+                    rsps.add(
+                        rsps.GET, openid_cfg,
+                        json=load_json("mock_files/adfs-openid-configuration.json")
+                    )
+                    rsps.add_callback(
+                        rsps.GET, openid_keys,
+                        callback=build_openid_keys,
+                        content_type='application/json',
+                    )
+                elif adfs_version == "azure":
+                    rsps.add(
+                        rsps.GET, openid_cfg,
+                        json=load_json("mock_files/azure-openid-configuration.json")
+                    )
+                    rsps.add_callback(
+                        rsps.GET, openid_keys,
+                        callback=build_openid_keys,
+                        content_type='application/json',
+                    )
+                else:
+                    rsps.add(
+                        rsps.GET, openid_cfg,
+                        status=404
+                    )
+                    rsps.add(
+                        rsps.GET, openid_keys,
+                        status=404
+                    )
+
+                rsps.add_callback(
+                    rsps.GET, adfs_meta,
+                    callback=build_adfs_meta,
+                    content_type='application/xml',
+                )
+                if adfs_version == "azure":
+                    rsps.add_callback(
+                        rsps.POST, token_endpoint,
+                        callback=build_access_token_azure,
+                        content_type='application/json',
+                    )
+                else:
+                    rsps.add_callback(
+                        rsps.POST, token_endpoint,
+                        callback=build_access_token_adfs,
+                        content_type='application/json',
+                    )
+
+                test_func(*original_args, **original_kwargs)
+        return wrapper
+    return do_mock
+
+
+signing_key_A, signing_cert_A = generate_key_and_cert()
+signing_key_B, signing_cert_B = generate_key_and_cert()
+
+@mock_adfs("2012")
+def test():
+    resp = requests.get("https://example.com/adfs/.well-known/openid-configuration")
+    # resp = requests.get("https://example.com/adfs/discovery/keys")
+    # resp = requests.post("https://example.com/adfs/oauth2/token/")
+    print(resp.json())
+
+
+

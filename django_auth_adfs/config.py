@@ -17,8 +17,9 @@ try:
 except ImportError:  # Django < 1.10
     from django.core.urlresolvers import reverse
 
-
 logger = logging.getLogger("django_auth_adfs")
+
+AZURE_AD_SERVER = "login.microsoftonline.com"
 
 
 class Settings(object):
@@ -90,7 +91,7 @@ class Settings(object):
 
         if self.TENANT_ID is not None:
             # Is a tenant ID was set, switch to Azure AD mode
-            self.SERVER = "login.microsoftonline.com"
+            self.SERVER = AZURE_AD_SERVER
             self.USERNAME_CLAIM = "upn"
             self.GROUP_CLAIM = "groups"
             self.CLAIM_MAPPING = {"first_name": "given_name",
