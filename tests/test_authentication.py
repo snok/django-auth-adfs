@@ -42,7 +42,7 @@ class AuthenticationTests(TestCase):
     @mock_adfs("azure")
     def test_with_auth_code_azure(self):
         with patch("django_auth_adfs.config.settings.TENANT_ID", "dummy_tenant_id"):
-            with patch("django_auth_adfs.config.provider_config", ProviderConfig()):
+            with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
                 backend = AdfsBackend()
                 user = backend.authenticate(self.request, authorization_code="dummycode")
                 self.assertIsInstance(user, User)
