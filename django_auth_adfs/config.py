@@ -22,6 +22,7 @@ class Settings(object):
         self.CLAIM_MAPPING = {}
         self.BOOLEAN_CLAIM_MAPPING = {}
         self.LOGIN_EXEMPT_URLS = []
+        self.MIRROR_GROUP = False
 
         required_settings = [
             "SERVER",

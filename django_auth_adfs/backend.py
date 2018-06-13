@@ -286,7 +286,11 @@ class AdfsBackend(ModelBackend):
 
             for group_name in groups_to_add:
                 try:
-                    group = Group.objects.get(name=group_name)
+                    if settings.MIRROR_GROUP:
+                        group = Group.objects.get_or_create(name=group_name)[0]
+                        logger.debug('Created mirror group "{0}"'.format(group_name))
+                    else:
+                        group = Group.objects.get(name=group_name)
                     user.groups.add(group)
                     logger.debug('User added to group "{0}"'.format(group_name))
                 except ObjectDoesNotExist:
