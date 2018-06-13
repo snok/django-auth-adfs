@@ -112,13 +112,13 @@ AUTH_ADFS = {
     # Make sure to read the documentation about the AUDIENCE setting
     # when you configured the identifier as a URL!
     "AUDIENCE": "microsoft:identityserver:django_website.adfs.relying_party_id",
-    "ISSUER": "http://adfs.example.com/adfs/services/trust",
     "CA_BUNDLE": False,  # !!! DON'T DO THIS IN A PRODUCTION SETUP !!!
     "CLAIM_MAPPING": {"first_name": "given_name",
                       "last_name": "family_name",
                       "email": "email"},
-    "BOOLEAN_CLAIM_MAPPING": {"is_staff": "is_staff"},
-    "REDIR_URI": "http://web.example.com:8000/oauth2/login",
+    "GROUP_FLAG_MAPPING": {"is_staff": "djangostaff"},
+    # "BOOLEAN_CLAIM_MAPPING": {"is_staff": "is_staff"},
+    "CONFIG_RELOAD_INTERVAL": 0.1,
 }
 
 # Internationalization
@@ -141,12 +141,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-LOGIN_URL = "https://adfs.example.com/adfs/oauth2/authorize" \
-            "?response_type=code" \
-            "&client_id=django_website.adfs.client_id" \
-            "&resource=django_website.adfs.relying_party_id" \
-            "&redirect_uri=http://web.example.com:8000/oauth2/login"
-LOGIN_REDIRECT_URL = "home"
+LOGIN_URL = "django_auth_adfs:login"
+LOGIN_REDIRECT_URL = "/"
 
 LOGGING = {
     'version': 1,

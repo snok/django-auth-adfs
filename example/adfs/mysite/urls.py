@@ -16,8 +16,11 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.urls import include, path
 from django.views.generic.base import TemplateView
+
+admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
@@ -25,5 +28,3 @@ urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
     path('oauth2/', include('django_auth_adfs.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-print(settings.STATIC_ROOT)

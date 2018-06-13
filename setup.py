@@ -50,5 +50,12 @@ setup(
         'django >= 1.8',
         'requests',
     ],
+    tests_require=[
+        "responses",
+        "mock",
+        "cryptography",
+        "coverage",
+        "tox",
+    ],
     zip_safe=False,
 )

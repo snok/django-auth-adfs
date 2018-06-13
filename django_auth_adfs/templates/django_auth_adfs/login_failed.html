@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Failure</title>
+  <style>
+    #message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 30em;
+      height: 3em;
+      margin-top: -9em;
+      margin-left: -15em;
+      border: 1px solid #ccc;
+      background-color: #f3f3f3;
+      font-family: Lato, proxima-nova, Helvetica Neue, Arial, sans-serif;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-content: center;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+<div id="message">
+  <strong>{{ error_message }}</strong>
+</div>
+</body>
+</html>

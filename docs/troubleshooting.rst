@@ -4,7 +4,7 @@ Troubleshooting
 If you run into any problems, you can set the logging level in Django to DEBUG.
 You can do this by adding the configuration below to your ``settings.py``
 
-You can see this logging in your console, or in you webserver log if you're using something
+You can see this logging in your console, or in you web server log if you're using something
 like Apache with mod_wsgi.
 
 More details about logging in Django can be found in
