@@ -135,21 +135,6 @@ will not be touched.
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
-.. _mirror_group_setting:
-
-MIRROR_GROUPS
--------------
-Default ``False``
-
-This parameter will create groups from ADFS in the Django database if they do not exist already.
-
-``True`` will generate groups.
-
-``False`` will not generate groups.
-
-.. IMPORTANT::
-    This parameter only works if GROUP_CLAIM is set.
-
 GROUP_FLAG_MAPPING
 ------------------
 This settings allows you to set flags on a user based on his group membership in Active Directory.
@@ -183,6 +168,21 @@ an unauthenticated user to the page configured in the Django setting ``LOGIN_URL
 If you have pages that should not trigger this redirect, add them to this setting as a list value.
 
 Every item it the list is interpreted as a regular expression.
+
+.. _mirror_group_setting:
+
+MIRROR_GROUPS
+-------------
+Default ``False``
+
+This parameter will create groups from ADFS in the Django database if they do not exist already.
+
+``True`` will create groups.
+
+``False`` will not create any extra groups.
+
+.. IMPORTANT::
+    This parameter only has effect if GROUP_CLAIM is set to something other then ``None``.
 
 .. _resource_setting:
 

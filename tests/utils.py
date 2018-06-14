@@ -6,14 +6,13 @@ import time
 from datetime import datetime, tzinfo, timedelta
 
 import jwt
-import requests
 import responses
+from cryptography import x509
 from cryptography.hazmat.backends import default_backend as crypto_default_backend
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography import x509
 from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import hashes
 
 
 def generate_key_and_cert():
@@ -22,16 +21,6 @@ def generate_key_and_cert():
         public_exponent=65537,
         key_size=2048
     )
-    # private_key = signing_key.private_bytes(
-    #     crypto_serialization.Encoding.DER,
-    #     crypto_serialization.PrivateFormat.PKCS8,
-    #     crypto_serialization.NoEncryption())
-    # public_key = signing_key.public_key().public_bytes(
-    #     crypto_serialization.Encoding.DER,
-    #     crypto_serialization.PublicFormat.PKCS1
-    # )
-    # Various details about who we are. For a self-signed certificate the
-    # subject and issuer are always the same.
     subject = issuer = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"CA"),
@@ -220,13 +209,3 @@ def mock_adfs(adfs_version):
 
 signing_key_A, signing_cert_A = generate_key_and_cert()
 signing_key_B, signing_cert_B = generate_key_and_cert()
-
-@mock_adfs("2012")
-def test():
-    resp = requests.get("https://example.com/adfs/.well-known/openid-configuration")
-    # resp = requests.get("https://example.com/adfs/discovery/keys")
-    # resp = requests.post("https://example.com/adfs/oauth2/token/")
-    print(resp.json())
-
-
-
