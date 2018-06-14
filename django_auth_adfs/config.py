@@ -38,7 +38,7 @@ class Settings(object):
         self.GROUP_FLAG_MAPPING = {}
         self.BOOLEAN_CLAIM_MAPPING = {}
         self.LOGIN_EXEMPT_URLS = []
-        self.MIRROR_GROUP = False
+        self.MIRROR_GROUPS = False
 
         required_settings = [
             "CLIENT_ID",

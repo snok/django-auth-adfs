@@ -137,8 +137,8 @@ will not be touched.
 
 .. _mirror_group_setting:
 
-MIRROR_GROUP
------------
+MIRROR_GROUPS
+-------------
 Default ``False``
 
 This parameter will create groups from ADFS in the Django database if they do not exist already.
