@@ -15,7 +15,7 @@ setup(
     author_email='joris.beckers@gmail.com',
     url="https://github.com/jobec/django-auth-adfs",
     download_url="https://pypi.python.org/pypi/django-auth-adfs",
-    description='A Django authentication backend for Microsoft ADFS',
+    description='A Django authentication backend for Microsoft ADFS and AzureAD',
     long_description=readme + '\n\n' + changelog,
     license="BSD",
     keywords='django authentication adfs oauth2',

@@ -15,7 +15,7 @@ ADFS Authentication for Django
 .. image:: https://codecov.io/github/jobec/django-auth-adfs/coverage.svg?branch=master
     :target: https://codecov.io/github/jobec/django-auth-adfs?branch=master
 
-A Django authentication backend for Microsoft ADFS or Azure AD
+A Django authentication backend for Microsoft ADFS and Azure AD
 
 * Free software: BSD License
 * Homepage: https://github.com/jobec/django-auth-adfs
