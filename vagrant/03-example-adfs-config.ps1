@@ -91,7 +91,7 @@ If ([Environment]::OSVersion.version.major -ge 10) {
     -name "$appName - Native application" `
     -Identifier $clientId `
     -ApplicationGroupIdentifier $appName `
-    -RedirectUri ("http://$webName."+(Get-ADDomain).Forest+":8000/oauth2/login")
+    -RedirectUri ("http://$webName."+(Get-ADDomain).Forest+":8000/oauth2/callback")
 
     Write-Host "Adding web application"
     Add-AdfsWebApiApplication `
@@ -146,13 +146,13 @@ If ([Environment]::OSVersion.version.major -ge 10) {
     Write-Host "Adding ADFS client"
     Add-ADFSClient `
     -Name "$appName OAuth2 Client" `
-    -ClientId $resourceId `
-    -RedirectUri ("http://$webName."+(Get-ADDomain).Forest+":8000/oauth2/login")
+    -ClientId $clientId `
+    -RedirectUri ("http://$webName."+(Get-ADDomain).Forest+":8000/oauth2/callback")
 
     Write-Host "Adding Relying Party Trust"
     Add-AdfsRelyingPartyTrust `
     -Name $appName `
-    -Identifier $guid `
+    -Identifier $resourceId `
     -IssuanceAuthorizationRules (
         '@RuleTemplate = "AllowAllAuthzRule"
          => issue(

@@ -4,8 +4,8 @@ ADFS Configuration Guide
 Getting this module to work is sometimes not so straight forward. If your not familiar with JWT tokens or ADFS itself,
 it might take some tries to get all settings right.
 
-This guide tries to given a very basic overview of how to configure ADFS and how to determine the settings for
-django-auth-adfs. Installing and configuring the basics of ADFS is not in scope.
+This guide tries to give a basic overview of how to configure ADFS and how to determine the settings for
+django-auth-adfs. Installing and configuring the basics of ADFS is not explained here.
 
 * **ADFS server:** https://adfs.example.com
 * **Web server:** http://webserver.example.com
@@ -150,10 +150,10 @@ Now execute the following command from a powershell console.
 
 .. code-block:: ps1con
 
-    PS C:\Users\Administrator> Add-ADFSClient -Name "Django Website OAuth2 Client" -ClientId "django_website.adfs.client_id" -RedirectUri "http://webserver.example.com/oauth2/login"
+    PS C:\Users\Administrator> Add-ADFSClient -Name "Django Website OAuth2 Client" -ClientId "django_website.adfs.client_id" -RedirectUri "http://webserver.example.com/oauth2/callback"
 
-The **ClientId** value will be the :ref:`client_id_setting` setting and the **RedirectUri** value will be
-the :ref:`redir_uri_setting` setting.
+The **ClientId** value will be the :ref:`client_id_setting` setting and the **RedirectUri** value is based on where you
+added the ```django_auth_adfs`` in your ``urls.py`` file.
 
 Step 4 - Determine configuration settings
 -----------------------------------------
@@ -163,21 +163,15 @@ package. The ``## ... ##`` pieces were added to indicate with what setting the v
 
 .. code-block:: ps1con
 
-    PS C:\Users\Administrator> Get-AdfsClient -Name "Django Website OAuth2 Client" | Select RedirectUri,ClientId | Format-List
-
-    ## REDIR_URI ##
-    RedirectUri : {http://webserver.example.com/oauth2/login}
+    PS C:\Users\Administrator> Get-AdfsClient -Name "Django Website OAuth2 Client" | Select ClientId | Format-List
 
     ## CLIENT_ID ##
     ClientId    : django_website.adfs.client_id
 
-    PS C:\Users\Administrator> Get-AdfsProperties | select Hostname,Identifier | Format-List
+    PS C:\Users\Administrator> Get-AdfsProperties | select Hostname | Format-List
 
     ## SERVER ##
     HostName   : adfs.example.com
-
-    ## ISSUER ##
-    Identifier : http://adfs.example.com/adfs/services/trust
 
     PS C:\Users\Administrator> Get-AdfsRelyingPartyTrust -Name "Django Website" | Select Identifier,IssuanceTransformRules | Format-List
 
@@ -209,12 +203,9 @@ If you followed this guide, you should end up with a configuration like this.
         "CLIENT_ID": "django_website.adfs.client_id",
         "RESOURCE": "django_website.adfs.identifier",
         "AUDIENCE": "microsoft:identityserver:django_website.adfs.identifier",
-        "ISSUER": "http://adfs.example.com/adfs/services/trust",
-        "CA_BUNDLE": False,
         "CLAIM_MAPPING": {"first_name": "given_name",
                           "last_name": "family_name",
                           "email": "email"},
         "USERNAME_CLAIM": "winaccountname",
         "GROUP_CLAIM": "group"
-        "REDIR_URI": "http://webserver.example.com/oauth2/login",
     }
