@@ -164,23 +164,23 @@ class AdfsBackend(ModelBackend):
 
     def update_user_groups(self, user, claims):
         """
-        Updates user group memberships based on the GROUP_CLAIM setting.
+        Updates user group memberships based on the GROUPS_CLAIM setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
             claims (dict): Claims from the access token
         """
-        if settings.GROUP_CLAIM is not None:
+        if settings.GROUPS_CLAIM is not None:
             # Update the user's group memberships
             django_groups = [group.name for group in user.groups.all()]
 
-            if settings.GROUP_CLAIM in claims:
-                claim_groups = claims[settings.GROUP_CLAIM]
+            if settings.GROUPS_CLAIM in claims:
+                claim_groups = claims[settings.GROUPS_CLAIM]
                 if not isinstance(claim_groups, list):
                     claim_groups = [claim_groups, ]
             else:
                 logger.debug(
-                    "The configured group claim '{}' was not found in the access token".format(settings.GROUP_CLAIM))
+                    "The configured groups claim '{}' was not found in the access token".format(settings.GROUPS_CLAIM))
                 claim_groups = []
 
             # Make a diff of the user's groups.
@@ -218,26 +218,26 @@ class AdfsBackend(ModelBackend):
             user (django.contrib.auth.models.User): User model instance
             claims (dict): Claims from the access token
         """
-        if settings.GROUP_CLAIM is not None:
-            if settings.GROUP_CLAIM in claims:
-                access_token_groups = claims[settings.GROUP_CLAIM]
+        if settings.GROUPS_CLAIM is not None:
+            if settings.GROUPS_CLAIM in claims:
+                access_token_groups = claims[settings.GROUPS_CLAIM]
                 if not isinstance(access_token_groups, list):
                     access_token_groups = [access_token_groups, ]
             else:
                 logger.debug("The configured group claim was not found in the access token")
                 access_token_groups = []
 
-            for field, group in settings.GROUP_FLAG_MAPPING.items():
-                if hasattr(user, field):
+            for flag, group in settings.GROUP_TO_FLAG_MAPPING.items():
+                if hasattr(user, flag):
                     if group in access_token_groups:
                         value = True
                     else:
                         value = False
-                    setattr(user, field, value)
-                    logging.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, field, value))
+                    setattr(user, flag, value)
+                    logging.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, flag, value))
                 else:
                     msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
-                    raise ImproperlyConfigured(msg.format(field))
+                    raise ImproperlyConfigured(msg.format(flag))
 
         for field, claim in settings.BOOLEAN_CLAIM_MAPPING.items():
             if hasattr(user, field):

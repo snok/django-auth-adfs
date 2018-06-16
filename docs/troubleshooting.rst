@@ -1,7 +1,9 @@
 Troubleshooting
 ===============
 
-If you run into any problems, you can set the logging level in Django to DEBUG.
+Turn on Django debug logging
+----------------------------
+If you run into any problems, set the logging level in Django to DEBUG.
 You can do this by adding the configuration below to your ``settings.py``
 
 You can see this logging in your console, or in you web server log if you're using something
@@ -33,3 +35,13 @@ More details about logging in Django can be found in
             },
         },
     }
+
+Run Django with warnings enabled
+--------------------------------
+
+Start the python interpreter that runs you Django with the ``-Wd`` parameter. This will show warnings that are otherwise
+suppressed.
+
+.. code-block::
+
+    python -Wd manage.py runserver

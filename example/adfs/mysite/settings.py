@@ -116,7 +116,7 @@ AUTH_ADFS = {
     "CLAIM_MAPPING": {"first_name": "given_name",
                       "last_name": "family_name",
                       "email": "email"},
-    "GROUP_FLAG_MAPPING": {"is_staff": "djangostaff"},
+    "GROUP_TO_FLAG_MAPPING": {"is_staff": "djangostaff"},
     # "BOOLEAN_CLAIM_MAPPING": {"is_staff": "is_staff"},
     "CONFIG_RELOAD_INTERVAL": 0.1,
 }

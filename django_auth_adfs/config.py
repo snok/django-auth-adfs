@@ -25,32 +25,32 @@ AZURE_AD_SERVER = "login.microsoftonline.com"
 class Settings(object):
     def __init__(self):
         # Set defaults
-        self.SERVER = None  # Required
-        self.TENANT_ID = None  # Required
-        self.CLIENT_ID = None  # Required
         self.AUDIENCE = None  # Required
-        self.RESOURCE = None  # Required
-        self.CONFIG_RELOAD_INTERVAL = 24  # hours
-        self.CA_BUNDLE = True
-        self.USERNAME_CLAIM = "winaccountname"
-        self.GROUP_CLAIM = "group"
-        self.CLAIM_MAPPING = {}
-        self.GROUP_FLAG_MAPPING = {}
         self.BOOLEAN_CLAIM_MAPPING = {}
+        self.CA_BUNDLE = True
+        self.CLAIM_MAPPING = {}
+        self.CLIENT_ID = None  # Required
+        self.CONFIG_RELOAD_INTERVAL = 24  # hours
+        self.GROUP_TO_FLAG_MAPPING = {}
+        self.GROUPS_CLAIM = "group"
         self.LOGIN_EXEMPT_URLS = []
         self.MIRROR_GROUPS = False
+        self.RESOURCE = None  # Required
+        self.SERVER = None  # Required
+        self.TENANT_ID = None  # Required
+        self.USERNAME_CLAIM = "winaccountname"
 
         required_settings = [
-            "CLIENT_ID",
             "AUDIENCE",
+            "CLIENT_ID",
             "RESOURCE",
             "USERNAME_CLAIM",
         ]
 
         deprecated_settings = {
             "AUTHORIZE_PATH": "This setting is automatically loaded from ADFS.",
-            "LOGIN_REDIRECT_URL": "Instead use the standard Django settings with the same name.",
             "ISSUER": "This setting is automatically loaded from ADFS.",
+            "LOGIN_REDIRECT_URL": "Instead use the standard Django settings with the same name.",
             "REDIR_URI": "This setting is automatically determined based on the URL configuration of Django.",
             "SIGNING_CERT": "The token signing certificates are automatically loaded from ADFS.",
             "TOKEN_PATH": "This setting is automatically loaded from ADFS.",
@@ -63,45 +63,52 @@ class Settings(object):
         # Handle deprecated settings
         for setting, message in deprecated_settings.items():
             if setting in django_settings.AUTH_ADFS:
-                warnings.warn('Setting {} is deprecated and has is ignored. {}'.format(setting, message),
+                warnings.warn("Setting {} is deprecated and it's value was ignored. {}".format(setting, message),
                               DeprecationWarning)
                 del django_settings.AUTH_ADFS[setting]
+
         if "CERT_MAX_AGE" in django_settings.AUTH_ADFS:
             django_settings.AUTH_ADFS["CONFIG_RELOAD_INTERVAL"] = django_settings.AUTH_ADFS["CERT_MAX_AGE"]
             warnings.warn('Setting CERT_MAX_AGE has been renamed to CONFIG_RELOAD_INTERVAL. The value was copied.',
                           DeprecationWarning)
             del django_settings.AUTH_ADFS["CERT_MAX_AGE"]
 
+        if "GROUP_CLAIM" in django_settings.AUTH_ADFS:
+            django_settings.AUTH_ADFS["GROUPS_CLAIM"] = django_settings.AUTH_ADFS["GROUP_CLAIM"]
+            warnings.warn('Setting GROUP_CLAIM has been renamed to GROUPS_CLAIM. The value was copied.',
+                          DeprecationWarning)
+            del django_settings.AUTH_ADFS["GROUP_CLAIM"]
+
+        if "TENNANT_ID" in django_settings.AUTH_ADFS:
+            # Is a tenant ID was set, switch to Azure AD mode
+            self.SERVER = AZURE_AD_SERVER
+            self.USERNAME_CLAIM = "upn"
+            self.GROUPS_CLAIM = "groups"
+            self.CLAIM_MAPPING = {"first_name": "given_name",
+                                  "last_name": "family_name",
+                                  "email": "email"}
+
         # Overwrite defaults with user settings
         for setting, value in django_settings.AUTH_ADFS.items():
             if hasattr(self, setting):
                 setattr(self, setting, value)
             else:
-                msg = "'{0}' is not a valid configuration directive"
+                msg = "'{0}' is not a valid configuration directive for django_auth_adfs."
                 raise ImproperlyConfigured(msg.format(setting))
 
         # Validate required settings
+        if (not self.TENANT_ID and not self.SERVER) or (self.TENANT_ID and self.SERVER):
+            msg = "Exactly one of the settings TENANT_ID or SERVER must be set"
+            raise ImproperlyConfigured(msg)
+        elif self.TENANT_ID is None:
+            # For on premises ADFS, the tenant ID is set to adfs
+            # On AzureAD the adfs part in the URL happens to be replace by the tenant ID.
+            self.TENANT_ID = "adfs"
+
         for setting in required_settings:
             if not getattr(self, setting):
                 msg = "django_auth_adfs setting '{0}' has not been set".format(setting)
                 raise ImproperlyConfigured(msg)
-
-        if (not self.TENANT_ID and not self.SERVER) or (self.TENANT_ID and self.SERVER):
-            msg = "Exactly one of the settings TENANT_ID or SERVER must be set"
-            raise ImproperlyConfigured(msg)
-
-        if self.TENANT_ID is not None:
-            # Is a tenant ID was set, switch to Azure AD mode
-            self.SERVER = AZURE_AD_SERVER
-            self.USERNAME_CLAIM = "upn"
-            self.GROUP_CLAIM = "groups"
-            self.CLAIM_MAPPING = {"first_name": "given_name",
-                                  "last_name": "family_name",
-                                  "email": "email"}
-        else:
-            # For local setups, the tenant ID is set to adfs
-            # Allowing for easy URL building
-            self.TENANT_ID = "adfs"
 
 
 class ProviderConfig(object):

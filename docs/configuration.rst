@@ -7,6 +7,8 @@ Settings
 
 AUDIENCE
 --------
+**Required**
+
 Default: ``None``
 
 Set this to the value of the ``aud`` claim your ADFS server sends back in the JWT token.
@@ -34,12 +36,18 @@ It allows you to control the webserver certificate verification of the ADFS serv
 
 ``True`` to use the default CA bundle of the ``requests`` package.
 
-``/path/to/ca-bundle.pem`` allows you to specify a path to a CA bundle file.
+``/path/to/ca-bundle.pem`` allows you to specify a path to a CA bundle file. If your ADFS server uses a certificate
+signed by an enterprise root CA, you will need to specify the path to it's certificate here.
 
 ``False`` disables the certificate check.
 
 Have a look at the `Requests documentation
 <http://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for more details.
+
+.. warning::
+    Do not set this value to ``False`` in a production setup. Because we load certain settings from the ADFS server,
+    this might lead to a security issue. DNS hijacking for example might cause an attacker to inject his own
+    access token signing certificate.
 
 .. _boolean_claim_mapping_setting:
 
@@ -47,7 +55,7 @@ BOOLEAN_CLAIM_MAPPING
 ---------------------
 Default: ``None``
 
-A dictionary of claim/field mappings that is used to set boolean fields of the user account in Django.
+A dictionary of claim/field mappings that is used to set boolean fields on the user account in Django.
 
 The **key** represents user model field (e.g. ``first_name``)
 and the **value** represents the claim short name (e.g. ``given_name``).
@@ -119,7 +127,11 @@ token signing certificate rollover on ADFS.
 
 GROUP_CLAIM
 -----------
-Default ``group`` for windows server or ``groups`` for Azure AD.
+Alias of ``GROUPS_CLAIM``
+
+GROUPS_CLAIM
+------------
+Default ``group`` for ADFS or ``groups`` for Azure AD.
 
 Name of the claim in the JWT access token from ADFS that contains the groups the user is member of.
 If an entry in this claim matches a group configured in Django, the user will join it automatically.
@@ -128,15 +140,15 @@ Set this setting to ``None`` to disable automatic group handling. The group memb
 will not be touched.
 
 .. IMPORTANT::
-   A user's group membership in Django will be reset to math this claim's value.
-   If there's no value in the access token, the user will end up being a member of no group at all.
+   If not set to ``None``, a user's group membership in Django will be reset to math this claim's value.
+   If there's no value in the access token, the user will be removed from all groups.
 
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
 
-GROUP_FLAG_MAPPING
-------------------
+GROUP_TO_FLAG_MAPPING
+---------------------
 This settings allows you to set flags on a user based on his group membership in Active Directory.
 
 For example, if a user is a member of the group ``Django Staff``, you can automatically set the ``is_staff``
@@ -150,8 +162,8 @@ example
 .. code-block:: python
 
     AUTH_ADFS = {
-        "GROUP_FLAG_MAPPING": {"is_staff": "Django Staff",
-                               "is_superuser": "Django Admins"},
+        "GROUP_TO_FLAG_MAPPING": {"is_staff": "Django Staff",
+                                  "is_superuser": "Django Admins"},
     }
 
 .. NOTE::
@@ -197,7 +209,7 @@ and taking the ``Identifier`` value.
 
 SERVER
 ------
-**Required** when your ADFS server is an on premises ADFS server.
+**Required** when your identity provider is an on premises ADFS server.
 
 Only one of ``SERVER`` or ``TENANT_ID`` can be set.
 
@@ -205,7 +217,7 @@ The FQDN of the ADFS server you want users to authenticate against.
 
 TENANT_ID
 ---------
-**Required** when your ADFS server is an Azure AD instance.
+**Required** when your identity provider is an Azure AD instance.
 
 Only one of ``TENANT_ID`` or ``SERVER`` can be set.
 
@@ -215,11 +227,17 @@ The FQDN of the ADFS server you want users to authenticate against.
 
 USERNAME_CLAIM
 --------------
-Default: ``winaccountname`` on Windows Server or ``upn`` on Azure AD.
+Default: ``winaccountname`` for ADFS or ``upn`` for Azure AD.
 
 Name of the claim sent in the JWT token from ADFS that contains the username.
 If the user doesn't exist yet, this field will be used as it's username.
 
+.. warning::
+   You shouldn't need to set this value for ADFS or Azure AD. Because ``winaccountname`` maps to the ``sAMAccountName``
+   on Active Directory, which is guaranteed to be unique. The same for Azure AD where ``upn`` maps to the
+   ``UserPrincipleName``, which is unique on Azure AD.
+
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
+

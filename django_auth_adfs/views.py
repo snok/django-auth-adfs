@@ -1,4 +1,5 @@
 import base64
+import logging
 
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, login, logout
@@ -7,6 +8,8 @@ from django.utils.http import is_safe_url
 from django.views.generic import View
 
 from django_auth_adfs.config import provider_config
+
+logger = logging.getLogger("django_auth_adfs")
 
 
 class OAuth2CallbackView(View):
@@ -18,8 +21,15 @@ class OAuth2CallbackView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        code = request.GET.get("code", None)
-        redirect_to = request.GET.get("state", None)
+        code = request.GET.get("code")
+
+        if not code:
+            # Return an error message
+            return render(request, 'django_auth_adfs/login_failed.html', {
+                'error_message': "No authorization code was provided.",
+            }, status=400)
+
+        redirect_to = request.GET.get("state")
 
         user = authenticate(request, authorization_code=code)
 
