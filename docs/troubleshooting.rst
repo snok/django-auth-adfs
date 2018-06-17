@@ -38,10 +38,22 @@ More details about logging in Django can be found in
 
 Run Django with warnings enabled
 --------------------------------
-
 Start the python interpreter that runs you Django with the ``-Wd`` parameter. This will show warnings that are otherwise
 suppressed.
 
-.. code-block::
+.. code-block:: bash
 
     python -Wd manage.py runserver
+
+Have a look at the demo project
+-------------------------------
+There's an simple demo project available in the ``/demo`` folder and in the **demo** chapter of the documentation.
+
+If you compare the files in the ``adfs`` folder with those in the ``formsbased`` folder, you'll see what needs to be
+changed in a standard Django project to enable ADFS authentication.
+
+Besides that, there are a couple of PowerShell scripts available that are used while provisioning the ADFS server for
+the demo. you can find them in the ``/vagrant`` folder in this repository. They might be useful to figure out what is
+wrong with the configuration of your ADFS server.
+
+**Note that they are only meant for getting a demo running. By no means are they meant to configure your ADFS server.**

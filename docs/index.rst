@@ -36,8 +36,9 @@ Contents
 
    install
    configuration
-   adfs_config_guide
+   config_guides
    extras
+   demo
    troubleshooting
    faq
    contributing

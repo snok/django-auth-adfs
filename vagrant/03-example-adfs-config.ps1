@@ -2,8 +2,8 @@
 $webIP = "10.0.0.10"
 $webName = "web"
 $appName = "Django Application"
-$clientId = "django_website.adfs.client_id"
-$resourceId = "django_website.adfs.relying_party_id"
+$clientId = "487d8ff7-80a8-4f62-b926-c2852ab06e94"
+$relyingPartyId = "web.example.com"
 # #############################
 
 Write-Host "Waiting for domain controller to become reachable."
@@ -26,10 +26,10 @@ Add-DnsServerResourceRecordA -Name $webName -IPv4Address $webIP -ZoneName (Get-A
 
 # Add example users and groups
 # ----------------------------
-Write-Host "Creating Django Staff group"
+Write-Host "Creating Django Admins group"
 $staffGroup = New-ADGroup `
--Name "Django Staff" `
--SamAccountName djangostaff `
+-Name "Django Admins" `
+-SamAccountName django_admins `
 -GroupCategory Security `
 -GroupScope Global `
 -Passthru
@@ -46,7 +46,7 @@ New-ADUser `
 -Enabled $true
 
 Write-Host "Creating user Bob..."
-$user = New-ADUser `
+$bob = New-ADUser `
 -Name "Bob" `
 -GivenName Bob `
 -SurName Builder `
@@ -57,7 +57,7 @@ $user = New-ADUser `
 -Enabled $true `
 -Passthru
 
-Add-ADGroupMember -Identity djangostaff -Members $user
+Add-ADGroupMember -Identity django_admins -Members $bob
 
 Write-Host "Disabling Internet Explorer Enhanced Security Configuration"
 $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
@@ -96,7 +96,7 @@ If ([Environment]::OSVersion.version.major -ge 10) {
     Write-Host "Adding web application"
     Add-AdfsWebApiApplication `
     -Name "$appName - Web application" `
-    -Identifier $resourceId `
+    -Identifier $relyingPartyId `
     -AccessControlPolicyName "Permit everyone" `
     -ApplicationGroupIdentifier $appName `
     -IssuanceTransformRules (
@@ -117,28 +117,13 @@ If ([Environment]::OSVersion.version.major -ge 10) {
             ),
             query = ";mail,givenName,sn,tokenGroups,sAMAccountName;{0}",
             param = c.Value
-         );
-
-         @RuleTemplate = "EmitGroupClaims"
-         @RuleName = "Django staff"
-         c:[
-            Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid",
-            Value == "'+$staffGroup.SID+'",
-            Issuer == "AD AUTHORITY"
-         ]
-         => issue(
-            Type = "is_staff",
-            Value = "true",
-            Issuer = c.Issuer,
-            OriginalIssuer = c.OriginalIssuer,
-            ValueType = c.ValueType
          );'
     )
 
     Write-Host "Adding native application"
     Grant-AdfsApplicationPermission `
     -ClientRoleIdentifier $clientId `
-    -ServerRoleIdentifier $resourceId `
+    -ServerRoleIdentifier $relyingPartyId `
     -ScopeNames "openid"
 
 } Else {
@@ -152,7 +137,7 @@ If ([Environment]::OSVersion.version.major -ge 10) {
     Write-Host "Adding Relying Party Trust"
     Add-AdfsRelyingPartyTrust `
     -Name $appName `
-    -Identifier $resourceId `
+    -Identifier $relyingPartyId `
     -IssuanceAuthorizationRules (
         '@RuleTemplate = "AllowAllAuthzRule"
          => issue(
@@ -178,21 +163,6 @@ If ([Environment]::OSVersion.version.major -ge 10) {
             ),
             query = ";mail,givenName,sn,tokenGroups,sAMAccountName;{0}",
             param = c.Value
-         );
-
-         @RuleTemplate = "EmitGroupClaims"
-         @RuleName = "Django staff"
-         c:[
-            Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid",
-            Value == "'+$staffGroup.SID+'",
-            Issuer == "AD AUTHORITY"
-         ]
-         => issue(
-            Type = "is_staff",
-            Value = "true",
-            Issuer = c.Issuer,
-            OriginalIssuer = c.OriginalIssuer,
-            ValueType = c.ValueType
          );'
     )
 }

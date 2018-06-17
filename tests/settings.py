@@ -67,7 +67,7 @@ STATIC_URL = '/static/'
 AUTH_ADFS = {
     "SERVER": "adfs.example.com",
     "CLIENT_ID": "your-configured-client-id",
-    "RESOURCE": "your-adfs-RPT-name",
+    "RELYING_PARTY_ID": "your-adfs-RPT-name",
     "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
     "CA_BUNDLE": "/path/to/ca-bundle.pem",
     "CLAIM_MAPPING": {"first_name": "given_name",

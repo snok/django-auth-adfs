@@ -123,11 +123,11 @@ ADFS server. Based on this information, certain configuration for this module is
 This setting determines the interval after which the configuration is reloaded. This allows to automatically follow the
 token signing certificate rollover on ADFS.
 
-.. _group_claim_setting:
-
 GROUP_CLAIM
 -----------
 Alias of ``GROUPS_CLAIM``
+
+.. _groups_claim_setting:
 
 GROUPS_CLAIM
 ------------
@@ -196,16 +196,21 @@ This parameter will create groups from ADFS in the Django database if they do no
 .. IMPORTANT::
     This parameter only has effect if GROUP_CLAIM is set to something other then ``None``.
 
-.. _resource_setting:
+.. _relying_party_id_setting:
+
+RELYING_PARTY_ID
+----------------
+**Required**
+
+Set this to the ``Relying party trust identifier`` value of the ``Relying Party Trust`` (2012) or ``Web application``
+(2016) you configured in ADFS.
+
+You can lookup this value by executing the powershell command ``Get-AdfsRelyingPartyTrust`` (2012) or
+``Get-AdfsWebApiApplication`` (2016) on the ADFS server and taking the ``Identifier`` value.
 
 RESOURCE
 --------
-**Required**
-
-Set this to the ``Relying party trust identifier`` value of the ``Relying Party Trust`` you configured in ADFS.
-
-You can lookup this value by executing the powershell command ``Get-AdfsRelyingPartyTrust`` on the ADFS server
-and taking the ``Identifier`` value.
+Alias for ``RELYING_PARTY_ID``
 
 SERVER
 ------
@@ -214,6 +219,8 @@ SERVER
 Only one of ``SERVER`` or ``TENANT_ID`` can be set.
 
 The FQDN of the ADFS server you want users to authenticate against.
+
+.. _tenant_id_setting:
 
 TENANT_ID
 ---------

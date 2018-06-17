@@ -35,7 +35,7 @@ class Settings(object):
         self.GROUPS_CLAIM = "group"
         self.LOGIN_EXEMPT_URLS = []
         self.MIRROR_GROUPS = False
-        self.RESOURCE = None  # Required
+        self.RELYING_PARTY_ID = None  # Required
         self.SERVER = None  # Required
         self.TENANT_ID = None  # Required
         self.USERNAME_CLAIM = "winaccountname"
@@ -43,7 +43,7 @@ class Settings(object):
         required_settings = [
             "AUDIENCE",
             "CLIENT_ID",
-            "RESOURCE",
+            "RELYING_PARTY_ID",
             "USERNAME_CLAIM",
         ]
 
@@ -78,6 +78,10 @@ class Settings(object):
             warnings.warn('Setting GROUP_CLAIM has been renamed to GROUPS_CLAIM. The value was copied.',
                           DeprecationWarning)
             del django_settings.AUTH_ADFS["GROUP_CLAIM"]
+
+        if "RESOURCE" in django_settings.AUTH_ADFS:
+            django_settings.AUTH_ADFS["RELYING_PARTY_ID"] = django_settings.AUTH_ADFS["RESOURCE"]
+            del django_settings.AUTH_ADFS["RESOURCE"]
 
         if "TENNANT_ID" in django_settings.AUTH_ADFS:
             # Is a tenant ID was set, switch to Azure AD mode
@@ -241,7 +245,7 @@ class ProviderConfig(object):
         query.update({
             "response_type": "code",
             "client_id": settings.CLIENT_ID,
-            "resource": settings.RESOURCE,
+            "resource": settings.RELYING_PARTY_ID,
             "redirect_uri": self.redirect_uri(request),
             "state": redirect_to,
         })
