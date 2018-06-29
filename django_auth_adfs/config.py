@@ -22,6 +22,10 @@ logger = logging.getLogger("django_auth_adfs")
 AZURE_AD_SERVER = "login.microsoftonline.com"
 
 
+class ConfigLoadError(Exception):
+    pass
+
+
 class Settings(object):
     def __init__(self):
         # Set defaults
@@ -132,7 +136,7 @@ class ProviderConfig(object):
             logger.debug("Loading django_auth_adfs ID Provider configuration.")
             try:
                 loaded = self._load_openid_config()
-            except requests.HTTPError:
+            except ConfigLoadError:
                 loaded = self._load_federation_metadata()
 
             if not loaded:
@@ -158,29 +162,32 @@ class ProviderConfig(object):
             settings.SERVER, settings.TENANT_ID
         )
 
-        logger.info("Trying to get OpenID Connect config from {}".format(config_url))
-        response = requests.get(config_url, verify=settings.CA_BUNDLE, timeout=10)
-        response.raise_for_status()
-        openid_cfg = response.json()
-
-        response = requests.get(openid_cfg["jwks_uri"], verify=settings.CA_BUNDLE, timeout=10)
         try:
+            logger.info("Trying to get OpenID Connect config from {}".format(config_url))
+            response = requests.get(config_url, verify=settings.CA_BUNDLE, timeout=10)
             response.raise_for_status()
+            openid_cfg = response.json()
+
+            response = requests.get(openid_cfg["jwks_uri"], verify=settings.CA_BUNDLE, timeout=10)
+            response.raise_for_status()
+            signing_certificates = [x["x5c"][0] for x in response.json()["keys"] if x.get("use", "sig") == "sig"]
+            #                               ^^^
+            # https://tools.ietf.org/html/draft-ietf-jose-json-web-key-41#section-4.7
+            # The PKIX certificate containing the key value MUST be the first certificate
         except requests.HTTPError:
-            return False
-        signing_certificates = [x["x5c"][0] for x in response.json()["keys"] if x.get("use", "sig") == "sig"]
-        #                       ^^^
-        # https://tools.ietf.org/html/draft-ietf-jose-json-web-key-41#section-4.7
-        # The PKIX certificate containing the key value MUST be the first certificate
+            raise ConfigLoadError
 
         self._load_keys(signing_certificates)
-        self.authorization_endpoint = openid_cfg["authorization_endpoint"]
-        self.token_endpoint = openid_cfg["token_endpoint"]
-        self.end_session_endpoint = openid_cfg["end_session_endpoint"]
-        if settings.TENANT_ID is not 'adfs':
-            self.issuer = openid_cfg["issuer"]
-        else:
-            self.issuer = openid_cfg["access_token_issuer"]
+        try:
+            self.authorization_endpoint = openid_cfg["authorization_endpoint"]
+            self.token_endpoint = openid_cfg["token_endpoint"]
+            self.end_session_endpoint = openid_cfg["end_session_endpoint"]
+            if settings.TENANT_ID is not 'adfs':
+                self.issuer = openid_cfg["issuer"]
+            else:
+                self.issuer = openid_cfg["access_token_issuer"]
+        except KeyError:
+            raise ConfigLoadError
         return True
 
     def _load_federation_metadata(self):
@@ -191,12 +198,15 @@ class ProviderConfig(object):
         else:
             adfs_config_url = base_url + "/FederationMetadata/2007-06/FederationMetadata.xml"
 
-        logger.info("Trying to get ADFS Metadata file {}".format(adfs_config_url))
-        response = requests.get(adfs_config_url, verify=settings.CA_BUNDLE, timeout=10)
-        response.raise_for_status()
-        xml_tree = ElementTree.fromstring(response.content)
+        try:
+            logger.info("Trying to get ADFS Metadata file {}".format(adfs_config_url))
+            response = requests.get(adfs_config_url, verify=settings.CA_BUNDLE, timeout=10)
+            response.raise_for_status()
+        except requests.HTTPError:
+            raise ConfigLoadError
 
         # Extract token signing certificates
+        xml_tree = ElementTree.fromstring(response.content)
         cert_nodes = xml_tree.findall(
             "./{urn:oasis:names:tc:SAML:2.0:metadata}RoleDescriptor"
             "[@{http://www.w3.org/2001/XMLSchema-instance}type='fed:SecurityTokenServiceType']"
