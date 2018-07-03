@@ -130,7 +130,7 @@ class AdfsBackend(ModelBackend):
             usermodel.USERNAME_FIELD: claims[username_claim]
         })
         if created:
-            logging.debug("User '{}' has been created.".format(username_claim))
+            logging.debug("User '{}' has been created.".format(claims[username_claim]))
 
         return user
 
