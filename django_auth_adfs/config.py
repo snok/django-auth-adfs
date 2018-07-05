@@ -43,6 +43,7 @@ class Settings(object):
         self.SERVER = None  # Required
         self.TENANT_ID = None  # Required
         self.USERNAME_CLAIM = "winaccountname"
+        self.REQUEST_TIMEOUT = 10
 
         required_settings = [
             "AUDIENCE",
@@ -164,11 +165,11 @@ class ProviderConfig(object):
 
         try:
             logger.info("Trying to get OpenID Connect config from {}".format(config_url))
-            response = requests.get(config_url, verify=settings.CA_BUNDLE, timeout=10)
+            response = requests.get(config_url, verify=settings.CA_BUNDLE, timeout=settings.REQUEST_TIMEOUT)
             response.raise_for_status()
             openid_cfg = response.json()
 
-            response = requests.get(openid_cfg["jwks_uri"], verify=settings.CA_BUNDLE, timeout=10)
+            response = requests.get(openid_cfg["jwks_uri"], verify=settings.CA_BUNDLE, timeout=settings.REQUEST_TIMEOUT)
             response.raise_for_status()
             signing_certificates = [x["x5c"][0] for x in response.json()["keys"] if x.get("use", "sig") == "sig"]
             #                               ^^^
@@ -200,7 +201,7 @@ class ProviderConfig(object):
 
         try:
             logger.info("Trying to get ADFS Metadata file {}".format(adfs_config_url))
-            response = requests.get(adfs_config_url, verify=settings.CA_BUNDLE, timeout=10)
+            response = requests.get(adfs_config_url, verify=settings.CA_BUNDLE, timeout=settings.REQUEST_TIMEOUT)
             response.raise_for_status()
         except requests.HTTPError:
             raise ConfigLoadError
