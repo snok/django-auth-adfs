@@ -14,6 +14,7 @@ Changelog
 * Groups a user belongs to can now be automatically created in Django (check the ``MIRROR_GROUPS`` setting)
 * When a claim mapped to a non-required field in the user model is missing,
   a warning is logged instead of an exception raised
+* Add a ``RETRIES`` and ``TIMEOUT`` setting for requests towards the ADFS server.
 
 **Incompatible changes**
 
