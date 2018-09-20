@@ -38,8 +38,7 @@ class AdfsBackend(ModelBackend):
         }
         logger.debug("Received authorization code: " + authorization_code)
         logger.debug("Getting access token at: " + provider_config.token_endpoint)
-        response = post(provider_config.token_endpoint, data,
-                        verify=settings.CA_BUNDLE, timeout=settings.TIMEOUT)
+        response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
 
         # 200 = valid token received
         # 400 = 'something' is wrong in our request

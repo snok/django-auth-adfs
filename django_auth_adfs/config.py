@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from xml.etree import ElementTree
 
 import requests
+import requests.adapters
 from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.x509 import load_der_x509_certificate
 from django.conf import settings as django_settings
@@ -40,10 +41,11 @@ class Settings(object):
         self.LOGIN_EXEMPT_URLS = []
         self.MIRROR_GROUPS = False
         self.RELYING_PARTY_ID = None  # Required
+        self.RETRIES = 3
         self.SERVER = None  # Required
         self.TENANT_ID = None  # Required
+        self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
-        self.TIMEOUT = 10
 
         required_settings = [
             "AUDIENCE",
@@ -130,6 +132,11 @@ class ProviderConfig(object):
         self.end_session_endpoint = None
         self.issuer = None
 
+        self.session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=settings.RETRIES)
+        self.session.mount('https://', adapter)
+        self.session.verify = settings.CA_BUNDLE
+
     def load_config(self):
         # If loaded data is too old, reload it again
         refresh_time = datetime.now() - timedelta(hours=settings.CONFIG_RELOAD_INTERVAL)
@@ -165,11 +172,11 @@ class ProviderConfig(object):
 
         try:
             logger.info("Trying to get OpenID Connect config from {}".format(config_url))
-            response = requests.get(config_url, verify=settings.CA_BUNDLE, timeout=settings.TIMEOUT)
+            response = self.session.get(config_url, timeout=settings.TIMEOUT)
             response.raise_for_status()
             openid_cfg = response.json()
 
-            response = requests.get(openid_cfg["jwks_uri"], verify=settings.CA_BUNDLE, timeout=settings.TIMEOUT)
+            response = self.session.get(openid_cfg["jwks_uri"], timeout=settings.TIMEOUT)
             response.raise_for_status()
             signing_certificates = [x["x5c"][0] for x in response.json()["keys"] if x.get("use", "sig") == "sig"]
             #                               ^^^
@@ -201,7 +208,7 @@ class ProviderConfig(object):
 
         try:
             logger.info("Trying to get ADFS Metadata file {}".format(adfs_config_url))
-            response = requests.get(adfs_config_url, verify=settings.CA_BUNDLE, timeout=settings.TIMEOUT)
+            response = self.session.get(adfs_config_url, timeout=settings.TIMEOUT)
             response.raise_for_status()
         except requests.HTTPError:
             raise ConfigLoadError

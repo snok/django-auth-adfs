@@ -212,6 +212,15 @@ RESOURCE
 --------
 Alias for ``RELYING_PARTY_ID``
 
+.. _retries_setting:
+
+RETRIES
+-------
+Default ``3``
+
+The number of time a request to the ADFS server is retried. It allows, in combination with :ref:`timeout_setting`
+to fine tune the behaviour of the connection to ADFS.
+
 SERVER
 ------
 **Required** when your identity provider is an on premises ADFS server.
@@ -230,13 +239,17 @@ Only one of ``TENANT_ID`` or ``SERVER`` can be set.
 
 The FQDN of the ADFS server you want users to authenticate against.
 
+.. _timeout_setting:
+
 TIMEOUT
 -------
-Default ``10``
+Default ``5``
 
 The timeout in seconds for every request made to the ADFS server. It's passed on as the ``timeout`` parameter
 to the underlying calls to the `requests <http://docs.python-requests.org/en/master/user/quickstart/#timeouts>`__
 library.
+
+It allows, in combination with :ref:`retries_setting` to fine tune the behaviour of the connection to ADFS.
 
 .. _username_claim_setting:
 
