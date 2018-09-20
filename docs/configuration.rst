@@ -230,6 +230,14 @@ Only one of ``TENANT_ID`` or ``SERVER`` can be set.
 
 The FQDN of the ADFS server you want users to authenticate against.
 
+TIMEOUT
+-------
+Default ``10``
+
+The timeout in seconds for every request made to the ADFS server. It's passed on as the ``timeout`` parameter
+to the underlying calls to the `requests <http://docs.python-requests.org/en/master/user/quickstart/#timeouts>`__
+library.
+
 .. _username_claim_setting:
 
 USERNAME_CLAIM
