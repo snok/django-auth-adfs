@@ -2,9 +2,10 @@ from django.contrib.auth.models import User, Group
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
 from mock import patch
+from copy import deepcopy
 
 from django_auth_adfs.backend import AdfsBackend
-from django_auth_adfs.config import ProviderConfig
+from django_auth_adfs.config import ProviderConfig, Settings
 from .utils import mock_adfs
 
 
@@ -41,17 +42,22 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("azure")
     def test_with_auth_code_azure(self):
-        with patch("django_auth_adfs.config.settings.TENANT_ID", "dummy_tenant_id"):
-            with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                backend = AdfsBackend()
-                user = backend.authenticate(self.request, authorization_code="dummycode")
-                self.assertIsInstance(user, User)
-                self.assertEqual(user.first_name, "John")
-                self.assertEqual(user.last_name, "Doe")
-                self.assertEqual(user.email, "john.doe@example.com")
-                self.assertEqual(len(user.groups.all()), 2)
-                self.assertEqual(user.groups.all()[0].name, "group1")
-                self.assertEqual(user.groups.all()[1].name, "group2")
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch("django_auth_adfs.config.settings", Settings()):
+                with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                    backend = AdfsBackend()
+                    user = backend.authenticate(self.request, authorization_code="dummycode")
+                    self.assertIsInstance(user, User)
+                    self.assertEqual(user.first_name, "John")
+                    self.assertEqual(user.last_name, "Doe")
+                    self.assertEqual(user.email, "john.doe@example.com")
+                    self.assertEqual(len(user.groups.all()), 2)
+                    self.assertEqual(user.groups.all()[0].name, "group1")
+                    self.assertEqual(user.groups.all()[1].name, "group2")
 
     @mock_adfs("2016")
     def test_empty(self):

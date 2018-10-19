@@ -148,10 +148,16 @@ def mock_adfs(adfs_version):
 
     def do_mock(test_func):
         def wrapper(*original_args, **original_kwargs):
-            openid_cfg = re.compile(r".*\.well-known/openid-configuration")
-            openid_keys = re.compile(r".*/discovery/keys")
-            adfs_meta = re.compile(r".*/FederationMetadata/2007-06/FederationMetadata\.xml")
-            token_endpoint = re.compile(r".*/oauth2/token")
+            prefix_table = {
+                "2012": "https://adfs.example.com",
+                "2016": "https://adfs.example.com",
+                "azure": "https://login.microsoftonline.com",
+            }
+            prefix = prefix_table[adfs_version]
+            openid_cfg = re.compile(prefix + r".*\.well-known/openid-configuration")
+            openid_keys = re.compile(prefix + r".*/discovery/keys")
+            adfs_meta = re.compile(prefix + r".*/FederationMetadata/2007-06/FederationMetadata\.xml")
+            token_endpoint = re.compile(prefix + r".*/oauth2/token")
             with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
                 # https://github.com/getsentry/responses
                 if adfs_version == "2016":

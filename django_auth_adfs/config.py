@@ -90,8 +90,10 @@ class Settings(object):
             django_settings.AUTH_ADFS["RELYING_PARTY_ID"] = django_settings.AUTH_ADFS["RESOURCE"]
             del django_settings.AUTH_ADFS["RESOURCE"]
 
-        if "TENNANT_ID" in django_settings.AUTH_ADFS:
-            # Is a tenant ID was set, switch to Azure AD mode
+        if "TENANT_ID" in django_settings.AUTH_ADFS:
+            # If a tenant ID was set, switch to Azure AD mode
+            if "SERVER" in django_settings.AUTH_ADFS:
+                raise ImproperlyConfigured("The SERVER cannot be set when TENANT_ID is set.")
             self.SERVER = AZURE_AD_SERVER
             self.USERNAME_CLAIM = "upn"
             self.GROUPS_CLAIM = "groups"
@@ -108,7 +110,7 @@ class Settings(object):
                 raise ImproperlyConfigured(msg.format(setting))
 
         # Validate required settings
-        if (not self.TENANT_ID and not self.SERVER) or (self.TENANT_ID and self.SERVER):
+        if not self.TENANT_ID and not self.SERVER:
             msg = "Exactly one of the settings TENANT_ID or SERVER must be set"
             raise ImproperlyConfigured(msg)
         elif self.TENANT_ID is None:
