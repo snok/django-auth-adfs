@@ -43,7 +43,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
         assert hasattr(request, 'user'), "The Login Required middleware requires " \
                                          "authentication middleware to be installed. " \
                                          "Edit your MIDDLEWARE setting to insert " \
-                                         "'django.contrib.auth.middlware.AuthenticationMiddleware'. " \
+                                         "'django.contrib.auth.middleware.AuthenticationMiddleware'. " \
                                          "If that doesn't work, ensure your TEMPLATE_CONTEXT_PROCESSORS " \
                                          "setting includes 'django.core.context_processors.auth'."
 
