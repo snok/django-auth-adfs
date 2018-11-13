@@ -19,11 +19,10 @@ class AdfsBackend(ModelBackend):
     It's based on the ``RemoteUserBackend`` from Django.
     """
 
-    def __init__(self):
+    def authenticate(self, request, authorization_code=None, **kwargs):
         # If loaded data is too old, reload it again
         provider_config.load_config()
 
-    def authenticate(self, request, authorization_code=None, **kwargs):
         # If there's no token or code, we pass control to the next authentication backend
         if authorization_code is None or authorization_code == '':
             logger.debug("django_auth_adfs was called but no authorization code was received")
