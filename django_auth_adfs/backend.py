@@ -129,7 +129,7 @@ class AdfsBackend(ModelBackend):
             usermodel.USERNAME_FIELD: claims[username_claim]
         })
         if created:
-            logging.debug("User '{}' has been created.".format(claims[username_claim]))
+            logger.debug("User '{}' has been created.".format(claims[username_claim]))
 
         return user
 
@@ -148,7 +148,7 @@ class AdfsBackend(ModelBackend):
             if hasattr(user, field):
                 if claim in claims:
                     setattr(user, field, claims[claim])
-                    logging.debug("Attribute '{}' for user '{}' was set to '{}'.".format(user, field, claims[claim]))
+                    logger.debug("Attribute '{}' for user '{}' was set to '{}'.".format(user, field, claims[claim]))
                 else:
                     if field in required_fields:
                         msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
@@ -233,7 +233,7 @@ class AdfsBackend(ModelBackend):
                     else:
                         value = False
                     setattr(user, flag, value)
-                    logging.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, flag, value))
+                    logger.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, flag, value))
                 else:
                     msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                     raise ImproperlyConfigured(msg.format(flag))
@@ -244,7 +244,7 @@ class AdfsBackend(ModelBackend):
                 if claim in claims and str(claims[claim]).lower() in ['y', 'yes', 't', 'true', 'on', '1']:
                     bool_val = True
                 setattr(user, field, bool_val)
-                logging.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, field, bool_val))
+                logger.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, field, bool_val))
             else:
                 msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
