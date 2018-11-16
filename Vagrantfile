@@ -85,10 +85,10 @@ Vagrant.configure("2") do |config|
       # Install django-auth-adfs in editable mode
       pip3 install -e /vagrant
       # run migrate command for both example projects
-      python3 /vagrant/example/adfs/manage.py makemigrations polls
-      python3 /vagrant/example/adfs/manage.py migrate
-      python3 /vagrant/example/formsbased/manage.py makemigrations polls
-      python3 /vagrant/example/formsbased/manage.py migrate
+      python3 /vagrant/demo/adfs/manage.py makemigrations polls
+      python3 /vagrant/demo/adfs/manage.py migrate
+      python3 /vagrant/demo/formsbased/manage.py makemigrations polls
+      python3 /vagrant/demo/formsbased/manage.py migrate
       # Set fixed hosts entry to ADFS server
       echo "10.0.0.2 adfs.example.com" >> /etc/hosts
     SHELL
