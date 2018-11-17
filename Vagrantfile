@@ -84,6 +84,8 @@ Vagrant.configure("2") do |config|
       apt-get install -y python3-pip
       # Install django-auth-adfs in editable mode
       pip3 install -e /vagrant
+      # Install DRF to demo the API integration
+      pip3 install djangorestframework django-filter
       # run migrate command for both example projects
       python3 /vagrant/demo/adfs/manage.py makemigrations polls
       python3 /vagrant/demo/adfs/manage.py migrate

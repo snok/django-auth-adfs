@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -166,4 +167,13 @@ LOGGING = {
             'level': 'DEBUG',
         },
     },
+}
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'django_auth_adfs.rest_framework.AdfsAccessTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
 }
