@@ -32,14 +32,15 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 3
+    :maxdepth: 3
 
-   install
-   configuration
-   config_guides
-   extras
-   demo
-   troubleshooting
-   faq
-   contributing
-   changelog
+    install
+    configuration
+    config_guides
+    rest_framework
+    extras
+    demo
+    troubleshooting
+    faq
+    contributing
+    changelog
