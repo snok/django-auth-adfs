@@ -44,8 +44,8 @@ First we get the web server up and running.
 
 #. Once connected, start the Django project::
 
-    cd /vagrant/example/adfs
-    python manage.py runserver 0.0.0.0:8000
+    cd /vagrant/demo/adfs
+    python3 manage.py runserver 0.0.0.0:8000
 
 you should now be able to browse the demo project by opening the page `http://localhost:8000 <http://localhost:8000>`__
 in a browser. Pages requiring authentication wont work, because the ADFS server is not there yet.
@@ -53,7 +53,7 @@ in a browser. Pages requiring authentication wont work, because the ADFS server 
 .. note::
 
     There are 2 versions of the web example. One is a forms based authentication example, the other depends on ADFS.
-    If you want to run the forms based example, change the path above to ``/vagrant/example/formsbased``
+    If you want to run the forms based example, change the path above to ``/vagrant/demo/formsbased``
 
 ADFS server
 ~~~~~~~~~~~
@@ -106,5 +106,5 @@ Once everything is up and running, you can click around in the very basic poll a
 
 * By default, only the page to vote on a poll requires you to be logged in.
 * There are no questions by default. Create some in the admin section with user ``bob``.
-* Compare the files in ``/vagrant/example/formsbased`` to those in ``/vagrant/example/adfs`` to see what was changed
+* Compare the files in ``/vagrant/demo/formsbased`` to those in ``/vagrant/demo/adfs`` to see what was changed
   to enable ADFS authentication in a demo project.
