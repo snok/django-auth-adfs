@@ -23,34 +23,38 @@ class AdfsBackend(ModelBackend):
         # If loaded data is too old, reload it again
         provider_config.load_config()
 
-    def authenticate(self, request, authorization_code=None, **kwargs):
+    def authenticate(self, request, authorization_code=None, access_token=None, **kwargs):
         # If there's no token or code, we pass control to the next authentication backend
-        if authorization_code is None or authorization_code == '':
-            logger.debug("django_auth_adfs was called but no authorization code was received")
+        if (authorization_code is None or authorization_code == '') and (access_token is None or access_token == ''):
+            logger.debug("django_auth_adfs authentication backend was called but no authorization code was received")
             return
 
-        data = {
-            'grant_type': 'authorization_code',
-            'client_id': settings.CLIENT_ID,
-            'redirect_uri': provider_config.redirect_uri(request),
-            'code': authorization_code,
-        }
-        logger.debug("Received authorization code: " + authorization_code)
-        logger.debug("Getting access token at: " + provider_config.token_endpoint)
-        response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
+        if authorization_code:
+            data = {
+                'grant_type': 'authorization_code',
+                'client_id': settings.CLIENT_ID,
+                'redirect_uri': provider_config.redirect_uri(request),
+                'code': authorization_code,
+            }
+            logger.debug("Received authorization code: " + authorization_code)
+            logger.debug("Getting access token at: " + provider_config.token_endpoint)
+            response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
 
-        # 200 = valid token received
-        # 400 = 'something' is wrong in our request
-        if response.status_code == 400:
-            logger.error("ADFS server returned an error: " + response.json()["error_description"])
-            raise PermissionDenied
+            # 200 = valid token received
+            # 400 = 'something' is wrong in our request
+            if response.status_code == 400:
+                logger.error("ADFS server returned an error: " + response.json()["error_description"])
+                raise PermissionDenied
 
-        if response.status_code != 200:
-            logger.error("Unexpected ADFS response: " + response.content.decode())
-            raise PermissionDenied
+            if response.status_code != 200:
+                logger.error("Unexpected ADFS response: " + response.content.decode())
+                raise PermissionDenied
 
-        json_response = response.json()
-        access_token = json_response["access_token"]
+            json_response = response.json()
+            access_token = json_response["access_token"]
+        else:
+            access_token = access_token.decode()
+
         logger.debug("Received access token: " + access_token)
         claims = jwt.decode(access_token, verify=False)
         logger.debug("JWT claims:\n"+pformat(claims))
