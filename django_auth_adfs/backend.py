@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
 
 from django_auth_adfs.config import settings, provider_config
+from django_auth_adfs.signals import adfs_backend_post_authenticate
 
 logger = logging.getLogger("django_auth_adfs")
 
@@ -111,6 +112,9 @@ class AdfsBackend(ModelBackend):
         self.update_user_groups(user, claims)
         self.update_user_flags(user, claims)
         user.save()
+
+        adfs_backend_post_authenticate.send(
+            sender=self, user=user, claims=claims, json_response=json_response)
 
         return user
 
