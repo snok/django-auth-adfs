@@ -35,9 +35,7 @@ class AdfsBackend(ModelBackend):
             'code': authorization_code,
         }
         if settings.CLIENT_SECRET:
-            data.update({
-                'client_secret': settings.CLIENT_SECRET,
-            })
+            data['client_secret'] = settings.CLIENT_SECRET
 
         logger.debug("Received authorization code: " + authorization_code)
         logger.debug("Getting access token at: " + provider_config.token_endpoint)
