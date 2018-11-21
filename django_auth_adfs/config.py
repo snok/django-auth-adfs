@@ -35,6 +35,7 @@ class Settings(object):
         self.CA_BUNDLE = True
         self.CLAIM_MAPPING = {}
         self.CLIENT_ID = None  # Required
+        self.CLIENT_SECRET = None
         self.CONFIG_RELOAD_INTERVAL = 24  # hours
         self.GROUP_TO_FLAG_MAPPING = {}
         self.GROUPS_CLAIM = "group"
