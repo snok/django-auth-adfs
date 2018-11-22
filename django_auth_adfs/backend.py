@@ -58,8 +58,24 @@ class AdfsBackend(ModelBackend):
         claims = jwt.decode(access_token, verify=False)
         logger.debug("JWT claims:\n"+pformat(claims))
 
-        claims = None
+        claims = self.verify_claims(access_token)
 
+        if not claims:
+            logger.error("Access token payload empty, cannot authenticate the request")
+            raise PermissionDenied
+
+        user = self.create_user(claims)
+        self.update_user_attributes(user, claims)
+        self.update_user_groups(user, claims)
+        self.update_user_flags(user, claims)
+        user.save()
+
+        adfs_backend_post_authenticate.send(
+            sender=self, user=user, claims=claims, json_response=json_response)
+
+        return user
+
+    def verify_claims(self, access_token):
         for idx, key in enumerate(provider_config.signing_keys):
             try:
                 # Explicitly define the verification option.
@@ -88,7 +104,7 @@ class AdfsBackend(ModelBackend):
                     options=options,
                 )
                 # Don't try next key if this one is valid
-                break
+                return claims
             except jwt.ExpiredSignature as error:
                 logger.info("Signature has expired: %s" % error)
                 raise PermissionDenied
@@ -102,21 +118,6 @@ class AdfsBackend(ModelBackend):
             except jwt.InvalidTokenError as error:
                 logger.info(str(error))
                 raise PermissionDenied
-
-        if not claims:
-            logger.error("Access token payload empty, cannot authenticate the request")
-            raise PermissionDenied
-
-        user = self.create_user(claims)
-        self.update_user_attributes(user, claims)
-        self.update_user_groups(user, claims)
-        self.update_user_flags(user, claims)
-        user.save()
-
-        adfs_backend_post_authenticate.send(
-            sender=self, user=user, claims=claims, json_response=json_response)
-
-        return user
 
     def create_user(self, claims):
         """
