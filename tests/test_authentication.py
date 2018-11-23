@@ -1,11 +1,13 @@
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
-from mock import patch
+from mock import Mock, patch
 from copy import deepcopy
 
 from django_auth_adfs.backend import AdfsBackend
 from django_auth_adfs.config import ProviderConfig, Settings
+from django_auth_adfs.signals import adfs_backend_post_authenticate
+
 from .utils import mock_adfs
 
 
@@ -15,6 +17,14 @@ class AuthenticationTests(TestCase):
         Group.objects.create(name='group2')
         Group.objects.create(name='group3')
         self.request = RequestFactory().get('/oauth2/callback')
+        self.signal_handler = Mock()
+        adfs_backend_post_authenticate.connect(self.signal_handler)
+
+    @mock_adfs("2012")
+    def test_post_authenticate_signal_send(self):
+        backend = AdfsBackend()
+        backend.authenticate(self.request, authorization_code="dummycode")
+        self.assertEqual(self.signal_handler.call_count, 1)
 
     @mock_adfs("2012")
     def test_with_auth_code_2012(self):
