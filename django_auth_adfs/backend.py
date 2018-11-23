@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
 
 from django_auth_adfs.config import settings, provider_config
-from django_auth_adfs.signals import adfs_backend_post_authenticate
+from django_auth_adfs import signals
 
 logger = logging.getLogger("django_auth_adfs")
 
@@ -52,13 +52,13 @@ class AdfsBackend(ModelBackend):
             logger.error("Unexpected ADFS response: " + response.content.decode())
             raise PermissionDenied
 
-        json_response = response.json()
-        access_token = json_response["access_token"]
+        adfs_response = response.json()
+        access_token = adfs_response["access_token"]
         logger.debug("Received access token: " + access_token)
         claims = jwt.decode(access_token, verify=False)
-        logger.debug("JWT claims:\n"+pformat(claims))
+        logger.debug("JWT claims:\n" + pformat(claims))
 
-        claims = self.verify_claims(access_token)
+        claims = self.verify_access_token(access_token)
 
         if not claims:
             logger.error("Access token payload empty, cannot authenticate the request")
@@ -68,14 +68,19 @@ class AdfsBackend(ModelBackend):
         self.update_user_attributes(user, claims)
         self.update_user_groups(user, claims)
         self.update_user_flags(user, claims)
+
+        signals.post_authenticate.send(
+            sender=self,
+            user=user,
+            claims=claims,
+            adfs_response=adfs_response
+        )
+
+        user.full_clean()
         user.save()
-
-        adfs_backend_post_authenticate.send(
-            sender=self, user=user, claims=claims, json_response=json_response)
-
         return user
 
-    def verify_claims(self, access_token):
+    def verify_access_token(self, access_token):
         for idx, key in enumerate(provider_config.signing_keys):
             try:
                 # Explicitly define the verification option.
@@ -161,7 +166,7 @@ class AdfsBackend(ModelBackend):
                         msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
                         raise ImproperlyConfigured(msg.format(claim))
                     else:
-                        msg = "Claim '{}' for user field '{}' was not found in the access token for user '{}'. "\
+                        msg = "Claim '{}' for user field '{}' was not found in the access token for user '{}'. " \
                               "Field is not required and will be left empty".format(claim, field, user)
                         logger.warning(msg)
             else:
