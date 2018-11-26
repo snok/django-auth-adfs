@@ -15,6 +15,8 @@ Changelog
 * When a claim mapped to a non-required field in the user model is missing,
   a warning is logged instead of an exception raised
 * Add a ``RETRIES`` and ``TIMEOUT`` setting for requests towards the ADFS server.
+* Add the ``CLIENT_SECRET`` setting to support client secrets in the OAuth2 Flow.
+* Django Rest Framework support.
 
 **Incompatible changes**
 
