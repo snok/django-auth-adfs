@@ -76,7 +76,6 @@ class AdfsBackend(ModelBackend):
             adfs_response=adfs_response
         )
 
-        user.full_clean()
         user.save()
         return user
 
