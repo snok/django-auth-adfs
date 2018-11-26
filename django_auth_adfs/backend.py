@@ -74,7 +74,7 @@ class AdfsBackend(ModelBackend):
             sender=self,
             user=user,
             claims=claims,
-            adfs_response=adfs_response
+            adfs_response=access_token
         )
 
         user.full_clean()
