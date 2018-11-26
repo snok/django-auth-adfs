@@ -24,6 +24,8 @@ class AdfsBackend(ModelBackend):
         # If loaded data is too old, reload it again
         provider_config.load_config()
 
+        adfs_response = None
+
         # If there's no token or code, we pass control to the next authentication backend
         if (authorization_code is None or authorization_code == '') and (access_token is None or access_token == ''):
             logger.debug("django_auth_adfs authentication backend was called but no authorization code was received")
@@ -77,7 +79,6 @@ class AdfsBackend(ModelBackend):
             adfs_response=adfs_response
         )
 
-        user.full_clean()
         user.save()
         return user
 
