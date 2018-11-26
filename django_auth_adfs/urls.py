@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.conf.urls import url
 
 from django_auth_adfs import views
 
