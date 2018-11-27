@@ -7,6 +7,20 @@ Setup
 When using Django Rest Framework, you can also use this package to authenticate
 your REST API clients. For this you need to do some extra configuration.
 
+You also need to install ``djangorestframework`` (or add it to your
+project dependencies)::
+
+    pip install djangorestframework
+
+The default ``AdfsBackend`` backend expects an ``authorization_code``. The backend
+will take care of obtaining an ``access_code`` from the Adfs server.
+
+With the Django Rest Framework integration the client application needs to acquire
+the access token by itself. See for an example: :ref:`request-access-token`. To
+authenticate against the API you need to enable the ``AdfsAccessTokenBackend``.
+
+Steps to enable the Django Rest Framework integration are as following:
+
 Add an extra authentication class to Django Rest Framework in ``settings.py``:
 
 .. code-block:: python
@@ -17,6 +31,16 @@ Add an extra authentication class to Django Rest Framework in ``settings.py``:
             'rest_framework.authentication.SessionAuthentication',
         )
     }
+
+Enable the ``AdfsAccessTokenBackend`` authentication backend in ``settings.py``:
+
+.. code-block:: python
+
+    AUTHENTICATION_BACKENDS = (
+        ...
+        'django_auth_adfs.backend.AdfsAccessTokenBackend',
+        ...
+    )
 
 (Optional) Override the standard Django Rest Framework login pages in your main ``urls.py``:
 
@@ -35,10 +59,13 @@ Add an extra authentication class to Django Rest Framework in ``settings.py``:
         ...
     ]
 
+.. _request-access-token:
+
 Requesting an access token
 --------------------------
 
-When everything is configured, you can request an access token in your client (script) like this:
+When everything is configured, you can request an access token in your client (script) and
+access the api like this:
 
 .. code-block:: python
 
