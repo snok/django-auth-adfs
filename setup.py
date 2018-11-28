@@ -57,6 +57,7 @@ setup(
         "cryptography",
         "coverage",
         "tox",
+        "djangorestframework",
     ],
     zip_safe=False,
 )
