@@ -24,5 +24,5 @@ I cannot get it working!
 Make sure you follow the instructions in the troubleshooting guide.
 It will enable debugging and can quickly tell you what is wrong.
 
-Also, walk through :ref:`all the possible settings <configuration>` once, you might find one
+Also, walk through the :ref:`settings` once, you might find one
 that needs to be adjusted to match your situation.

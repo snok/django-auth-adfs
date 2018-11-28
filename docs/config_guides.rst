@@ -1,5 +1,5 @@
-Configuration Guides
-====================
+ADFS Config Guides
+==================
 
 .. toctree::
    :maxdepth: 3

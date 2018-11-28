@@ -1,7 +1,7 @@
-.. _configuration:
+.. _settings:
 
-Settings
-========
+Settings Reference
+==================
 
 .. _audience_setting:
 

@@ -1,5 +1,5 @@
-Django Rest Framework integration
-=================================
+Rest Framework integration
+==========================
 
 Setup
 -----

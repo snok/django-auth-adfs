@@ -35,10 +35,11 @@ Contents
     :maxdepth: 3
 
     install
-    configuration
+    oauth2_explained
+    settings_ref
     config_guides
+    middleware
     rest_framework
-    extras
     demo
     troubleshooting
     faq
