@@ -250,7 +250,7 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
     Microsoft ADFS server with an authorization code.
     """
 
-    def authenticate(self, request, authorization_code=None, **kwargs):
+    def authenticate(self, request=None, authorization_code=None, **kwargs):
         # If loaded data is too old, reload it again
         provider_config.load_config()
 
@@ -271,7 +271,7 @@ class AdfsAccessTokenBackend(AdfsBaseBackend):
     Microsoft ADFS server with an access token retrieved by the client.
     """
 
-    def authenticate(self, request, access_token=None, **kwargs):
+    def authenticate(self, request=None, access_token=None, **kwargs):
         # If loaded data is too old, reload it again
         provider_config.load_config()
 
