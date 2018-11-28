@@ -103,7 +103,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'django_auth_adfs.backend.AdfsBackend',
+    'django_auth_adfs.backend.AdfsAuthCodeBackend',
+    'django_auth_adfs.backend.AdfsAccessTokenBackend',
 )
 
 AUTH_ADFS = {

@@ -1,13 +1,13 @@
+from copy import deepcopy
+
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
 from mock import Mock, patch
-from copy import deepcopy
 
-from django_auth_adfs.backend import AdfsBackend
-from django_auth_adfs.config import ProviderConfig, Settings
 from django_auth_adfs import signals
-
+from django_auth_adfs.backend import AdfsAuthCodeBackend
+from django_auth_adfs.config import ProviderConfig, Settings
 from .utils import mock_adfs
 
 
@@ -22,13 +22,13 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2012")
     def test_post_authenticate_signal_send(self):
-        backend = AdfsBackend()
+        backend = AdfsAuthCodeBackend()
         backend.authenticate(self.request, authorization_code="dummycode")
         self.assertEqual(self.signal_handler.call_count, 1)
 
     @mock_adfs("2012")
     def test_with_auth_code_2012(self):
-        backend = AdfsBackend()
+        backend = AdfsAuthCodeBackend()
         user = backend.authenticate(self.request, authorization_code="dummycode")
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
@@ -40,7 +40,7 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016")
     def test_with_auth_code_2016(self):
-        backend = AdfsBackend()
+        backend = AdfsAuthCodeBackend()
         user = backend.authenticate(self.request, authorization_code="dummycode")
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
@@ -59,7 +59,7 @@ class AuthenticationTests(TestCase):
         with patch("django_auth_adfs.config.django_settings", settings):
             with patch("django_auth_adfs.config.settings", Settings()):
                 with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                    backend = AdfsBackend()
+                    backend = AdfsAuthCodeBackend()
                     user = backend.authenticate(self.request, authorization_code="dummycode")
                     self.assertIsInstance(user, User)
                     self.assertEqual(user.first_name, "John")
@@ -71,12 +71,12 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016")
     def test_empty(self):
-        backend = AdfsBackend()
+        backend = AdfsAuthCodeBackend()
         self.assertIsNone(backend.authenticate(self.request))
 
     @mock_adfs("2016")
     def test_group_claim(self):
-        backend = AdfsBackend()
+        backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.backend.settings.GROUPS_CLAIM", "nonexisting"):
             user = backend.authenticate(self.request, authorization_code="dummycode")
             self.assertIsInstance(user, User)
@@ -87,7 +87,7 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016")
     def test_empty_keys(self):
-        backend = AdfsBackend()
+        backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.config.provider_config.signing_keys", []):
             self.assertRaises(PermissionDenied, backend.authenticate, self.request, authorization_code='testcode')
 
@@ -102,7 +102,7 @@ class AuthenticationTests(TestCase):
 
         self.assertEqual(user.groups.all()[0].name, "group3")
 
-        backend = AdfsBackend()
+        backend = AdfsAuthCodeBackend()
 
         user = backend.authenticate(self.request, authorization_code="dummycode")
         self.assertIsInstance(user, User)

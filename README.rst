@@ -42,7 +42,7 @@ In your project's ``settings.py`` add these settings.
 
     AUTHENTICATION_BACKENDS = (
         ...
-        'django_auth_adfs.backend.AdfsBackend',
+        'django_auth_adfs.backend.AdfsAuthCodeBackend',
         ...
     )
 

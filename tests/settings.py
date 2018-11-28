@@ -21,8 +21,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-
-                'django_auth_adfs.context_processors.adfs_url',
             ],
         },
         'DIRS': 'templates'
@@ -56,8 +54,8 @@ INSTALLED_APPS = (
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    'django_auth_adfs.backend.AdfsBackend',
-    'django_auth_adfs.backend.AdfsAccessTokenBackend'
+    'django_auth_adfs.backend.AdfsAuthCodeBackend',
+    'django_auth_adfs.backend.AdfsAccessTokenBackend',
 )
 
 ROOT_URLCONF = 'tests.urls'

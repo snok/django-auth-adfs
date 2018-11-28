@@ -35,7 +35,7 @@ class AdfsAccessTokenAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed(msg)
 
         # Authenticate the user
-        # The AdfsBackend authentication backend will notice the "access_token" parameter
+        # The AdfsAuthCodeBackend authentication backend will notice the "access_token" parameter
         # and skip the request for an access token using the authorization code
         user = authenticate(access_token=auth[1])
 
