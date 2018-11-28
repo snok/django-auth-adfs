@@ -57,6 +57,7 @@ INSTALLED_APPS = (
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     'django_auth_adfs.backend.AdfsBackend',
+    'django_auth_adfs.backend.AdfsAccessTokenBackend'
 )
 
 ROOT_URLCONF = 'tests.urls'
