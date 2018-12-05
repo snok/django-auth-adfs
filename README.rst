@@ -48,6 +48,7 @@ In your project's ``settings.py`` add these settings.
 
     INSTALLED_APPS = (
         ...
+        # Needed for the ADFS redirect URI to function
         'django_auth_adfs',
         ...
 
