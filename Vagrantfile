@@ -36,8 +36,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "adfs2012", autostart: false do |adfs2012|
 
-    # adfs2012.vm.box = "adamrushuk/win2012r2-std-wmf5-dev"
-    adfs2012.vm.box = "cdaf/WindowsServer2012R2"
+    adfs2012.vm.box = "devopsgroup-io/windows_server-2012r2-standard-amd64-nocm"
 
     adfs2012.vm.provider "virtualbox" do |v|
       v.memory = 2048

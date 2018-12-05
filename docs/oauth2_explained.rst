@@ -1,12 +1,82 @@
 OAuth2 and ADFS explained
 =========================
 
-This chapter tries to explain how ADFS and Django map on the OAuth2 `Authorization Code Grant <https://tools.ietf.org/html/rfc6749#section-4.1>`__
+This chapter tries to explain how ADFS implements the OAuth2 and OpenID Connect standard and
+how we can use this in Django.
 
-The OAuth2 RFC
---------------
+OAuth2 vs. OpenID Connect
+-------------------------
 
-`RFC 6749 <https://tools.ietf.org/html/rfc6749#section-4.1>`__ specifies
+What's `OAuth2 <https://tools.ietf.org/html/rfc6749>`__?
+
+    The OAuth 2.0 authorization framework enables a third-party
+    application to obtain limited access to an HTTP service, either on
+    behalf of a resource owner by orchestrating an approval interaction
+    between the resource owner and the HTTP service, or by allowing the
+    third-party application to obtain access on its own behalf.
+
+What's important is that it's only an **authorization** framework. It only
+tells you what the user is allowed to do but it doesn't tell you who the user is.
+At it's core, there's nothing in the protocol that gives you info about the user.
+
+To solve this, there's the `OpenID Connect <https://openid.net/specs/openid-connect-core-1_0.html>`__
+framework.
+
+    OpenID Connect 1.0 is a simple identity layer on top of the OAuth 2.0 [RFC6749]
+    protocol. It enables Clients to verify the identity of the End-User based on the
+    authentication performed by an Authorization Server, as well as to obtain basic
+    profile information about the End-User in an interoperable and REST-like manner.
+
+So, where the OAuth2 protocol lacks any user identifiable info, OpenID Connect does
+give you info about who the user is. The access token returned by OpenID Connect is
+a signed JWT token (JSON Web Token) containing claims about the user.
+
+``django-auth-adfs`` uses this access token to validate the issuer of the token by verifying the
+signature and also uses it to keep de Django users database up to date and at the same time
+authenticate users.
+
+Depending on the version of ADFS, there's support for different pieces of these protocol.
+The table below tries to list the support in various ADFS versions:
+
+==================================  ============  =========  ========
+Protocol                            ADFS 2012 R2  ADFS 2016  Azure AD
+==================================  ============  =========  ========
+OAuth2                              Yes           Yes        Yes
+OpenID Connect                      No**          Yes        Yes
+==================================  ============  =========  ========
+
+** ADFS 2012 doesn't implement OpenID Connect, but it does return the access token
+as a JWT token, just like OpenID Connect would.
+
+OpenID Connect / OAuth2 Flow support:
+
+==================================  ============  =========  ========
+Version                             ADFS 2012 R2  ADFS 2016  Azure AD
+==================================  ============  =========  ========
+**Authorization code grant**        Yes           Yes        Yes
+Implicit grant                      no            Yes        Yes
+Resource owner password credential  no            Yes        Yes
+Client credential grant             no            Yes        Yes
+==================================  ============  =========  ========
+
+References:
+
+* https://blogs.msdn.microsoft.com/nicold/2018/03/23/oauth-2-0-protocol-support-level-for-adfs-2012r2-vs-adfs-2016/
+
+The **Authorization Code Grant** is what ``django-auth-adfs`` uses.
+
+OAuth2 and Django
+-----------------
+
+Let's step through the process of how ``django-auth-adfs`` uses OAuth2 to authenticate
+and authorize users.
+
+.. note::
+
+    In all the graphs below, remember that the access token is what contains the info
+    about our user in the form of a signed JWT token.
+
+The OAuth2 `RFC 6749 <https://tools.ietf.org/html/rfc6749#section-4.1>`__ specifies
 the `Authorization Code Grant <https://tools.ietf.org/html/rfc6749#section-4.1>`__ flow as follows:
 
 .. code-block::
@@ -122,10 +192,7 @@ Let's add it to make things complete:
    (G)  The resource server validates the access token, and if valid,
         serves the request.
 
-Django and OAuth2
------------------
-
-Alright, now we have the entire flow, let's translate the roles to our components at hand
+Alright, now that we have the entire flow, let's translate the roles to our components
 and use a bit more comprehensible terms:
 
 .. code-block::
@@ -169,7 +236,7 @@ and use a bit more comprehensible terms:
 
 The following things changed:
 
-* A ``resource`` parameter was added to step **A**. This is a ADFS specific thing.
+* A ``resource`` parameter was added to step **A**. This is an ADFS specific thing used to identify which application .
 * Step **G** was extended up to the web browser. Resembling the session cookie sent back to the web browser.
 * ``Resource Owner`` ➜ ``User``
 * ``User-Agent`` ➜ ``Web Browser``
@@ -327,10 +394,35 @@ Let's go over the changes again:
 * ``Client`` ➜ ``Application``
 * ``Resource Server`` ➜ ``Django Rest Framework API``
 
-In this case, a user inputs his username and password into, an application/script.
+In this case, a user inputs his username and password into an application/script.
 The application fetches an access token on behalf of the user and uses it to
 make calls to you API.
 
-TODO:
+ADFS and OAuth2 lingo compared
+------------------------------
 
-* Map to ADFS config and explain which config object in ADFS maps to which role in the diagram.
+Potayto, potahto...
+
+OAuth2 and ADFS don't keep the same name for components. Below is an overview of what OAuth2
+role maps to which configuration part on ADFS.
+
++-----------------------+----------------------+----------------------+----------------------+
+| OAuth2                | Azure AD             | ADFS 2016            | ADFS 2012            |
++=======================+======================+======================+======================+
+| Resource Owner        | User                 | User                 | User                 |
++-----------------------+----------------------+----------------------+----------------------+
+| Authorization Server  | ADFS server          | ADFS server          | ADFS server          |
++-----------------------+----------------------+----------------------+----------------------+
+| Client                | Native Application   | * Native Application | Client               |
+|                       |                      | * Server Application |                      |
++-----------------------+----------------------+----------------------+----------------------+
+| Resource Server       | Web app / API        | Web API              | Relying Party        |
++-----------------------+----------------------+----------------------+----------------------+
+
+.. note::
+
+    For ADFS 2016, we assumed you use **application group** configuration instead of the
+    "old-fashion" Relying Party Trust config.
+
+    For ADFS 2012, the client part is not visible from the GUI and can only be configured
+    via PowerShell commands.
