@@ -1,5 +1,4 @@
 import logging
-from pprint import pformat
 
 import jwt
 from django.contrib.auth import get_user_model
@@ -7,28 +6,15 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
 
-from django_auth_adfs.config import settings, provider_config
 from django_auth_adfs import signals
+from django_auth_adfs.config import settings, provider_config
 
 logger = logging.getLogger("django_auth_adfs")
 
 
-class AdfsBackend(ModelBackend):
-    """
-    Authentication backend to allow authenticating users against a
-    Microsoft ADFS server.
-    It's based on the ``RemoteUserBackend`` from Django.
-    """
-
-    def authenticate(self, request, authorization_code=None, **kwargs):
-        # If loaded data is too old, reload it again
-        provider_config.load_config()
-
-        # If there's no token or code, we pass control to the next authentication backend
-        if authorization_code is None or authorization_code == '':
-            logger.debug("django_auth_adfs was called but no authorization code was received")
-            return
-
+class AdfsBaseBackend(ModelBackend):
+    def exchange_auth_code(self, authorization_code, request):
+        logger.debug("Received authorization code: " + authorization_code)
         data = {
             'grant_type': 'authorization_code',
             'client_id': settings.CLIENT_ID,
@@ -38,7 +24,6 @@ class AdfsBackend(ModelBackend):
         if settings.CLIENT_SECRET:
             data['client_secret'] = settings.CLIENT_SECRET
 
-        logger.debug("Received authorization code: " + authorization_code)
         logger.debug("Getting access token at: " + provider_config.token_endpoint)
         response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
 
@@ -53,33 +38,9 @@ class AdfsBackend(ModelBackend):
             raise PermissionDenied
 
         adfs_response = response.json()
-        access_token = adfs_response["access_token"]
-        logger.debug("Received access token: " + access_token)
-        claims = jwt.decode(access_token, verify=False)
-        logger.debug("JWT claims:\n" + pformat(claims))
+        return adfs_response
 
-        claims = self.verify_access_token(access_token)
-
-        if not claims:
-            logger.error("Access token payload empty, cannot authenticate the request")
-            raise PermissionDenied
-
-        user = self.create_user(claims)
-        self.update_user_attributes(user, claims)
-        self.update_user_groups(user, claims)
-        self.update_user_flags(user, claims)
-
-        signals.post_authenticate.send(
-            sender=self,
-            user=user,
-            claims=claims,
-            adfs_response=adfs_response
-        )
-
-        user.save()
-        return user
-
-    def verify_access_token(self, access_token):
+    def validate_access_token(self, access_token):
         for idx, key in enumerate(provider_config.signing_keys):
             try:
                 # Explicitly define the verification option.
@@ -97,8 +58,8 @@ class AdfsBackend(ModelBackend):
                     'require_iat': False,
                     'require_nbf': False
                 }
-                # Validate token and extract claims
-                claims = jwt.decode(
+                # Validate token and return claims
+                return jwt.decode(
                     access_token,
                     key=key,
                     algorithms=['RS256', 'RS384', 'RS512'],
@@ -107,8 +68,6 @@ class AdfsBackend(ModelBackend):
                     issuer=provider_config.issuer,
                     options=options,
                 )
-                # Don't try next key if this one is valid
-                return claims
             except jwt.ExpiredSignature as error:
                 logger.info("Signature has expired: %s" % error)
                 raise PermissionDenied
@@ -122,6 +81,30 @@ class AdfsBackend(ModelBackend):
             except jwt.InvalidTokenError as error:
                 logger.info(str(error))
                 raise PermissionDenied
+
+    def process_access_token(self, access_token, adfs_response=None):
+        if not access_token:
+            raise PermissionDenied
+
+        logger.debug("Received access token: " + access_token)
+        claims = self.validate_access_token(access_token)
+        if not claims:
+            raise PermissionDenied
+
+        user = self.create_user(claims)
+        self.update_user_attributes(user, claims)
+        self.update_user_groups(user, claims)
+        self.update_user_flags(user, claims)
+
+        signals.post_authenticate.send(
+            sender=self,
+            user=user,
+            claims=claims,
+            adfs_response=adfs_response
+        )
+
+        user.save()
+        return user
 
     def create_user(self, claims):
         """
@@ -259,3 +242,49 @@ class AdfsBackend(ModelBackend):
             else:
                 msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
+
+
+class AdfsAuthCodeBackend(AdfsBaseBackend):
+    """
+    Authentication backend to allow authenticating users against a
+    Microsoft ADFS server with an authorization code.
+    """
+
+    def authenticate(self, request=None, authorization_code=None, **kwargs):
+        # If loaded data is too old, reload it again
+        provider_config.load_config()
+
+        # If there's no token or code, we pass control to the next authentication backend
+        if authorization_code is None or authorization_code == '':
+            logger.debug("django_auth_adfs authentication backend was called but no authorization code was received")
+            return
+
+        adfs_response = self.exchange_auth_code(authorization_code, request)
+        access_token = adfs_response["access_token"]
+        user = self.process_access_token(access_token, adfs_response)
+        return user
+
+
+class AdfsAccessTokenBackend(AdfsBaseBackend):
+    """
+    Authentication backend to allow authenticating users against a
+    Microsoft ADFS server with an access token retrieved by the client.
+    """
+
+    def authenticate(self, request=None, access_token=None, **kwargs):
+        # If loaded data is too old, reload it again
+        provider_config.load_config()
+
+        # If there's no token or code, we pass control to the next authentication backend
+        if access_token is None or access_token == '':
+            logger.debug("django_auth_adfs authentication backend was called but no authorization code was received")
+            return
+
+        access_token = access_token.decode()
+        user = self.process_access_token(access_token)
+        return user
+
+
+class AdfsBackend(AdfsAuthCodeBackend):
+    """ Backwards compatible class name """
+    pass

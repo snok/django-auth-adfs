@@ -27,6 +27,7 @@ Features
 * Integrates Django with Active Directory on Windows 2012 R2, 2016 or Azure AD in the cloud.
 * Provides seamless single sign on (SSO) for your Django project on intranet environments.
 * Auto creates users and adds them to Django groups based on info received from ADFS.
+* Django Rest Framework (DRF) integration: Authenticate against your API with an ADFS access token.
 
 Installation
 ------------
@@ -41,7 +42,7 @@ In your project's ``settings.py`` add these settings.
 
     AUTHENTICATION_BACKENDS = (
         ...
-        'django_auth_adfs.backend.AdfsBackend',
+        'django_auth_adfs.backend.AdfsAuthCodeBackend',
         ...
     )
 

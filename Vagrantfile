@@ -36,8 +36,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "adfs2012", autostart: false do |adfs2012|
 
-    # adfs2012.vm.box = "adamrushuk/win2012r2-std-wmf5-dev"
-    adfs2012.vm.box = "cdaf/WindowsServer2012R2"
+    adfs2012.vm.box = "devopsgroup-io/windows_server-2012r2-standard-amd64-nocm"
 
     adfs2012.vm.provider "virtualbox" do |v|
       v.memory = 2048
@@ -84,6 +83,8 @@ Vagrant.configure("2") do |config|
       apt-get install -y python3-pip
       # Install django-auth-adfs in editable mode
       pip3 install -e /vagrant
+      # Install DRF to demo the API integration
+      pip3 install djangorestframework django-filter
       # run migrate command for both example projects
       python3 /vagrant/demo/adfs/manage.py makemigrations polls
       python3 /vagrant/demo/adfs/manage.py migrate
