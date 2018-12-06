@@ -228,3 +228,22 @@ If you followed this guide, you should end up with a configuration like this.
         "USERNAME_CLAIM": "winaccountname",
         "GROUP_CLAIM": "group"
     }
+
+Enabling SSO for other browsers
+-------------------------------
+
+By default, ADFS only supports seamless single sign-on for Internet Explorer.
+In other browsers, users will always be prompted for their username and password.
+
+To enable SSO also for other browsers like Chrome and Firefox, execute the following PowerShell command:
+
+.. code-block:: ps
+
+    [System.Collections.ArrayList]$UserAgents = Get-AdfsProperties | select -ExpandProperty WIASupportedUserAgents
+    $UserAgents.Add(“Mozilla/5.0”)
+    Set-ADFSProperties -WIASupportedUserAgents $UserAgents
+
+After that, restart the ADFS service on every server in the ADFS farm.
+
+For firefox, you'll also have to change it's ``network.automatic-ntlm-auth.trusted-uris`` setting
+to include the URI of your ADFS server.

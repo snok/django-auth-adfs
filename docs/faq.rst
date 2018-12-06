@@ -19,6 +19,13 @@ I'm receiving an ``SSLError: CERTIFICATE_VERIFY_FAILED`` error.
 double check your ``CA_BUNDLE`` setting. Most likely your ADFS server is using a certificate signed by an
 enterprise root CA. you'll need to put it's certificate in a file and set ``CA_BUNDLE`` to it's path.
 
+Why am I prompted for a username and password in Chrome/Firefox?
+----------------------------------------------------------------
+By default, ADFS only triggers seamless single sign-on for Internet Explorer or Edge.
+
+Have a look at the ADFS configuration guides for details about how to got this working
+for other browsers also.
+
 I cannot get it working!
 ------------------------
 Make sure you follow the instructions in the troubleshooting guide.
