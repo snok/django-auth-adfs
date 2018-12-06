@@ -37,6 +37,7 @@ class Settings(object):
         self.CLIENT_ID = None  # Required
         self.CLIENT_SECRET = None
         self.CONFIG_RELOAD_INTERVAL = 24  # hours
+        self.DISABLE_SSO = False
         self.GROUP_TO_FLAG_MAPPING = {}
         self.GROUPS_CLAIM = "group"
         self.LOGIN_EXEMPT_URLS = []
@@ -128,6 +129,7 @@ class Settings(object):
 class ProviderConfig(object):
     def __init__(self):
         self._config_timestamp = None
+        self._mode = None
 
         self.authorization_endpoint = None
         self.signing_keys = None
@@ -147,8 +149,10 @@ class ProviderConfig(object):
             logger.debug("Loading django_auth_adfs ID Provider configuration.")
             try:
                 loaded = self._load_openid_config()
+                self._mode = "openid_connect"
             except ConfigLoadError:
                 loaded = self._load_federation_metadata()
+                self._mode = "oauth2"
 
             if not loaded:
                 if self._config_timestamp is None:
@@ -163,6 +167,7 @@ class ProviderConfig(object):
             self._config_timestamp = datetime.now()
 
             logger.info("django_auth_adfs loaded settings from ADFS server.")
+            logger.info("operating mode:         " + self._mode)
             logger.info("authorization endpoint: " + self.authorization_endpoint)
             logger.info("token endpoint:         " + self.token_endpoint)
             logger.info("end session endpoint:   " + self.end_session_endpoint)
@@ -270,6 +275,11 @@ class ProviderConfig(object):
             "redirect_uri": self.redirect_uri(request),
             "state": redirect_to,
         })
+        if self._mode == "openid_connect":
+            query["scope"] = "openid"
+            if settings.DISABLE_SSO:
+                query["prompt"] = "login"
+
         return "{0}?{1}".format(self.authorization_endpoint, query.urlencode())
 
     def build_end_session_endpoint(self):

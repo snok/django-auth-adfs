@@ -27,28 +27,6 @@ Examples
 | https://adfs.yourcompany.com/adfs/services/trust | https://adfs.yourcompany.com/adfs/services/trust           |
 +--------------------------------------------------+------------------------------------------------------------+
 
-CA_BUNDLE
----------
-Default: ``True``
-
-The value of this setting is passed to the call to the ``Requests`` package when fetching the access token from ADFS.
-It allows you to control the webserver certificate verification of the ADFS server.
-
-``True`` to use the default CA bundle of the ``requests`` package.
-
-``/path/to/ca-bundle.pem`` allows you to specify a path to a CA bundle file. If your ADFS server uses a certificate
-signed by an enterprise root CA, you will need to specify the path to it's certificate here.
-
-``False`` disables the certificate check.
-
-Have a look at the `Requests documentation
-<http://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for more details.
-
-.. warning::
-    Do not set this value to ``False`` in a production setup. Because we load certain settings from the ADFS server,
-    this might lead to a security issue. DNS hijacking for example might cause an attacker to inject his own
-    access token signing certificate.
-
 .. _boolean_claim_mapping_setting:
 
 BOOLEAN_CLAIM_MAPPING
@@ -75,6 +53,28 @@ example
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
+
+CA_BUNDLE
+---------
+Default: ``True``
+
+The value of this setting is passed to the call to the ``Requests`` package when fetching the access token from ADFS.
+It allows you to control the webserver certificate verification of the ADFS server.
+
+``True`` to use the default CA bundle of the ``requests`` package.
+
+``/path/to/ca-bundle.pem`` allows you to specify a path to a CA bundle file. If your ADFS server uses a certificate
+signed by an enterprise root CA, you will need to specify the path to it's certificate here.
+
+``False`` disables the certificate check.
+
+Have a look at the `Requests documentation
+<http://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for more details.
+
+.. warning::
+    Do not set this value to ``False`` in a production setup. Because we load certain settings from the ADFS server,
+    this might lead to a security issue. DNS hijacking for example might cause an attacker to inject his own
+    access token signing certificate.
 
 .. _claim_mapping_setting:
 
@@ -132,6 +132,21 @@ ADFS server. Based on this information, certain configuration for this module is
 
 This setting determines the interval after which the configuration is reloaded. This allows to automatically follow the
 token signing certificate rollover on ADFS.
+
+DISABLE_SSO
+-----------
+Default: ``False``
+
+Setting this to ``True`` will disable the seamless single sign-on capability of ADFS.
+Forcing ADFS to prompt users for a username and password, instead of automatically logging them in
+with their current user.
+
+This allows users to use a different account then the one they are logged in with on their workstation.
+
+.. attention::
+
+    This does not work with ADFS 3.0 on windows 2012 because this setting requires OpenID Connect
+    which is not supported on ADFS 3.0
 
 GROUP_CLAIM
 -----------
