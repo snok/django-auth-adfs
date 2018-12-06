@@ -82,4 +82,4 @@ class OAuth2LogoutView(View):
             request (django.http.request.HttpRequest): A Django Request object
         """
         logout(request)
-        return redirect(provider_config.end_session_endpoint)
+        return redirect(provider_config.build_end_session_endpoint())

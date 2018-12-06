@@ -272,6 +272,17 @@ class ProviderConfig(object):
         })
         return "{0}?{1}".format(self.authorization_endpoint, query.urlencode())
 
+    def build_end_session_endpoint(self):
+        """
+        This function returns the ADFS end session URL to log a user out.
+
+        Returns:
+            str: The redirect URI
+
+        """
+        self.load_config()
+        return self.end_session_endpoint
+
 
 settings = Settings()
 provider_config = ProviderConfig()
