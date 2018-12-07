@@ -142,7 +142,7 @@ class AdfsBaseBackend(ModelBackend):
             if hasattr(user, field):
                 if claim in claims:
                     setattr(user, field, claims[claim])
-                    logger.debug("Attribute '{}' for user '{}' was set to '{}'.".format(user, field, claims[claim]))
+                    logger.debug("Attribute '{}' for user '{}' was set to '{}'.".format(field, user, claims[claim]))
                 else:
                     if field in required_fields:
                         msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
