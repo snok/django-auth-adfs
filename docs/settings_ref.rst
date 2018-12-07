@@ -316,10 +316,13 @@ USERNAME_CLAIM
 Name of the claim sent in the JWT token from ADFS that contains the username.
 If the user doesn't exist yet, this field will be used as it's username.
 
+The value of the claim must be a unique value. No 2 users should ever have the same value.
+
 .. warning::
-   You shouldn't need to set this value for ADFS or Azure AD. Because ``winaccountname`` maps to the ``sAMAccountName``
-   on Active Directory, which is guaranteed to be unique. The same for Azure AD where ``upn`` maps to the
-   ``UserPrincipleName``, which is unique on Azure AD.
+   You shouldn't need to set this value for ADFS or Azure AD unless you use custom user models.
+   Because ``winaccountname`` maps to the ``sAMAccountName`` on Active Directory, which is guaranteed
+   to be unique. The same for Azure AD where ``upn`` maps to the ``UserPrincipleName``, which is unique
+   on Azure AD.
 
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
