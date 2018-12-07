@@ -1,7 +1,7 @@
 Changelog
 =========
 
-`1.1.0`_ - 2018-12-07
+`1.1.1`_ - 2018-12-07
 ---------------------
 
 **Added**
@@ -132,6 +132,7 @@ Changelog
 
 * Initial release
 
+.. _1.1.1: https://github.com/jobec/django-auth-adfs/compare/1.0.0...1.1.1
 .. _1.0.0: https://github.com/jobec/django-auth-adfs/compare/0.2.1...1.0.0
 .. _0.2.1: https://github.com/jobec/django-auth-adfs/compare/0.2.0...0.2.1
 .. _0.2.0: https://github.com/jobec/django-auth-adfs/compare/0.1.2...0.2.0
@@ -142,5 +143,3 @@ Changelog
 .. _0.0.4: https://github.com/jobec/django-auth-adfs/compare/0.0.3...0.0.4
 .. _0.0.3: https://github.com/jobec/django-auth-adfs/compare/0.0.2...0.0.3
 .. _0.0.2: https://github.com/jobec/django-auth-adfs/compare/0.0.1...0.0.2
-
-
