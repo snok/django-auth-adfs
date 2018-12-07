@@ -1,6 +1,25 @@
 Changelog
 =========
 
+`1.1.0`_ - 2018-12-07
+---------------------
+
+**Added**
+
+* Add a setting to force a login screen and disable SSO on ADFS.
+* Documentation about how to enable SSO for other browsers than IE & Edge.
+
+**Fixed**
+
+* Prevent username field from being overwritten by a claim mapping.
+* Prevent traceback upon logout when ADFS config is not yet loaded.
+* Fix fields in log messages being swapped.
+
+**Security**
+
+* Don't allow the audience claim to be ignored. Preventing access token reuse.
+* Set an unusable password on newly created user instead of leaving it empty.
+
 `1.0.0`_ - 2018-12-05
 ---------------------
 
