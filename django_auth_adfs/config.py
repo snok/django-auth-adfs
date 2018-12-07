@@ -10,6 +10,7 @@ from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.x509 import load_der_x509_certificate
 from django.conf import settings as django_settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.http import QueryDict
 
@@ -124,6 +125,12 @@ class Settings(object):
             if not getattr(self, setting):
                 msg = "django_auth_adfs setting '{0}' has not been set".format(setting)
                 raise ImproperlyConfigured(msg)
+
+        # Validate setting conflicts
+        usermodel = get_user_model()
+        if usermodel.USERNAME_FIELD in self.CLAIM_MAPPING.keys():
+            raise ImproperlyConfigured("You cannot set the username field of the user model from "
+                                       "the CLAIM_MAPPING setting. Instead use the USERNAME_CLAIM setting.")
 
 
 class ProviderConfig(object):
