@@ -52,7 +52,7 @@ class AdfsBaseBackend(ModelBackend):
                     'verify_exp': True,
                     'verify_nbf': True,
                     'verify_iat': True,
-                    'verify_aud': (True if settings.AUDIENCE else False),
+                    'verify_aud': True,
                     'verify_iss': True,
                     'require_exp': False,
                     'require_iat': False,
