@@ -237,10 +237,10 @@ In other browsers, users will always be prompted for their username and password
 
 To enable SSO also for other browsers like Chrome and Firefox, execute the following PowerShell command:
 
-.. code-block:: ps
+.. code-block:: powershell
 
     [System.Collections.ArrayList]$UserAgents = Get-AdfsProperties | select -ExpandProperty WIASupportedUserAgents
-    $UserAgents.Add(“Mozilla/5.0”)
+    $UserAgents.Add("Mozilla/5.0")
     Set-ADFSProperties -WIASupportedUserAgents $UserAgents
 
 After that, restart the ADFS service on every server in the ADFS farm.
