@@ -103,6 +103,7 @@ class AdfsBaseBackend(ModelBackend):
             adfs_response=adfs_response
         )
 
+        user.full_clean()
         user.save()
         return user
 
@@ -123,6 +124,7 @@ class AdfsBaseBackend(ModelBackend):
             usermodel.USERNAME_FIELD: claims[username_claim]
         })
         if created:
+            user.set_unusable_password()
             logger.debug("User '{}' has been created.".format(claims[username_claim]))
 
         return user

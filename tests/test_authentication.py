@@ -98,6 +98,7 @@ class AuthenticationTests(TestCase):
         })
         group = Group.objects.get(name="group3")
         user.groups.add(group)
+        user.set_unusable_password()
         user.save()
 
         self.assertEqual(user.groups.all()[0].name, "group3")
