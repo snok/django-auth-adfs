@@ -123,7 +123,7 @@ class AdfsBaseBackend(ModelBackend):
         user, created = usermodel.objects.get_or_create(**{
             usermodel.USERNAME_FIELD: claims[username_claim]
         })
-        if created:
+        if created or not user.password:
             user.set_unusable_password()
             logger.debug("User '{}' has been created.".format(claims[username_claim]))
 
