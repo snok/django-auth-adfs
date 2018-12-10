@@ -148,11 +148,13 @@ DISABLE_SSO
 * **Type**: ``boolean``
 
 
-Setting this to ``True`` will disable the seamless single sign-on capability of ADFS.
+Setting this to ``True`` will globally disable the seamless single sign-on capability of ADFS.
 Forcing ADFS to prompt users for a username and password, instead of automatically logging them in
-with their current user.
+with their current user. This allows users to use a different account then the one they are logged
+in with on their workstation.
 
-This allows users to use a different account then the one they are logged in with on their workstation.
+You can also selectively enable this setting by using ``<a href="{% url 'django_auth_adfs:login-no-sso' %}">...</a>``
+in a template instead of the regular ``<a href="{% url 'django_auth_adfs:login' %}">...</a>``
 
 .. attention::
 

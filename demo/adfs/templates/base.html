@@ -22,13 +22,18 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
         </li>
-        <li>
         {% if user.is_authenticated %}
+        <li>
           <a class="nav-link" href="{% url 'django_auth_adfs:logout' %}">Logout</a>
-        {% else %}
-          <a class="nav-link" href="{% url 'django_auth_adfs:login' %}">Login</a>
-        {% endif %}
         </li>
+        {% else %}
+        <li>
+          <a class="nav-link" href="{% url 'django_auth_adfs:login' %}">Login</a>
+        </li>
+        <li>
+          <a class="nav-link" href="{% url 'django_auth_adfs:login-no-sso' %}">Login (no SSO)</a>
+        </li>
+        {% endif %}
       </ul>
     </div>
   </nav>
