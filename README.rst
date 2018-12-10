@@ -80,7 +80,7 @@ In your project's ``settings.py`` add these settings.
         # the LoginRequiredMixin on every view class
         #
         # You can specify URLs for which login is not enforced by
-        # specifying them in LOGIN_EXEMPT_URLS in setting.
+        # specifying them in the LOGIN_EXEMPT_URLS setting.
         'django_auth_adfs.middleware.LoginRequiredMiddleware',
     )
 

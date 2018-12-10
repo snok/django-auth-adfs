@@ -229,7 +229,7 @@ class AdfsBaseBackend(ModelBackend):
                     else:
                         value = False
                     setattr(user, flag, value)
-                    logger.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, flag, value))
+                    logger.debug("Attribute '{}' for user '{}' was set to '{}'.".format(user, flag, value))
                 else:
                     msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                     raise ImproperlyConfigured(msg.format(flag))
