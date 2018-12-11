@@ -1,6 +1,17 @@
 Changelog
 =========
 
+`1.1.2`_ - 2018-12-11
+---------------------
+
+**Added**
+
+* Added views to selectively disable SSO for login links
+
+**Fixed**
+
+* Existing users with an empty password raised an exception
+
 `1.1.1`_ - 2018-12-07
 ---------------------
 
@@ -132,6 +143,7 @@ Changelog
 
 * Initial release
 
+.. _1.1.2: https://github.com/jobec/django-auth-adfs/compare/1.1.1...1.1.2
 .. _1.1.1: https://github.com/jobec/django-auth-adfs/compare/1.0.0...1.1.1
 .. _1.0.0: https://github.com/jobec/django-auth-adfs/compare/0.2.1...1.0.0
 .. _0.2.1: https://github.com/jobec/django-auth-adfs/compare/0.2.0...0.2.1
