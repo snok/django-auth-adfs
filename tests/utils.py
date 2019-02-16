@@ -95,7 +95,7 @@ def do_build_access_token(request, issuer):
         "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
         "ver": "1.0"
     }
-    token = jwt.encode(claims, signing_key_B, algorithm="RS256")
+    token = jwt.encode(claims, signing_key_b, algorithm="RS256")
     response = {
         'resource': 'django_website.adfs.relying_party_id',
         'token_type': 'bearer',
@@ -118,7 +118,7 @@ def build_openid_keys(request):
                 "x5t": "dummythumbprint",
                 "n": "somebase64encodedmodulus",
                 "e": "somebase64encodedexponent",
-                "x5c": [base64.b64encode(signing_cert_A).decode(), ]
+                "x5c": [base64.b64encode(signing_cert_a).decode(), ]
             },
             {
                 "kty": "RSA",
@@ -127,7 +127,7 @@ def build_openid_keys(request):
                 "x5t": "dummythumbprint",
                 "n": "somebase64encodedmodulus",
                 "e": "somebase64encodedexponent",
-                "x5c": [base64.b64encode(signing_cert_B).decode(), ]
+                "x5c": [base64.b64encode(signing_cert_b).decode(), ]
             },
         ]
     }
@@ -137,8 +137,8 @@ def build_openid_keys(request):
 def build_adfs_meta(request):
     with open(os.path.join(os.path.dirname(__file__), "mock_files/FederationMetadata.xml"), mode="r") as f:
         data = "".join(f.readlines())
-    data = data.replace("REPLACE_WITH_CERT_A", base64.b64encode(signing_cert_A).decode())
-    data = data.replace("REPLACE_WITH_CERT_B", base64.b64encode(signing_cert_B).decode())
+    data = data.replace("REPLACE_WITH_CERT_A", base64.b64encode(signing_cert_a).decode())
+    data = data.replace("REPLACE_WITH_CERT_B", base64.b64encode(signing_cert_b).decode())
     return 200, [], data
 
 
@@ -213,5 +213,5 @@ def mock_adfs(adfs_version):
     return do_mock
 
 
-signing_key_A, signing_cert_A = generate_key_and_cert()
-signing_key_B, signing_cert_B = generate_key_and_cert()
+signing_key_a, signing_cert_a = generate_key_and_cert()
+signing_key_b, signing_cert_b = generate_key_and_cert()
