@@ -1,16 +1,9 @@
 # Config file for automatic testing at travis-ci.org
 
+dist: xenial
 language: python
 matrix:
     include:
-        - python: 2.7
-          env: TOXENV=py27-django18-drf36
-        - python: 2.7
-          env: TOXENV=py27-django19-drf36
-        - python: 2.7
-          env: TOXENV=py27-django110-drf37
-        - python: 2.7
-          env: TOXENV=py27-django110-drf38
         - python: 2.7
           env: TOXENV=py27-django111-drf37
         - python: 2.7
@@ -19,28 +12,12 @@ matrix:
           env: TOXENV=py27-django111-drf39
 
         - python: 3.4
-          env: TOXENV=py34-django18-drf36
-        - python: 3.4
-          env: TOXENV=py34-django19-drf36
-        - python: 3.4
-          env: TOXENV=py34-django110-drf37
-        - python: 3.4
-          env: TOXENV=py34-django110-drf38
-        - python: 3.4
           env: TOXENV=py34-django111-drf37
         - python: 3.4
           env: TOXENV=py34-django111-drf38
         - python: 3.4
           env: TOXENV=py34-django111-drf39
 
-        - python: 3.5
-          env: TOXENV=py35-django18-drf36
-        - python: 3.5
-          env: TOXENV=py35-django19-drf36
-        - python: 3.5
-          env: TOXENV=py35-django110-drf37
-        - python: 3.5
-          env: TOXENV=py35-django110-drf38
         - python: 3.5
           env: TOXENV=py35-django111-drf37
         - python: 3.5
@@ -59,15 +36,13 @@ matrix:
           env: TOXENV=py35-django21-drf38
         - python: 3.5
           env: TOXENV=py35-django21-drf39
+        - python: 3.5
+          env: TOXENV=py35-django22-drf37
+        - python: 3.5
+          env: TOXENV=py35-django22-drf38
+        - python: 3.5
+          env: TOXENV=py35-django22-drf39
 
-        - python: 3.6
-          env: TOXENV=py36-django18-drf36
-        - python: 3.6
-          env: TOXENV=py36-django19-drf36
-        - python: 3.6
-          env: TOXENV=py36-django110-drf37
-        - python: 3.6
-          env: TOXENV=py36-django110-drf38
         - python: 3.6
           env: TOXENV=py36-django111-drf37
         - python: 3.6
@@ -86,6 +61,37 @@ matrix:
           env: TOXENV=py36-django21-drf38
         - python: 3.6
           env: TOXENV=py36-django21-drf39
+        - python: 3.6
+          env: TOXENV=py36-django22-drf37
+        - python: 3.6
+          env: TOXENV=py36-django22-drf38
+        - python: 3.6
+          env: TOXENV=py36-django22-drf39
+
+        - python: 3.7
+          env: TOXENV=py37-django111-drf37
+        - python: 3.7
+          env: TOXENV=py37-django111-drf38
+        - python: 3.7
+          env: TOXENV=py37-django111-drf39
+        - python: 3.7
+          env: TOXENV=py37-django20-drf37
+        - python: 3.7
+          env: TOXENV=py37-django20-drf38
+        - python: 3.7
+          env: TOXENV=py37-django20-drf39
+        - python: 3.7
+          env: TOXENV=py37-django21-drf37
+        - python: 3.7
+          env: TOXENV=py37-django21-drf38
+        - python: 3.7
+          env: TOXENV=py37-django21-drf39
+        - python: 3.7
+          env: TOXENV=py37-django22-drf37
+        - python: 3.7
+          env: TOXENV=py37-django22-drf38
+        - python: 3.7
+          env: TOXENV=py37-django22-drf39
 
         - python: 3.6
           env: TOXENV=flake8
