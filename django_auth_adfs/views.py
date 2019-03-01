@@ -31,7 +31,7 @@ class OAuth2CallbackView(View):
 
         redirect_to = request.GET.get("state")
 
-        user = authenticate(request, authorization_code=code)
+        user = authenticate(request=request, authorization_code=code)
 
         if user is not None:
             if user.is_active:
