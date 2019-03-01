@@ -11,6 +11,7 @@ setup(
     name='django-auth-adfs',
     version=__version__,
     packages=find_packages(),
+    include_package_data=True,
     author='Joris Beckers',
     author_email='joris.beckers@gmail.com',
     url="https://github.com/jobec/django-auth-adfs",
