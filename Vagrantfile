@@ -1,7 +1,6 @@
 Vagrant.configure("2") do |config|
   config.vm.define "adfs2016", autostart: false do |adfs2016|
 
-    # adfs2016.vm.box = "adamrushuk/win2016-std-dev"
     adfs2016.vm.box = "cdaf/WindowsServer"
 
     adfs2016.vm.provider "virtualbox" do |v|
@@ -36,7 +35,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "adfs2012", autostart: false do |adfs2012|
 
-    adfs2012.vm.box = "devopsgroup-io/windows_server-2012r2-standard-amd64-nocm"
+    adfs2012.vm.box = "fujiiface/2012r2"
 
     adfs2012.vm.provider "virtualbox" do |v|
       v.memory = 2048
