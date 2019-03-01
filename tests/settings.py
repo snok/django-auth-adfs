@@ -76,3 +76,6 @@ AUTH_ADFS = {
                               "is_superuser": "user_is_superuser"},
     "LOGIN_EXEMPT_URLS": ["^context_processor/$"]
 }
+
+LOGIN_URL = "django_auth_adfs:login"
+LOGIN_REDIRECT_URL = "/"

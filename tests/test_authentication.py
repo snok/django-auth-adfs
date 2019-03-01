@@ -1,3 +1,10 @@
+import base64
+
+try:
+    from urllib.parse import urlparse, parse_qs
+except ImportError:  # Python 2.7
+    from urlparse import urlparse, parse_qs
+
 from copy import deepcopy
 
 from django.contrib.auth.models import User, Group
@@ -113,3 +120,102 @@ class AuthenticationTests(TestCase):
         self.assertEqual(len(user.groups.all()), 2)
         self.assertEqual(user.groups.all()[0].name, "group1")
         self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("2016")
+    def test_authentication(self):
+        response = self.client.get("/oauth2/callback", {'code': 'testcode'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], "/")
+
+    @mock_adfs("2016")
+    def test_callback_redir(self):
+        state = base64.urlsafe_b64encode("/test/".encode())
+        response = self.client.get("/oauth2/callback", {'code': 'testcode', "state": state})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], "/test/")
+
+    @mock_adfs("2016")
+    def test_missing_code(self):
+        response = self.client.get("/oauth2/callback")
+        self.assertEqual(response.status_code, 400)
+
+    @mock_adfs("2016")
+    def test_login_redir(self):
+        response = self.client.get("/test/")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], '/oauth2/login?next=/test/')
+
+    @mock_adfs("2012")
+    def test_oauth_redir_2012(self):
+        response = self.client.get("/oauth2/login?next=/test/")
+        self.assertEqual(response.status_code, 302)
+        redir = urlparse(response["Location"])
+        qs = parse_qs(redir.query)
+        sq_expected = {
+            'scope': ['openid'],
+            'client_id': ['your-configured-client-id'],
+            'state': ['L3Rlc3Qv'],
+            'response_type': ['code'],
+            'resource': ['your-adfs-RPT-name'],
+            'redirect_uri': ['http://testserver/oauth2/callback']
+        }
+        self.assertEqual(redir.scheme, 'https')
+        self.assertEqual(redir.hostname, 'adfs.example.com')
+        self.assertEqual(redir.path, '/adfs/oauth2/authorize/')
+        self.assertEqual(qs, sq_expected)
+
+    @mock_adfs("2016")
+    def test_oauth_redir_2016(self):
+        response = self.client.get("/oauth2/login?next=/test/")
+        self.assertEqual(response.status_code, 302)
+        redir = urlparse(response["Location"])
+        qs = parse_qs(redir.query)
+        sq_expected = {
+            'scope': ['openid'],
+            'client_id': ['your-configured-client-id'],
+            'state': ['L3Rlc3Qv'],
+            'response_type': ['code'],
+            'resource': ['your-adfs-RPT-name'],
+            'redirect_uri': ['http://testserver/oauth2/callback']
+        }
+        self.assertEqual(redir.scheme, 'https')
+        self.assertEqual(redir.hostname, 'adfs.example.com')
+        self.assertEqual(redir.path, '/adfs/oauth2/authorize/')
+        self.assertEqual(qs, sq_expected)
+
+    @mock_adfs("azure")
+    def test_oauth_redir_azure(self):
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        with patch("django_auth_adfs.config.django_settings", settings),\
+                patch("django_auth_adfs.config.settings", Settings()),\
+                patch("django_auth_adfs.views.provider_config", ProviderConfig()):
+            response = self.client.get("/oauth2/login?next=/test/")
+            self.assertEqual(response.status_code, 302)
+            redir = urlparse(response["Location"])
+            qs = parse_qs(redir.query)
+            sq_expected = {
+                'scope': ['openid'],
+                'client_id': ['your-configured-client-id'],
+                'state': ['L3Rlc3Qv'],
+                'response_type': ['code'],
+                'resource': ['your-adfs-RPT-name'],
+                'redirect_uri': ['http://testserver/oauth2/callback']
+            }
+            self.assertEqual(redir.scheme, 'https')
+            self.assertEqual(redir.hostname, 'login.microsoftonline.com')
+            self.assertEqual(redir.path, '/01234567-89ab-cdef-0123-456789abcdef/oauth2/authorize')
+            self.assertEqual(qs, sq_expected)
+
+    @mock_adfs("2016")
+    def test_inactive_user(self):
+        user = User.objects.create(**{
+            User.USERNAME_FIELD: "testuser",
+            "is_active": False
+        })
+        response = self.client.get("/oauth2/callback", {'code': 'testcode'})
+        self.assertContains(response, "Your account is disabled", status_code=403)
+        user.delete()
+
