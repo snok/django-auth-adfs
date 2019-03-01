@@ -161,7 +161,7 @@ class AuthenticationTests(TestCase):
         }
         self.assertEqual(redir.scheme, 'https')
         self.assertEqual(redir.hostname, 'adfs.example.com')
-        self.assertEqual(redir.path, '/adfs/oauth2/authorize/')
+        self.assertEqual(redir.path.rstrip("/"), '/adfs/oauth2/authorize')
         self.assertEqual(qs, sq_expected)
 
     @mock_adfs("2016")
@@ -180,7 +180,7 @@ class AuthenticationTests(TestCase):
         }
         self.assertEqual(redir.scheme, 'https')
         self.assertEqual(redir.hostname, 'adfs.example.com')
-        self.assertEqual(redir.path, '/adfs/oauth2/authorize/')
+        self.assertEqual(redir.path.rstrip("/"), '/adfs/oauth2/authorize')
         self.assertEqual(qs, sq_expected)
 
     @mock_adfs("azure")
@@ -206,7 +206,7 @@ class AuthenticationTests(TestCase):
             }
             self.assertEqual(redir.scheme, 'https')
             self.assertEqual(redir.hostname, 'login.microsoftonline.com')
-            self.assertEqual(redir.path, '/01234567-89ab-cdef-0123-456789abcdef/oauth2/authorize')
+            self.assertEqual(redir.path.rstrip("/"), '/01234567-89ab-cdef-0123-456789abcdef/oauth2/authorize')
             self.assertEqual(qs, sq_expected)
 
     @mock_adfs("2016")
@@ -218,4 +218,3 @@ class AuthenticationTests(TestCase):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertContains(response, "Your account is disabled", status_code=403)
         user.delete()
-
