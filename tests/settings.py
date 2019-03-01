@@ -37,8 +37,6 @@ MIDDLEWARE = (
 
     'django_auth_adfs.middleware.LoginRequiredMiddleware',
 )
-# Django < 1.10 compatibility
-MIDDLEWARE_CLASSES = MIDDLEWARE
 
 INSTALLED_APPS = (
     'django.contrib.admin',

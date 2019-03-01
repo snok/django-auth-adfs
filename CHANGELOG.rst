@@ -1,6 +1,18 @@
 Changelog
 =========
 
+`1.2.0`_ - 2019-03-01
+---------------------
+
+**Removed**
+
+* Django 1.8, 1.9 and 1.10 support. They are end of extended support and keeping support for them was becoming too
+  complex.
+
+**Fixed**
+
+* The django templates were missing in the wheel
+
 `1.1.2`_ - 2018-12-11
 ---------------------
 
@@ -143,6 +155,7 @@ Changelog
 
 * Initial release
 
+.. _1.2.0: https://github.com/jobec/django-auth-adfs/compare/1.1.2...1.2.0
 .. _1.1.2: https://github.com/jobec/django-auth-adfs/compare/1.1.1...1.1.2
 .. _1.1.1: https://github.com/jobec/django-auth-adfs/compare/1.0.0...1.1.1
 .. _1.0.0: https://github.com/jobec/django-auth-adfs/compare/0.2.1...1.0.0
