@@ -92,7 +92,7 @@ class AuthenticationTests(TestCase):
             self.assertEqual(user.email, "john.doe@example.com")
             self.assertEqual(len(user.groups.all()), 0)
 
-    @mock_adfs("2016")
+    @mock_adfs("2016", empty_keys=True)
     def test_empty_keys(self):
         backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.config.provider_config.signing_keys", []):
@@ -152,7 +152,6 @@ class AuthenticationTests(TestCase):
         redir = urlparse(response["Location"])
         qs = parse_qs(redir.query)
         sq_expected = {
-            'scope': ['openid'],
             'client_id': ['your-configured-client-id'],
             'state': ['L3Rlc3Qv'],
             'response_type': ['code'],
@@ -170,7 +169,7 @@ class AuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         redir = urlparse(response["Location"])
         qs = parse_qs(redir.query)
-        sq_expected = {
+        qs_expected = {
             'scope': ['openid'],
             'client_id': ['your-configured-client-id'],
             'state': ['L3Rlc3Qv'],
@@ -181,7 +180,7 @@ class AuthenticationTests(TestCase):
         self.assertEqual(redir.scheme, 'https')
         self.assertEqual(redir.hostname, 'adfs.example.com')
         self.assertEqual(redir.path.rstrip("/"), '/adfs/oauth2/authorize')
-        self.assertEqual(qs, sq_expected)
+        self.assertEqual(qs, qs_expected)
 
     @mock_adfs("azure")
     def test_oauth_redir_azure(self):

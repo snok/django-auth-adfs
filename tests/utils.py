@@ -4,6 +4,7 @@ import os
 import re
 import time
 from datetime import datetime, tzinfo, timedelta
+from functools import partial
 
 import jwt
 import responses
@@ -108,29 +109,32 @@ def do_build_access_token(request, issuer):
     return 200, [], json.dumps(response)
 
 
-def build_openid_keys(request):
-    keys = {
-        "keys": [
-            {
-                "kty": "RSA",
-                "use": "sig",
-                "kid": "dummythumbprint",
-                "x5t": "dummythumbprint",
-                "n": "somebase64encodedmodulus",
-                "e": "somebase64encodedexponent",
-                "x5c": [base64.b64encode(signing_cert_a).decode(), ]
-            },
-            {
-                "kty": "RSA",
-                "use": "sig",
-                "kid": "dummythumbprint",
-                "x5t": "dummythumbprint",
-                "n": "somebase64encodedmodulus",
-                "e": "somebase64encodedexponent",
-                "x5c": [base64.b64encode(signing_cert_b).decode(), ]
-            },
-        ]
-    }
+def build_openid_keys(request, empty_keys=False):
+    if empty_keys:
+        keys = {"keys": []}
+    else:
+        keys = {
+            "keys": [
+                {
+                    "kty": "RSA",
+                    "use": "sig",
+                    "kid": "dummythumbprint",
+                    "x5t": "dummythumbprint",
+                    "n": "somebase64encodedmodulus",
+                    "e": "somebase64encodedexponent",
+                    "x5c": [base64.b64encode(signing_cert_a).decode(), ]
+                },
+                {
+                    "kty": "RSA",
+                    "use": "sig",
+                    "kid": "dummythumbprint",
+                    "x5t": "dummythumbprint",
+                    "n": "somebase64encodedmodulus",
+                    "e": "somebase64encodedexponent",
+                    "x5c": [base64.b64encode(signing_cert_b).decode(), ]
+                },
+            ]
+        }
     return 200, [], json.dumps(keys)
 
 
@@ -142,7 +146,7 @@ def build_adfs_meta(request):
     return 200, [], data
 
 
-def mock_adfs(adfs_version):
+def mock_adfs(adfs_version, empty_keys=False):
     if adfs_version not in ["2012", "2016", "azure"]:
         raise NotImplementedError("This version of ADFS is not implemented")
 
@@ -167,7 +171,7 @@ def mock_adfs(adfs_version):
                     )
                     rsps.add_callback(
                         rsps.GET, openid_keys,
-                        callback=build_openid_keys,
+                        callback=partial(build_openid_keys, empty_keys=empty_keys),
                         content_type='application/json',
                     )
                 elif adfs_version == "azure":
@@ -177,7 +181,7 @@ def mock_adfs(adfs_version):
                     )
                     rsps.add_callback(
                         rsps.GET, openid_keys,
-                        callback=build_openid_keys,
+                        callback=partial(build_openid_keys, empty_keys=empty_keys),
                         content_type='application/json',
                     )
                 else:

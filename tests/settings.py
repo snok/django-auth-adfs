@@ -72,7 +72,7 @@ AUTH_ADFS = {
                       "email": "email"},
     "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
                               "is_superuser": "user_is_superuser"},
-    "LOGIN_EXEMPT_URLS": ["^context_processor/$"]
+    "CONFIG_RELOAD_INTERVAL": 0,  # Always reload settings
 }
 
 LOGIN_URL = "django_auth_adfs:login"
