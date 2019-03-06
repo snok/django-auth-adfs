@@ -1,6 +1,15 @@
 Changelog
 =========
 
+`1.3.0`_ - 2019-03-??
+---------------------
+
+**Added**
+
+* Added setting ``SETTINGS_CLASS``, defaulting to
+  ``django_auth_adfs.config.Settings``. This provides a mechanism to load the
+  ``AUTH_ADFS`` config from sources other than Django settings.
+
 `1.2.0`_ - 2019-03-01
 ---------------------
 
@@ -155,6 +164,7 @@ Changelog
 
 * Initial release
 
+.. _1.3.0: https://github.com/jobec/django-auth-adfs/compare/1.2.0...1.3.0
 .. _1.2.0: https://github.com/jobec/django-auth-adfs/compare/1.1.2...1.2.0
 .. _1.1.2: https://github.com/jobec/django-auth-adfs/compare/1.1.1...1.1.2
 .. _1.1.1: https://github.com/jobec/django-auth-adfs/compare/1.0.0...1.1.1
