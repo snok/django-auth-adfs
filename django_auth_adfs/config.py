@@ -23,7 +23,6 @@ except ImportError:  # Django < 1.10
 logger = logging.getLogger("django_auth_adfs")
 
 AZURE_AD_SERVER = "login.microsoftonline.com"
-
 DEFAULT_SETTINGS_CLASS = 'django_auth_adfs.config.Settings'
 
 
@@ -31,14 +30,15 @@ class ConfigLoadError(Exception):
     pass
 
 
-def _get_auth_adfs_settings():
+def _get_settings_class():
     """
     Get the AUTH_ADFS setting from the Django settings.
     """
     if not hasattr(django_settings, "AUTH_ADFS"):
         msg = "The configuration directive 'AUTH_ADFS' was not found in your Django settings"
         raise ImproperlyConfigured(msg)
-    return django_settings.AUTH_ADFS
+    cls = django_settings.AUTH_ADFS.get('SETTINGS_CLASS', DEFAULT_SETTINGS_CLASS)
+    return import_string(cls)
 
 
 class Settings(object):
@@ -47,11 +47,6 @@ class Settings(object):
     """
 
     def __init__(self):
-        # which settings class to actually use - might be a replacement of this class
-        # unused in this class, but added here to contain all possible settings
-        # in the AUTH_ADFS django setting
-        self.SETTINGS_CLASS = DEFAULT_SETTINGS_CLASS
-
         # Set defaults
         self.AUDIENCE = None  # Required
         self.BOOLEAN_CLAIM_MAPPING = {}
@@ -88,34 +83,41 @@ class Settings(object):
             "TOKEN_PATH": "This setting is automatically loaded from ADFS.",
         }
 
-        _auth_adfs_settings = _get_auth_adfs_settings()
+        if not hasattr(django_settings, "AUTH_ADFS"):
+            msg = "The configuration directive 'AUTH_ADFS' was not found in your Django settings"
+            raise ImproperlyConfigured(msg)
+        _settings = django_settings.AUTH_ADFS
+
+        # Settings class is loaded by now. Delete this setting
+        if "SETTINGS_CLASS" in _settings:
+            del _settings["SETTINGS_CLASS"]
 
         # Handle deprecated settings
         for setting, message in deprecated_settings.items():
-            if setting in _auth_adfs_settings:
+            if setting in _settings:
                 warnings.warn("Setting {} is deprecated and it's value was ignored. {}".format(setting, message),
                               DeprecationWarning)
-                del _auth_adfs_settings[setting]
+                del _settings[setting]
 
-        if "CERT_MAX_AGE" in _auth_adfs_settings:
-            _auth_adfs_settings["CONFIG_RELOAD_INTERVAL"] = _auth_adfs_settings["CERT_MAX_AGE"]
+        if "CERT_MAX_AGE" in _settings:
+            _settings["CONFIG_RELOAD_INTERVAL"] = _settings["CERT_MAX_AGE"]
             warnings.warn('Setting CERT_MAX_AGE has been renamed to CONFIG_RELOAD_INTERVAL. The value was copied.',
                           DeprecationWarning)
-            del _auth_adfs_settings["CERT_MAX_AGE"]
+            del _settings["CERT_MAX_AGE"]
 
-        if "GROUP_CLAIM" in _auth_adfs_settings:
-            _auth_adfs_settings["GROUPS_CLAIM"] = _auth_adfs_settings["GROUP_CLAIM"]
+        if "GROUP_CLAIM" in _settings:
+            _settings["GROUPS_CLAIM"] = _settings["GROUP_CLAIM"]
             warnings.warn('Setting GROUP_CLAIM has been renamed to GROUPS_CLAIM. The value was copied.',
                           DeprecationWarning)
-            del _auth_adfs_settings["GROUP_CLAIM"]
+            del _settings["GROUP_CLAIM"]
 
-        if "RESOURCE" in _auth_adfs_settings:
-            _auth_adfs_settings["RELYING_PARTY_ID"] = _auth_adfs_settings["RESOURCE"]
-            del _auth_adfs_settings["RESOURCE"]
+        if "RESOURCE" in _settings:
+            _settings["RELYING_PARTY_ID"] = _settings["RESOURCE"]
+            del _settings["RESOURCE"]
 
-        if "TENANT_ID" in _auth_adfs_settings:
+        if "TENANT_ID" in _settings:
             # If a tenant ID was set, switch to Azure AD mode
-            if "SERVER" in _auth_adfs_settings:
+            if "SERVER" in _settings:
                 raise ImproperlyConfigured("The SERVER cannot be set when TENANT_ID is set.")
             self.SERVER = AZURE_AD_SERVER
             self.USERNAME_CLAIM = "upn"
@@ -125,7 +127,7 @@ class Settings(object):
                                   "email": "email"}
 
         # Overwrite defaults with user settings
-        for setting, value in _auth_adfs_settings.items():
+        for setting, value in _settings.items():
             if hasattr(self, setting):
                 setattr(self, setting, value)
             else:
@@ -322,9 +324,6 @@ class ProviderConfig(object):
         return self.end_session_endpoint
 
 
-# Allow custom Setting providers via Django settings.
-AUTH_ADFS = _get_auth_adfs_settings()
-SettingsClass = import_string(AUTH_ADFS.get('SETTINGS_CLASS', DEFAULT_SETTINGS_CLASS))
-
-settings = SettingsClass()
+settings_cls = _get_settings_class()
+settings = settings_cls()
 provider_config = ProviderConfig()
