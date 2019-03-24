@@ -350,10 +350,10 @@ and point to it by using the ``SETTINGS_CLASS`` setting:
         ...
 
 
-    # in settings
+    # in settings.py
 
     AUTH_ADFS = {
-        'SETTINGS_CLASS': 'myapp.adfs.config',
+        'SETTINGS_CLASS': 'myapp.adfs.config.CustomSettings',
         # other settings are not needed
     }
 
