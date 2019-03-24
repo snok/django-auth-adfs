@@ -1,10 +1,12 @@
+import sys
 from copy import deepcopy
 
 from django.core.exceptions import ImproperlyConfigured
-from django.test import TestCase
+from django.test import TestCase, SimpleTestCase, override_settings
 from mock import patch
 from django_auth_adfs.config import django_settings
 from django_auth_adfs.config import Settings
+from .custom_config import Settings as CustomSettings
 
 
 class SettingsTests(TestCase):
@@ -38,3 +40,19 @@ class SettingsTests(TestCase):
         del settings.AUTH_ADFS["AUDIENCE"]
         with patch("django_auth_adfs.config.django_settings", settings):
             self.assertRaises(ImproperlyConfigured, Settings)
+
+
+class CustomSettingsTests(SimpleTestCase):
+    def setUp(self):
+        sys.modules.pop('django_auth_adfs.config', None)
+
+    def tearDown(self):
+        sys.modules.pop('django_auth_adfs.config', None)
+
+    def test_dotted_path(self):
+        auth_adfs = deepcopy(django_settings).AUTH_ADFS
+        auth_adfs['SETTINGS_CLASS'] = 'tests.custom_config.Settings'
+
+        with override_settings(AUTH_ADFS=auth_adfs):
+            from django_auth_adfs.config import settings
+            self.assertIsInstance(settings, CustomSettings)

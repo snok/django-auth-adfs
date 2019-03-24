@@ -283,6 +283,39 @@ The FQDN of the ADFS server you want users to authenticate against.
 
 .. _tenant_id_setting:
 
+SETTINGS_CLASS
+--------------
+* **Default**: ``django_auth_adfs.config.Settings``
+* **Type**: ``string``
+
+By default, django-auth-adfs reads the configuration from the Django setting
+``AUTH_ADFS``. You can provide the configuration in a custom implementation
+and point to it by using the ``SETTINGS_CLASS`` setting:
+
+.. code-block:: python
+
+    # in myapp.adfs.config
+
+    class CustomSettings:
+
+        SERVER = 'bar'
+        AUDIENCE = 'foo'
+        ...
+
+
+    # in settings.py
+
+    AUTH_ADFS = {
+        'SETTINGS_CLASS': 'myapp.adfs.config.CustomSettings',
+        # other settings are not needed
+    }
+
+The value must be an importable dotted Python path, and the imported object
+must be callable with no arguments to initialize.
+
+Use cases are storing configuration in database so an administrator can edit
+the configuration in an admin interface.
+
 TENANT_ID
 ---------
 * **Default**:
@@ -329,4 +362,3 @@ The value of the claim must be a unique value. No 2 users should ever have the s
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
-
