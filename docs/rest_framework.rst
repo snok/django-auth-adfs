@@ -67,6 +67,11 @@ Requesting an access token
 When everything is configured, you can request an access token in your client (script) and
 access the api like this:
 
+.. note::
+
+    This example is written for ADFS on windows server 2016 but with some changes in the
+    URLs should also work for Azure AD.
+
 .. code-block:: python
 
     import getpass
@@ -104,5 +109,71 @@ access the api like this:
         'https://web.example.com/api/questions',
         headers=headers,
         verify=False
+    )
+    pprint(response.json())
+
+
+.. note::
+
+    The following example is written for ADFS on windows server 2012 R2 and needs
+    the ``requests-ntlm`` module.
+
+    This example is here only for legacy reasons. If possible it's advised to
+    upgrade to 2016. Support for 2012 R2 is about to end.
+
+.. code-block:: python
+
+    import getpass
+    import re
+    import requests
+    from requests_ntlm import HttpNtlmAuth
+    from pprint import pprint
+
+    # Ask for password
+    user = getpass.getuser()
+    password = getpass.getpass("Password for "+user+": ")
+    user = "EXAMPLE\\" + user
+
+    # Get a authorization code
+    headers = {"User-Agent": "Mozilla/5.0"}
+    params = {
+        "response_type": "code",
+        "resource": "your-relying-party-id",
+        "client_id": "your-configured-client-id",
+        "redirect_uri": "https://djangoapp.example.com/oauth2/callback"
+    }
+    response = requests.get(
+        "https://adfs.example.com/adfs/oauth2/authorize/wia",
+        auth=HttpNtlmAuth(user, password),
+        headers=headers,
+        allow_redirects=False,
+        params=params,
+    )
+    response.raise_for_status()
+    code = re.search('code=(.*)', response.headers['location']).group(1)
+
+    # Get an access token
+    data = {
+        'grant_type': 'authorization_code',
+        'client_id': 'your-configured-client-id',
+        'redirect_uri': 'https://djangoapp.example.com/oauth2/callback',
+        'code': code,
+    }
+    response = requests.post(
+        "https://adfs.example.com/adfs/oauth2/token",
+        data,
+    )
+    response.raise_for_status()
+    response_data = response.json()
+    access_token = response_data['access_token']
+
+    # Make a request towards this API
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer %s' % access_token,
+    }
+    response = requests.get(
+        'https://djangoapp.example.com/v1/pets?name=rudolf',
+        headers=headers
     )
     pprint(response.json())
