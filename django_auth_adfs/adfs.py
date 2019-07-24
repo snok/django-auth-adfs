@@ -43,6 +43,36 @@ def exchange_auth_code(authorization_code, request):
     return adfs_response
 
 
+def exchange_refresh_token(refresh_token, request):
+    logger.debug("Received refresh token: %s", refresh_token)
+    data = {
+        'grant_type': 'refresh_token',
+        'client_id': settings.CLIENT_ID,
+        'redirect_uri': provider_config.redirect_uri(request),
+        'refresh_token': refresh_token,
+    }
+
+    logger.debug("Refreshing access token at: %s", provider_config.token_endpoint)
+    response = provider_config.session.post(
+        provider_config.token_endpoint,
+        data,
+        timeout=settings.TIMEOUT
+    )
+
+    # 200 = valid token received
+    # 400 = 'something' is wrong in our request
+    if response.status_code == 400:
+        logger.error("ADFS server returned an error: %s", response.json()["error_description"])
+
+    if response.status_code != 200:
+        logger.error("Unexpected ADFS response: %s", response.content.decode())
+
+    response.raise_for_status()
+
+    adfs_response = response.json()
+    return adfs_response
+
+
 def validate_access_token(access_token):
     for idx, key in enumerate(provider_config.signing_keys):
         try:
