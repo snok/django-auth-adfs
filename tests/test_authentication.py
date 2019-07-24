@@ -84,7 +84,7 @@ class AuthenticationTests(TestCase):
     @mock_adfs("2016")
     def test_group_claim(self):
         backend = AdfsAuthCodeBackend()
-        with patch("django_auth_adfs.backend.settings.GROUPS_CLAIM", "nonexisting"):
+        with patch("django_auth_adfs.adfs.settings.GROUPS_CLAIM", "nonexisting"):
             user = backend.authenticate(self.request, authorization_code="dummycode")
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
