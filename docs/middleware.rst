@@ -9,7 +9,7 @@ By default it's disabled for the page defined in the ``LOGIN_URL`` setting and t
 But by setting the ``LOGIN_EXEMPT_URLS`` setting, you can exclude other pages from authentication.
 Have a look at the :ref:`settings` for more information.
 
-To enable the middleware, add it to ``MIDLEWARE`` in ``settings.py`` (or ``MIDDLEWARE_CLASSES`` if using Django <1.10.
+To enable the middleware, add it to ``MIDDLEWARE`` in ``settings.py`` (or ``MIDDLEWARE_CLASSES`` if using Django <1.10.
 make sure to add it after any other session or authentication middleware to be sure all other methods of identifying
 the user are tried first.
 
