@@ -28,13 +28,23 @@ with guest users who's **source** in the users overview of Azure AD is ``Microso
 In such cases, try setting the :ref:`username_claim_setting` to ``email`` instead of the default ``upn``. Or create a
 new user in your Azure AD directory.
 
-
 Why am I prompted for a username and password in Chrome/Firefox?
 ----------------------------------------------------------------
 By default, ADFS only triggers seamless single sign-on for Internet Explorer or Edge.
 
 Have a look at the ADFS configuration guides for details about how to got this working
 for other browsers also.
+
+The redirect_uri starts with HTTP, while my site is HTTPS only.
+---------------------------------------------------------------
+When you run Django behind a TLS terminating webserver or load balancer, then Django doesn't know the client arrived
+over a HTTPS connection. It will only see the plain HTTP traffic. Therefor, the link it generates and sends to ADFS
+as the ``redirect_uri`` query parameter, will start with HTTP, instead of HTTPS.
+
+To tell Django to generate HTTPS links, you need to set it's ``SECURE_PROXY_SSL_HEADER`` setting and inject the correct
+HTTP header and value on your web server.
+
+For more info, have a look at `Django's docs <https://docs.djangoproject.com/en/dev/ref/settings/#secure-proxy-ssl-header>`_.
 
 I cannot get it working!
 ------------------------
