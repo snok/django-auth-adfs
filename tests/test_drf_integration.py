@@ -16,6 +16,21 @@ from django_auth_adfs.rest_framework import views
 from .utils import build_access_token_adfs, build_access_token_azure, mock_adfs
 
 
+AUTH_ADFS_AZURE = {
+    "TENANT_ID": "dummy_tenant_id",
+    "CLIENT_ID": "your-configured-client-id",
+    "RELYING_PARTY_ID": "your-adfs-RPT-name",
+    "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
+    "CA_BUNDLE": "/path/to/ca-bundle.pem",
+    "CLAIM_MAPPING": {"first_name": "given_name",
+                      "last_name": "family_name",
+                      "email": "email"},
+    "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
+                              "is_superuser": "user_is_superuser"},
+    "CONFIG_RELOAD_INTERVAL": 0,  # Always reload settings
+}
+
+
 @override_settings(ROOT_URLCONF='tests.rest_urls')
 class RestFrameworkIntegrationTests(TestCase):
     def setUp(self):
@@ -93,13 +108,11 @@ class RestFrameworkIntegrationTests(TestCase):
         self.assertEqual(response.data['refresh_token'], 'random_refresh_token')
 
     @mock_adfs("azure")
-    @override_settings()
+    @override_settings(AUTH_ADFS=AUTH_ADFS_AZURE)
     def test_access_token_azure(self):
         access_token_header = "Bearer {}".format(self.access_token_azure)
         request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
 
-        del settings.AUTH_ADFS["SERVER"]
-        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
         with patch("django_auth_adfs.config.settings", Settings()):
             provider_config = ProviderConfig()
             with patch("django_auth_adfs.adfs.provider_config", provider_config),\
@@ -108,12 +121,10 @@ class RestFrameworkIntegrationTests(TestCase):
                 self.assertEqual(user.username, "testuser")
 
     @mock_adfs("azure")
-    @override_settings()
+    @override_settings(AUTH_ADFS=AUTH_ADFS_AZURE)
     def test_access_callback_azure(self):
         request = APIRequestFactory().get('/api/oauth2/callback?code=%3Ccode%3E')
 
-        del settings.AUTH_ADFS["SERVER"]
-        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
         with patch("django_auth_adfs.config.settings", Settings()):
             provider_config = ProviderConfig()
             with patch("django_auth_adfs.adfs.provider_config", provider_config),\
@@ -124,7 +135,7 @@ class RestFrameworkIntegrationTests(TestCase):
                 self.assertEqual(response.data['refresh_token'], 'random_refresh_token')
 
     @mock_adfs("azure")
-    @override_settings()
+    @override_settings(AUTH_ADFS=AUTH_ADFS_AZURE)
     def test_refresh_token_azure(self):
         access_token_header = "Bearer {}".format(self.access_token_azure)
         request = APIRequestFactory().get(
@@ -132,8 +143,6 @@ class RestFrameworkIntegrationTests(TestCase):
             HTTP_AUTHORIZATION=access_token_header
         )
 
-        del settings.AUTH_ADFS["SERVER"]
-        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
         with patch("django_auth_adfs.config.settings", Settings()):
             provider_config = ProviderConfig()
             with patch("django_auth_adfs.adfs.provider_config", provider_config),\
