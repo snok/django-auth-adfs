@@ -203,8 +203,8 @@ class ProviderConfig(object):
             logger.info("issuer:                 " + self.issuer)
 
     def _load_openid_config(self):
-        config_url = "https://{}/{}/.well-known/openid-configuration".format(
-            settings.SERVER, settings.TENANT_ID
+        config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
+            settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
         )
 
         try:
