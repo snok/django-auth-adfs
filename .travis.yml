@@ -5,104 +5,104 @@ language: python
 matrix:
     include:
         - python: 3.5
-          env: TOXENV=py35-django111-drf37
-        - python: 3.5
           env: TOXENV=py35-django111-drf38
         - python: 3.5
           env: TOXENV=py35-django111-drf39
         - python: 3.5
-          env: TOXENV=py35-django20-drf37
+          env: TOXENV=py35-django111-drf310
         - python: 3.5
           env: TOXENV=py35-django20-drf38
         - python: 3.5
           env: TOXENV=py35-django20-drf39
         - python: 3.5
-          env: TOXENV=py35-django21-drf37
+          env: TOXENV=py35-django20-drf310
         - python: 3.5
           env: TOXENV=py35-django21-drf38
         - python: 3.5
           env: TOXENV=py35-django21-drf39
         - python: 3.5
-          env: TOXENV=py35-django22-drf37
+          env: TOXENV=py35-django21-drf310
         - python: 3.5
           env: TOXENV=py35-django22-drf38
         - python: 3.5
           env: TOXENV=py35-django22-drf39
+        - python: 3.5
+          env: TOXENV=py35-django22-drf310
 
-        - python: 3.6
-          env: TOXENV=py36-django111-drf37
         - python: 3.6
           env: TOXENV=py36-django111-drf38
         - python: 3.6
           env: TOXENV=py36-django111-drf39
         - python: 3.6
-          env: TOXENV=py36-django20-drf37
+          env: TOXENV=py36-django111-drf310
         - python: 3.6
           env: TOXENV=py36-django20-drf38
         - python: 3.6
           env: TOXENV=py36-django20-drf39
         - python: 3.6
-          env: TOXENV=py36-django21-drf37
+          env: TOXENV=py36-django20-drf310
         - python: 3.6
           env: TOXENV=py36-django21-drf38
         - python: 3.6
           env: TOXENV=py36-django21-drf39
         - python: 3.6
-          env: TOXENV=py36-django22-drf37
+          env: TOXENV=py36-django21-drf310
         - python: 3.6
           env: TOXENV=py36-django22-drf38
         - python: 3.6
           env: TOXENV=py36-django22-drf39
+        - python: 3.6
+          env: TOXENV=py36-django22-drf310
 
-        - python: 3.7
-          env: TOXENV=py37-django111-drf37
         - python: 3.7
           env: TOXENV=py37-django111-drf38
         - python: 3.7
           env: TOXENV=py37-django111-drf39
         - python: 3.7
-          env: TOXENV=py37-django20-drf37
+          env: TOXENV=py37-django111-drf310
         - python: 3.7
           env: TOXENV=py37-django20-drf38
         - python: 3.7
           env: TOXENV=py37-django20-drf39
         - python: 3.7
-          env: TOXENV=py37-django21-drf37
+          env: TOXENV=py37-django20-drf310
         - python: 3.7
           env: TOXENV=py37-django21-drf38
         - python: 3.7
           env: TOXENV=py37-django21-drf39
         - python: 3.7
-          env: TOXENV=py37-django22-drf37
+          env: TOXENV=py37-django21-drf310
         - python: 3.7
           env: TOXENV=py37-django22-drf38
         - python: 3.7
           env: TOXENV=py37-django22-drf39
+        - python: 3.7
+          env: TOXENV=py37-django22-drf310
 
-        - python: 3.8
-          env: TOXENV=py38-django111-drf37
         - python: 3.8
           env: TOXENV=py38-django111-drf38
         - python: 3.8
           env: TOXENV=py38-django111-drf39
         - python: 3.8
-          env: TOXENV=py38-django20-drf37
+          env: TOXENV=py38-django111-drf310
         - python: 3.8
           env: TOXENV=py38-django20-drf38
         - python: 3.8
           env: TOXENV=py38-django20-drf39
         - python: 3.8
-          env: TOXENV=py38-django21-drf37
+          env: TOXENV=py38-django20-drf310
         - python: 3.8
           env: TOXENV=py38-django21-drf38
         - python: 3.8
           env: TOXENV=py38-django21-drf39
         - python: 3.8
-          env: TOXENV=py38-django22-drf37
+          env: TOXENV=py38-django21-drf310
         - python: 3.8
           env: TOXENV=py38-django22-drf38
         - python: 3.8
           env: TOXENV=py38-django22-drf39
+        - python: 3.8
+          env: TOXENV=py38-django22-drf310
 
         - python: 3.8
           env: TOXENV=flake8

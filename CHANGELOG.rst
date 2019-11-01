@@ -1,7 +1,7 @@
 Changelog
 =========
 
-`1.3.0`_ - 2019-03-??
+`1.3.0`_ - 2019-11-01
 ---------------------
 
 .. note::
@@ -11,6 +11,12 @@ Changelog
 **Removed**
 
 * Python 2.7 and 3.4 tests
+* Django Rest Framework 3.7 tests
+
+**Changed**
+
+* The URLs file to override the django rest framework login (``drf-urls.py``), was not a valid python module name.
+  It was changed to ``drf_urls.py``. Th old name is still there but will be removed in a next release.
 
 **Added**
 
