@@ -37,5 +37,5 @@ urlpatterns = [
     #
     path('oauth2/', include('django_auth_adfs.urls')),
     # This overrides the DRF login page
-    path('oauth2/', include('django_auth_adfs.drf-urls')),
+    path('oauth2/', include('django_auth_adfs.drf_urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

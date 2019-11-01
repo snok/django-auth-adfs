@@ -55,7 +55,7 @@ Enable the ``AdfsAccessTokenBackend`` authentication backend in ``settings.py``:
         # path('api-auth/', include('rest_framework.urls')),
         #
         # This overrides the DRF login page
-        path('oauth2/', include('django_auth_adfs.drf-urls')),
+        path('oauth2/', include('django_auth_adfs.drf_urls')),
         ...
     ]
 
