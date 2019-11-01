@@ -281,8 +281,6 @@ Only one of ``SERVER`` or ``TENANT_ID`` can be set.
 
 The FQDN of the ADFS server you want users to authenticate against.
 
-.. _tenant_id_setting:
-
 SETTINGS_CLASS
 --------------
 * **Default**: ``django_auth_adfs.config.Settings``
@@ -315,6 +313,8 @@ must be callable with no arguments to initialize.
 
 Use cases are storing configuration in database so an administrator can edit
 the configuration in an admin interface.
+
+.. _tenant_id_setting:
 
 TENANT_ID
 ---------
