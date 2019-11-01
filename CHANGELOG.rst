@@ -4,11 +4,21 @@ Changelog
 `1.3.0`_ - 2019-03-??
 ---------------------
 
+.. note::
+
+    From this release onwards, compatibility with python 2.7 and 3.4 is not guaranteed anymore.
+
+**Removed**
+
+* Python 2.7 and 3.4 tests
+
 **Added**
 
 * Added setting ``SETTINGS_CLASS``, defaulting to
   ``django_auth_adfs.config.Settings``. This provides a mechanism to load the
   ``AUTH_ADFS`` config from sources other than Django settings.
+* Python 3.8 tests
+* Django Rest Framework 3.10 tests
 
 `1.2.0`_ - 2019-03-01
 ---------------------
