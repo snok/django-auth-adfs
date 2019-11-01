@@ -10,7 +10,7 @@ with open('CHANGELOG.rst') as changelog_file:
 setup(
     name='django-auth-adfs',
     version=__version__,
-    packages=find_packages(),
+    packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     author='Joris Beckers',
     author_email='joris.beckers@gmail.com',
