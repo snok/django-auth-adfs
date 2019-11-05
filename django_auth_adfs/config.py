@@ -167,11 +167,16 @@ class ProviderConfig(object):
         self.end_session_endpoint = None
         self.issuer = None
 
+        method_whitelist = frozenset([
+            'HEAD', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'TRACE', 'POST'
+        ])
+        
         retry = Retry(
             total=settings.RETRIES,
             read=settings.RETRIES,
             connect=settings.RETRIES,
             backoff_factor=0.3,
+            method_whitelist=method_whitelist
         )
         self.session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=retry)
