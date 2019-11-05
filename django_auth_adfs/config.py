@@ -170,7 +170,7 @@ class ProviderConfig(object):
         method_whitelist = frozenset([
             'HEAD', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'TRACE', 'POST'
         ])
-        
+
         retry = Retry(
             total=settings.RETRIES,
             read=settings.RETRIES,
