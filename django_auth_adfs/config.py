@@ -6,6 +6,7 @@ from xml.etree import ElementTree
 
 import requests
 import requests.adapters
+from urllib3.util.retry import Retry
 from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.x509 import load_der_x509_certificate
 from django.conf import settings as django_settings
@@ -166,8 +167,14 @@ class ProviderConfig(object):
         self.end_session_endpoint = None
         self.issuer = None
 
+        retry = Retry(
+            total=settings.RETRIES,
+            read=settings.RETRIES,
+            connect=settings.RETRIES,
+            backoff_factor=0.3,
+        )
         self.session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=settings.RETRIES)
+        adapter = requests.adapters.HTTPAdapter(max_retries=retry)
         self.session.mount('https://', adapter)
         self.session.verify = settings.CA_BUNDLE
 
