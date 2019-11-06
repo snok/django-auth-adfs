@@ -1,6 +1,13 @@
 Changelog
 =========
 
+`1.3.1`_ - 2019-11-06
+---------------------
+
+**Fixed**
+
+* Fix retries towards ADFS in situations where ADFS didn't respond in time.
+
 `1.3.0`_ - 2019-11-01
 ---------------------
 
@@ -180,6 +187,7 @@ Changelog
 
 * Initial release
 
+.. _1.3.1: https://github.com/jobec/django-auth-adfs/compare/1.3.0...1.3.1
 .. _1.3.0: https://github.com/jobec/django-auth-adfs/compare/1.2.0...1.3.0
 .. _1.2.0: https://github.com/jobec/django-auth-adfs/compare/1.1.2...1.2.0
 .. _1.1.2: https://github.com/jobec/django-auth-adfs/compare/1.1.1...1.1.2
