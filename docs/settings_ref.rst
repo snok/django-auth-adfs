@@ -224,6 +224,16 @@ If you have pages that should not trigger this redirect, add them to this settin
 
 Every item it the list is interpreted as a regular expression.
 
+example
+
+.. code-block:: python
+    AUTH_ADFS = {
+        'LOGIN_EXEMPT_URLS': [
+            '^$',
+            '^api'
+        ],
+    }
+
 .. _mirror_group_setting:
 
 MIRROR_GROUPS

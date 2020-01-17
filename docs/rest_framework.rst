@@ -42,6 +42,15 @@ Enable the ``AdfsAccessTokenBackend`` authentication backend in ``settings.py``:
         ...
     )
 
+Prevent your API from triggering a login redirect:
+
+.. code-block:: python
+    AUTH_ADFS = {
+        'LOGIN_EXEMPT_URLS': [
+            '^api',  # Assuming you API is available at /api
+        ],
+    }
+
 (Optional) Override the standard Django Rest Framework login pages in your main ``urls.py``:
 
 .. code-block:: python

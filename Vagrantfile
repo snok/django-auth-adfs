@@ -69,7 +69,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "web" do |web|
     web.vm.hostname = "web"
-    web.vm.box = "bento/debian-10"
+    web.vm.box = "generic/debian10"
 
     # If you change this IP, you also have to change it in the file 03-example-adfs-config.ps1
     web.vm.network "private_network", ip: "10.0.0.10"
