@@ -142,6 +142,15 @@ ADFS server. Based on this information, certain configuration for this module is
 This setting determines the interval after which the configuration is reloaded. This allows to automatically follow the
 token signing certificate rollover on ADFS.
 
+CREATE_NEW_USERS
+----------------
+* **Default**: ``True``
+* **Type**: ``boolean``
+
+Determines whether users are created automatically if they do not exist.
+
+If set to ``False``, then you need to create your users before they can log in.
+
 DISABLE_SSO
 -----------
 * **Default**: ``False``
