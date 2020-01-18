@@ -227,6 +227,7 @@ Every item it the list is interpreted as a regular expression.
 example
 
 .. code-block:: python
+
     AUTH_ADFS = {
         'LOGIN_EXEMPT_URLS': [
             '^$',
