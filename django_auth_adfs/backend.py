@@ -4,17 +4,17 @@ import jwt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
-from django.core.exceptions import ImproperlyConfigured, PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
 
 from django_auth_adfs import signals
-from django_auth_adfs.config import settings, provider_config
+from django_auth_adfs.config import provider_config, settings
 
 logger = logging.getLogger("django_auth_adfs")
 
 
 class AdfsBaseBackend(ModelBackend):
     def exchange_auth_code(self, authorization_code, request):
-        logger.debug("Received authorization code: " + authorization_code)
+        logger.debug("Received authorization code: %s", authorization_code)
         data = {
             'grant_type': 'authorization_code',
             'client_id': settings.CLIENT_ID,
@@ -24,17 +24,17 @@ class AdfsBaseBackend(ModelBackend):
         if settings.CLIENT_SECRET:
             data['client_secret'] = settings.CLIENT_SECRET
 
-        logger.debug("Getting access token at: " + provider_config.token_endpoint)
+        logger.debug("Getting access token at: %s", provider_config.token_endpoint)
         response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
 
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
         if response.status_code == 400:
-            logger.error("ADFS server returned an error: " + response.json()["error_description"])
+            logger.error("ADFS server returned an error: %s", response.json()["error_description"])
             raise PermissionDenied
 
         if response.status_code != 200:
-            logger.error("Unexpected ADFS response: " + response.content.decode())
+            logger.error("Unexpected ADFS response: %s", response.content.decode())
             raise PermissionDenied
 
         adfs_response = response.json()
@@ -69,14 +69,14 @@ class AdfsBaseBackend(ModelBackend):
                     options=options,
                 )
             except jwt.ExpiredSignature as error:
-                logger.info("Signature has expired: %s" % error)
+                logger.info("Signature has expired: %s", error)
                 raise PermissionDenied
             except jwt.DecodeError as error:
                 # If it's not the last certificate in the list, skip to the next one
                 if idx < len(provider_config.signing_keys) - 1:
                     continue
                 else:
-                    logger.info('Error decoding signature: %s' % error)
+                    logger.info('Error decoding signature: %s', error)
                     raise PermissionDenied
             except jwt.InvalidTokenError as error:
                 logger.info(str(error))
@@ -86,7 +86,7 @@ class AdfsBaseBackend(ModelBackend):
         if not access_token:
             raise PermissionDenied
 
-        logger.debug("Received access token: " + access_token)
+        logger.debug("Received access token: %s", access_token)
         claims = self.validate_access_token(access_token)
         if not claims:
             raise PermissionDenied
@@ -125,7 +125,7 @@ class AdfsBaseBackend(ModelBackend):
         })
         if created or not user.password:
             user.set_unusable_password()
-            logger.debug("User '{}' has been created.".format(claims[username_claim]))
+            logger.debug("User '%s' has been created.", claims[username_claim])
 
         return user
 
@@ -144,15 +144,15 @@ class AdfsBaseBackend(ModelBackend):
             if hasattr(user, field):
                 if claim in claims:
                     setattr(user, field, claims[claim])
-                    logger.debug("Attribute '{}' for user '{}' was set to '{}'.".format(field, user, claims[claim]))
+                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, claims[claim])
                 else:
                     if field in required_fields:
                         msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
                         raise ImproperlyConfigured(msg.format(claim))
                     else:
-                        msg = "Claim '{}' for user field '{}' was not found in the access token for user '{}'. " \
-                              "Field is not required and will be left empty".format(claim, field, user)
-                        logger.warning(msg)
+                        logger.warning("Claim '%s' for user field '%s' was not found in "
+                                       "the access token for user '%s'. "
+                                       "Field is not required and will be left empty", claim, field, user)
             else:
                 msg = "User model has no field named '{}'. Check ADFS claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
@@ -174,8 +174,8 @@ class AdfsBaseBackend(ModelBackend):
                 if not isinstance(claim_groups, list):
                     claim_groups = [claim_groups, ]
             else:
-                logger.debug(
-                    "The configured groups claim '{}' was not found in the access token".format(settings.GROUPS_CLAIM))
+                logger.debug("The configured groups claim '%s' was not found in the access token",
+                             settings.GROUPS_CLAIM)
                 claim_groups = []
 
             # Make a diff of the user's groups.
@@ -190,17 +190,17 @@ class AdfsBaseBackend(ModelBackend):
             for group_name in groups_to_remove:
                 group = Group.objects.get(name=group_name)
                 user.groups.remove(group)
-                logger.debug("User removed from group '{}'".format(group_name))
+                logger.debug("User removed from group '%s'", group_name)
 
             for group_name in groups_to_add:
                 try:
                     if settings.MIRROR_GROUPS:
                         group, _ = Group.objects.get_or_create(name=group_name)
-                        logger.debug("Created group '{}'".format(group_name))
+                        logger.debug("Created group '%s'", group_name)
                     else:
                         group = Group.objects.get(name=group_name)
                     user.groups.add(group)
-                    logger.debug("User added to group '{}'".format(group_name))
+                    logger.debug("User added to group '%s'", group_name)
                 except ObjectDoesNotExist:
                     # Silently fail for non-existing groups.
                     pass
@@ -229,7 +229,7 @@ class AdfsBaseBackend(ModelBackend):
                     else:
                         value = False
                     setattr(user, flag, value)
-                    logger.debug("Attribute '{}' for user '{}' was set to '{}'.".format(user, flag, value))
+                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", user, flag, value)
                 else:
                     msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                     raise ImproperlyConfigured(msg.format(flag))
@@ -240,7 +240,7 @@ class AdfsBaseBackend(ModelBackend):
                 if claim in claims and str(claims[claim]).lower() in ['y', 'yes', 't', 'true', 'on', '1']:
                     bool_val = True
                 setattr(user, field, bool_val)
-                logger.debug('Attribute "{}" for user "{}" was set to "{}".'.format(user, field, bool_val))
+                logger.debug('Attribute "%s" for user "%s" was set to "%s".', user, field, bool_val)
             else:
                 msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
