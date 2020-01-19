@@ -184,32 +184,20 @@ class AdfsBaseBackend(ModelBackend):
                              settings.GROUPS_CLAIM)
                 claim_groups = []
 
-            # Make a diff of the user's groups.
-            # Removing a user from all groups and then re-add them would cause
-            # the autoincrement value for the database table storing the
-            # user-to-group mappings to increment for no reason.
-            groups_to_remove = set(django_groups) - set(claim_groups)
-            groups_to_add = set(claim_groups) - set(django_groups)
-
-            # Loop through the groups in the group claim and
-            # add the user to these groups as needed.
-            for group_name in groups_to_remove:
-                group = Group.objects.get(name=group_name)
-                user.groups.remove(group)
-                logger.debug("User removed from group '%s'", group_name)
-
-            for group_name in groups_to_add:
+            new_groups = []
+            for group_name in claim_groups:
                 try:
                     if settings.MIRROR_GROUPS:
                         group, _ = Group.objects.get_or_create(name=group_name)
                         logger.debug("Created group '%s'", group_name)
                     else:
                         group = Group.objects.get(name=group_name)
-                    user.groups.add(group)
                     logger.debug("User added to group '%s'", group_name)
+                    new_groups.append(group)
                 except ObjectDoesNotExist:
                     # Silently fail for non-existing groups.
                     pass
+            user.groups.set(new_groups)
 
     def update_user_flags(self, user, claims):
         """

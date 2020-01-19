@@ -109,6 +109,7 @@ class AuthenticationTests(TestCase):
         user.save()
 
         self.assertEqual(user.groups.all()[0].name, "group3")
+        self.assertEqual(len(user.groups.all()), 1)
 
         backend = AdfsAuthCodeBackend()
 
