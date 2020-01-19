@@ -184,20 +184,43 @@ class AdfsBaseBackend(ModelBackend):
                              settings.GROUPS_CLAIM)
                 claim_groups = []
 
-            new_groups = []
-            for group_name in claim_groups:
-                try:
-                    if settings.MIRROR_GROUPS:
-                        group, _ = Group.objects.get_or_create(name=group_name)
-                        logger.debug("Created group '%s'", group_name)
-                    else:
-                        group = Group.objects.get(name=group_name)
-                    logger.debug("User added to group '%s'", group_name)
-                    new_groups.append(group)
-                except ObjectDoesNotExist:
-                    # Silently fail for non-existing groups.
-                    pass
-            user.groups.set(new_groups)
+            if sorted(claim_groups) != sorted(django_groups):
+                existing_groups = list(
+                    Group.objects.filter(name__in=claim_groups).iterator()
+                )
+                existing_group_names = frozenset(group.name for group in existing_groups)
+                new_groups = []
+                if settings.MIRROR_GROUPS:
+                    new_groups = [
+                        Group.objects.get_or_create(name=name)[0]
+                        for name in claim_groups
+                        if name not in existing_group_names
+                    ]
+                else:
+                    for name in claim_groups:
+                        if name not in existing_group_names:
+                            try:
+                                group = Group.objects.get(name=name)
+                                new_groups.append(group)
+                            except ObjectDoesNotExist:
+                                pass
+                user.groups.set(existing_groups + new_groups)
+
+            #
+            # new_groups = []
+            # for group_name in claim_groups:
+            #     try:
+            #         if settings.MIRROR_GROUPS:
+            #             group, _ = Group.objects.get_or_create(name=group_name)
+            #             logger.debug("Created group '%s'", group_name)
+            #         else:
+            #             group = Group.objects.get(name=group_name)
+            #         logger.debug("User added to group '%s'", group_name)
+            #         new_groups.append(group)
+            #     except ObjectDoesNotExist:
+            #         # Silently fail for non-existing groups.
+            #         pass
+            # user.groups.set(new_groups)
 
     def update_user_flags(self, user, claims):
         """
