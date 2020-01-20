@@ -206,22 +206,6 @@ class AdfsBaseBackend(ModelBackend):
                                 pass
                 user.groups.set(existing_groups + new_groups)
 
-            #
-            # new_groups = []
-            # for group_name in claim_groups:
-            #     try:
-            #         if settings.MIRROR_GROUPS:
-            #             group, _ = Group.objects.get_or_create(name=group_name)
-            #             logger.debug("Created group '%s'", group_name)
-            #         else:
-            #             group = Group.objects.get(name=group_name)
-            #         logger.debug("User added to group '%s'", group_name)
-            #         new_groups.append(group)
-            #     except ObjectDoesNotExist:
-            #         # Silently fail for non-existing groups.
-            #         pass
-            # user.groups.set(new_groups)
-
     def update_user_flags(self, user, claims):
         """
         Updates user boolean attributes based on the BOOLEAN_CLAIM_MAPPING setting.

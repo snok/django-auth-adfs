@@ -123,6 +123,32 @@ class AuthenticationTests(TestCase):
         self.assertEqual(user.groups.all()[1].name, "group2")
 
     @mock_adfs("2016")
+    def test_group_removal_overlap(self):
+        user, created = User.objects.get_or_create(**{
+            User.USERNAME_FIELD: "testuser"
+        })
+        group_one = Group.objects.get(name="group1")
+        group_three = Group.objects.get(name="group3")
+        user.groups.add(group_one, group_three)
+        user.set_unusable_password()
+        user.save()
+
+        self.assertEqual(user.groups.all()[0].name, "group1")
+        self.assertEqual(user.groups.all()[1].name, "group3")
+        self.assertEqual(len(user.groups.all()), 2)
+
+        backend = AdfsAuthCodeBackend()
+
+        user = backend.authenticate(self.request, authorization_code="dummycode")
+        self.assertIsInstance(user, User)
+        self.assertEqual(user.first_name, "John")
+        self.assertEqual(user.last_name, "Doe")
+        self.assertEqual(user.email, "john.doe@example.com")
+        self.assertEqual(len(user.groups.all()), 2)
+        self.assertEqual(user.groups.all()[0].name, "group1")
+        self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("2016")
     def test_authentication(self):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
@@ -189,9 +215,9 @@ class AuthenticationTests(TestCase):
         settings = deepcopy(django_settings)
         del settings.AUTH_ADFS["SERVER"]
         settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
-        with patch("django_auth_adfs.config.django_settings", settings),\
-                patch("django_auth_adfs.config.settings", Settings()),\
-                patch("django_auth_adfs.views.provider_config", ProviderConfig()):
+        with patch("django_auth_adfs.config.django_settings", settings), \
+             patch("django_auth_adfs.config.settings", Settings()), \
+             patch("django_auth_adfs.views.provider_config", ProviderConfig()):
             response = self.client.get("/oauth2/login?next=/test/")
             self.assertEqual(response.status_code, 302)
             redir = urlparse(response["Location"])
