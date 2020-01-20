@@ -208,11 +208,11 @@ class ProviderConfig(object):
             self._config_timestamp = datetime.now()
 
             logger.info("django_auth_adfs loaded settings from ADFS server.")
-            logger.info("operating mode:         " + self._mode)
-            logger.info("authorization endpoint: " + self.authorization_endpoint)
-            logger.info("token endpoint:         " + self.token_endpoint)
-            logger.info("end session endpoint:   " + self.end_session_endpoint)
-            logger.info("issuer:                 " + self.issuer)
+            logger.info("operating mode:         %s", self._mode)
+            logger.info("authorization endpoint: %s", self.authorization_endpoint)
+            logger.info("token endpoint:         %s", self.token_endpoint)
+            logger.info("end session endpoint:   %s", self.end_session_endpoint)
+            logger.info("issuer:                 %s", self.issuer)
 
     def _load_openid_config(self):
         config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
@@ -220,7 +220,7 @@ class ProviderConfig(object):
         )
 
         try:
-            logger.info("Trying to get OpenID Connect config from {}".format(config_url))
+            logger.info("Trying to get OpenID Connect config from %s", config_url)
             response = self.session.get(config_url, timeout=settings.TIMEOUT)
             response.raise_for_status()
             openid_cfg = response.json()
@@ -256,7 +256,7 @@ class ProviderConfig(object):
             adfs_config_url = base_url + "/FederationMetadata/2007-06/FederationMetadata.xml"
 
         try:
-            logger.info("Trying to get ADFS Metadata file {}".format(adfs_config_url))
+            logger.info("Trying to get ADFS Metadata file %s", adfs_config_url)
             response = self.session.get(adfs_config_url, timeout=settings.TIMEOUT)
             response.raise_for_status()
         except requests.HTTPError:
@@ -283,7 +283,7 @@ class ProviderConfig(object):
     def _load_keys(self, certificates):
         new_keys = []
         for cert in certificates:
-            logger.debug("Loading public key from certificate: " + cert)
+            logger.debug("Loading public key from certificate: %s", cert)
             cert_obj = load_der_x509_certificate(base64.b64decode(cert), backend)
             new_keys.append(cert_obj.public_key())
         self.signing_keys = new_keys

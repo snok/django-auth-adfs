@@ -1,14 +1,10 @@
 from __future__ import absolute_import
 
-import logging
-
 from django.contrib.auth import authenticate
 from rest_framework import exceptions
 from rest_framework.authentication import (
     BaseAuthentication, get_authorization_header
 )
-
-logger = logging.getLogger(__name__)
 
 
 class AdfsAccessTokenAuthentication(BaseAuthentication):
