@@ -173,21 +173,19 @@ class AdfsBaseBackend(ModelBackend):
         """
         if settings.GROUPS_CLAIM is not None:
             # Update the user's group memberships
-            django_groups = [group.name for group in user.groups.all()]
+            django_groups = [group.name.lower() for group in user.groups.all()]
 
             if settings.GROUPS_CLAIM in claims:
                 claim_groups = claims[settings.GROUPS_CLAIM]
                 if not isinstance(claim_groups, list):
                     claim_groups = [claim_groups, ]
+                claim_groups = set(group.lower() for group in claim_groups)
             else:
                 logger.debug("The configured groups claim '%s' was not found in the access token",
                              settings.GROUPS_CLAIM)
                 claim_groups = []
-
             if sorted(claim_groups) != sorted(django_groups):
-                existing_groups = list(
-                    Group.objects.filter(name__in=claim_groups).iterator()
-                )
+                existing_groups = list(Group.objects.filter(name__in=claim_groups).iterator())
                 existing_group_names = frozenset(group.name for group in existing_groups)
                 new_groups = []
                 if settings.MIRROR_GROUPS:
