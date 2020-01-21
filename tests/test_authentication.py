@@ -216,8 +216,8 @@ class AuthenticationTests(TestCase):
         del settings.AUTH_ADFS["SERVER"]
         settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
         with patch("django_auth_adfs.config.django_settings", settings), \
-             patch("django_auth_adfs.config.settings", Settings()), \
-             patch("django_auth_adfs.views.provider_config", ProviderConfig()):
+                patch("django_auth_adfs.config.settings", Settings()), \
+                patch("django_auth_adfs.views.provider_config", ProviderConfig()):
             response = self.client.get("/oauth2/login?next=/test/")
             self.assertEqual(response.status_code, 302)
             redir = urlparse(response["Location"])
