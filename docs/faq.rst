@@ -35,8 +35,8 @@ By default, ADFS only triggers seamless single sign-on for Internet Explorer or 
 Have a look at the ADFS configuration guides for details about how to got this working
 for other browsers also.
 
-Why is a user is added and removed from the same group on every login?
-----------------------------------------------------------------------
+Why is a user added and removed from the same group on every login?
+-------------------------------------------------------------------
 This can be caused by having a case insensitive database, such as a ``MySQL`` database with default settings.
 You can read more about `collation settings <https://docs.djangoproject.com/en/3.0/ref/databases/#collation-settings>`_
 in the official documentation.
