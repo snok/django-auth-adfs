@@ -223,6 +223,7 @@ class AuthenticationTests(TestCase):
         from django_auth_adfs.config import django_settings
         settings = deepcopy(django_settings)
         settings.AUTH_ADFS["CREATE_NEW_USERS"] = False
-        with patch("django_auth_adfs.config.django_settings", settings):
+        with patch("django_auth_adfs.config.django_settings", settings),\
+                patch("django_auth_adfs.backend.settings", Settings()):
             backend = AdfsAuthCodeBackend()
             self.assertRaises(PermissionDenied, backend.authenticate, self.request, authorization_code='testcode')
