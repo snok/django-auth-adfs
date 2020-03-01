@@ -120,13 +120,19 @@ class AdfsBaseBackend(ModelBackend):
         # Create the user
         username_claim = settings.USERNAME_CLAIM
         usermodel = get_user_model()
-        user, created = usermodel.objects.get_or_create(**{
-            usermodel.USERNAME_FIELD: claims[username_claim]
-        })
-        if created or not user.password:
-            user.set_unusable_password()
-            logger.debug("User '%s' has been created.", claims[username_claim])
+        userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
 
+        try:
+            user = usermodel.objects.get(**userdata)
+        except usermodel.DoesNotExist:
+            if settings.CREATE_NEW_USERS:
+                user = usermodel.objects.create(**userdata)
+                logger.debug("User '%s' has been created.", claims[username_claim])
+            else:
+                logger.debug("User '%s' doesn't exist and creating users is disabled.", claims[username_claim])
+                raise PermissionDenied
+        if not user.password:
+            user.set_unusable_password()
         return user
 
     def update_user_attributes(self, user, claims):

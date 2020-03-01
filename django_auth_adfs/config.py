@@ -56,6 +56,7 @@ class Settings(object):
         self.CLIENT_ID = None  # Required
         self.CLIENT_SECRET = None
         self.CONFIG_RELOAD_INTERVAL = 24  # hours
+        self.CREATE_NEW_USERS = True
         self.DISABLE_SSO = False
         self.GROUP_TO_FLAG_MAPPING = {}
         self.GROUPS_CLAIM = "group"

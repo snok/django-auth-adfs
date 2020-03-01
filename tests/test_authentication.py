@@ -217,3 +217,13 @@ class AuthenticationTests(TestCase):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertContains(response, "Your account is disabled", status_code=403)
         user.delete()
+
+    @mock_adfs("2016")
+    def test_nonexisting_user(self):
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        settings.AUTH_ADFS["CREATE_NEW_USERS"] = False
+        with patch("django_auth_adfs.config.django_settings", settings),\
+                patch("django_auth_adfs.backend.settings", Settings()):
+            backend = AdfsAuthCodeBackend()
+            self.assertRaises(PermissionDenied, backend.authenticate, self.request, authorization_code='testcode')
