@@ -1,5 +1,5 @@
 # ########## SETTINGS #########
-$webIP = "10.0.0.10"
+$webIP = "11.0.0.10"
 $webName = "web"
 $appName = "Django Application"
 $clientId = "487d8ff7-80a8-4f62-b926-c2852ab06e94"
