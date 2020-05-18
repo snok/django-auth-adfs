@@ -22,7 +22,6 @@ class OAuth2CallbackView(View):
             request (django.http.request.HttpRequest): A Django Request object
         """
         code = request.GET.get("code")
-
         if not code:
             # Return an error message
             return render(request, 'django_auth_adfs/login_failed.html', {
@@ -33,7 +32,7 @@ class OAuth2CallbackView(View):
 
         user = authenticate(request=request, authorization_code=code)
 
-        if user is not None:
+        if user:
             if user.is_active:
                 login(request, user)
                 # Redirect to the "after login" page.
@@ -94,3 +93,14 @@ class OAuth2LogoutView(View):
         """
         logout(request)
         return redirect(provider_config.build_end_session_endpoint())
+
+
+class OAuth2LoginForceMFA(View):
+    def get(self, request):
+        """
+        Initiates the OAuth2 flow and redirect the user agent to ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
