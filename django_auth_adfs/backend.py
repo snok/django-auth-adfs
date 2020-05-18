@@ -31,10 +31,8 @@ class AdfsBaseBackend(ModelBackend):
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
         if response.status_code == 400:
-            if hasattr(response, "json"):
-                adfs_response = response.json()
-                if adfs_response.get("error_description", "").startswith("AADSTS50076"):
-                    raise MFARequired
+            if response.json().get("error_description", "").startswith("AADSTS50076"):
+                raise MFARequired
             logger.error("ADFS server returned an error: %s", response.json()["error_description"])
             raise PermissionDenied
 

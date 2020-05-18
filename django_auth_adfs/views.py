@@ -8,6 +8,7 @@ from django.utils.http import is_safe_url
 from django.views.generic import View
 
 from django_auth_adfs.config import provider_config
+from django_auth_adfs.exceptions import MFARequired
 
 logger = logging.getLogger("django_auth_adfs")
 
@@ -29,8 +30,10 @@ class OAuth2CallbackView(View):
             }, status=400)
 
         redirect_to = request.GET.get("state")
-
-        user = authenticate(request=request, authorization_code=code)
+        try:
+            user = authenticate(request=request, authorization_code=code)
+        except MFARequired:
+            return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
 
         if user:
             if user.is_active:
@@ -83,6 +86,17 @@ class OAuth2LoginNoSSOView(View):
         return redirect(provider_config.build_authorization_endpoint(request, disable_sso=True))
 
 
+class OAuth2LoginForceMFA(View):
+    def get(self, request):
+        """
+        Initiates the OAuth2 flow and redirect the user agent to ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
+
+
 class OAuth2LogoutView(View):
     def get(self, request):
         """
@@ -93,14 +107,3 @@ class OAuth2LogoutView(View):
         """
         logout(request)
         return redirect(provider_config.build_end_session_endpoint())
-
-
-class OAuth2LoginForceMFA(View):
-    def get(self, request):
-        """
-        Initiates the OAuth2 flow and redirect the user agent to ADFS
-
-        Args:
-            request (django.http.request.HttpRequest): A Django Request object
-        """
-        return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))

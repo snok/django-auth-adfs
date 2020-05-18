@@ -300,6 +300,7 @@ class ProviderConfig(object):
         Args:
             request(django.http.request.HttpRequest): A django Request object
             disable_sso(bool): Whether to disable single sign-on and force the ADFS server to show a login prompt.
+            force_mfa(bool): If MFA should be forced
 
         Returns:
             str: The redirect URI
