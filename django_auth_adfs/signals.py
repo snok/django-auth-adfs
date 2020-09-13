@@ -1,3 +1,7 @@
 from django.dispatch import Signal
 
-post_authenticate = Signal(providing_args=["user", "claims", "adfs_response"])
+# Arguments sent with the signal:
+# * user
+# * claims
+# * adfs_response
+post_authenticate = Signal()
