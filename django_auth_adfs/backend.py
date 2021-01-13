@@ -11,6 +11,10 @@ from django_auth_adfs.config import provider_config, settings
 
 logger = logging.getLogger("django_auth_adfs")
 
+# Monkey-patching PyJWT because version 2.0.0 dropped "ExpiredSignature" as an alias for "ExpiredSignatureError"
+if not hasattr(jwt, "ExpiredSignature"):
+    jwt.ExpiredSignature = jwt.ExpiredSignatureError
+
 
 class AdfsBaseBackend(ModelBackend):
     def exchange_auth_code(self, authorization_code, request):
