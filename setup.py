@@ -44,9 +44,9 @@ setup(
         'Development Status :: 5 - Production/Stable',
     ],
     install_requires=[
-        'pyjwt>=2.0',
+        'pyjwt >= 1.0.1',
         'cryptography>=1.7',
-        'django>=1.11',
+        'django >= 1.11',
         'requests',
     ],
     tests_require=[
