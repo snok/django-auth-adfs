@@ -68,7 +68,7 @@ class AdfsBaseBackend(ModelBackend):
                     issuer=provider_config.issuer,
                     options=options,
                 )
-            except jwt.ExpiredSignature as error:
+            except jwt.ExpiredSignatureError as error:
                 logger.info("Signature has expired: %s", error)
                 raise PermissionDenied
             except jwt.DecodeError as error:
