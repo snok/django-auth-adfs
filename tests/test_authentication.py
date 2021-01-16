@@ -163,7 +163,7 @@ class AuthenticationTests(TestCase):
         self.assertEqual(response['Location'], "/")\
 
     @mock_adfs("2016")
-    def test_jonas_____________________________(self):
+    def test_mfa_error(self):
         with patch('django_auth_adfs.views.authenticate') as mock_auth:
             mock_auth.side_effect = MFARequired('Mock error')
             response = self.client.get("/oauth2/callback", {'code': 'testcode'})
