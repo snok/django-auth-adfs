@@ -57,7 +57,7 @@ In your project's ``settings.py`` add these settings.
     AUTH_ADFS = {
     'AUDIENCE': "your-configured-client-id",
     'CLIENT_ID': "your-configured-client-id",
-    # AD_CLIENT_SECRET is confidential information, consider putting it in .env
+    # CLIENT_SECRET is confidential information, consider putting it in .env
     'CLIENT_SECRET': "your-configured-secret",
     'CLAIM_MAPPING': {'first_name': 'given_name',
                       'last_name': 'family_name',
