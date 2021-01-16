@@ -5,7 +5,7 @@ Changelog
 `1.4.1`_ - 2021-01-16
 ---------------------
 
-**Fixed**  
+**Fixed**
 
 * AADSTS50076 error fixed in #101
 
@@ -13,12 +13,12 @@ Changelog
 `1.4.0`_ - 2021-01-16
 ---------------------
 
-**Features**  
+**Features**
 
 * Added support for enterprice app SSO certificates #87
 * Added setting to disable user creation #96
 
-**Fixed**  
+**Fixed**
 
 * Dependency compatibility for PyJWT 2.0 #120
 * Django 4.0 deprecation cleanup
@@ -211,20 +211,20 @@ Changelog
 
 * Initial release
 
-.. _1.4.1: https://github.com/jobec/django-auth-adfs/compare/1.4.0...1.4.1
-.. _1.4.0: https://github.com/jobec/django-auth-adfs/compare/1.3.1...1.4.0
-.. _1.3.1: https://github.com/jobec/django-auth-adfs/compare/1.3.0...1.3.1
-.. _1.3.0: https://github.com/jobec/django-auth-adfs/compare/1.2.0...1.3.0
-.. _1.2.0: https://github.com/jobec/django-auth-adfs/compare/1.1.2...1.2.0
-.. _1.1.2: https://github.com/jobec/django-auth-adfs/compare/1.1.1...1.1.2
-.. _1.1.1: https://github.com/jobec/django-auth-adfs/compare/1.0.0...1.1.1
-.. _1.0.0: https://github.com/jobec/django-auth-adfs/compare/0.2.1...1.0.0
-.. _0.2.1: https://github.com/jobec/django-auth-adfs/compare/0.2.0...0.2.1
-.. _0.2.0: https://github.com/jobec/django-auth-adfs/compare/0.1.2...0.2.0
-.. _0.1.2: https://github.com/jobec/django-auth-adfs/compare/0.1.1...0.1.2
-.. _0.1.1: https://github.com/jobec/django-auth-adfs/compare/0.1.0...0.1.1
-.. _0.1.0: https://github.com/jobec/django-auth-adfs/compare/0.0.5...0.1.0
-.. _0.0.5: https://github.com/jobec/django-auth-adfs/compare/0.0.4...0.0.5
-.. _0.0.4: https://github.com/jobec/django-auth-adfs/compare/0.0.3...0.0.4
-.. _0.0.3: https://github.com/jobec/django-auth-adfs/compare/0.0.2...0.0.3
-.. _0.0.2: https://github.com/jobec/django-auth-adfs/compare/0.0.1...0.0.2
+.. _1.4.1: https://github.com/snok/django-auth-adfs/compare/1.4.0...1.4.1
+.. _1.4.0: https://github.com/snok/django-auth-adfs/compare/1.3.1...1.4.0
+.. _1.3.1: https://github.com/snok/django-auth-adfs/compare/1.3.0...1.3.1
+.. _1.3.0: https://github.com/snok/django-auth-adfs/compare/1.2.0...1.3.0
+.. _1.2.0: https://github.com/snok/django-auth-adfs/compare/1.1.2...1.2.0
+.. _1.1.2: https://github.com/snok/django-auth-adfs/compare/1.1.1...1.1.2
+.. _1.1.1: https://github.com/snok/django-auth-adfs/compare/1.0.0...1.1.1
+.. _1.0.0: https://github.com/snok/django-auth-adfs/compare/0.2.1...1.0.0
+.. _0.2.1: https://github.com/snok/django-auth-adfs/compare/0.2.0...0.2.1
+.. _0.2.0: https://github.com/snok/django-auth-adfs/compare/0.1.2...0.2.0
+.. _0.1.2: https://github.com/snok/django-auth-adfs/compare/0.1.1...0.1.2
+.. _0.1.1: https://github.com/snok/django-auth-adfs/compare/0.1.0...0.1.1
+.. _0.1.0: https://github.com/snok/django-auth-adfs/compare/0.0.5...0.1.0
+.. _0.0.5: https://github.com/snok/django-auth-adfs/compare/0.0.4...0.0.5
+.. _0.0.4: https://github.com/snok/django-auth-adfs/compare/0.0.3...0.0.4
+.. _0.0.3: https://github.com/snok/django-auth-adfs/compare/0.0.2...0.0.3
+.. _0.0.2: https://github.com/snok/django-auth-adfs/compare/0.0.1...0.0.2

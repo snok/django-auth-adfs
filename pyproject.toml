@@ -49,7 +49,6 @@ PyJWT = "^1.0.1 || ^2.0"
 responses = '*'
 mock = '*'
 coverage = '*'
-tox = '*'
 djangorestframework = '*'
 PyJWT = "^1.0.1"  # Even though PyJWT>=2 works for auth-adfs, the utils for our tests does not.
 

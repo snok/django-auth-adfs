@@ -10,15 +10,15 @@ ADFS Authentication for Django
     :target: https://pypi.python.org/pypi/django-auth-adfs#downloads
 .. image:: https://img.shields.io/pypi/djversions/django-auth-adfs.svg
     :target: https://pypi.python.org/pypi/django-auth-adfs
-.. image:: https://travis-ci.org/jobec/django-auth-adfs.svg?branch=master
-    :target: https://travis-ci.org/jobec/django-auth-adfs
-.. image:: https://codecov.io/github/jobec/django-auth-adfs/coverage.svg?branch=master
-    :target: https://codecov.io/github/jobec/django-auth-adfs?branch=master
+.. image:: https://travis-ci.org/snok/django-auth-adfs.svg?branch=master
+    :target: https://travis-ci.org/snok/django-auth-adfs
+.. image:: https://codecov.io/github/snok/django-auth-adfs/coverage.svg?branch=master
+    :target: https://codecov.io/github/snok/django-auth-adfs?branch=master
 
 A Django authentication backend for Microsoft ADFS and Azure AD
 
 * Free software: BSD License
-* Homepage: https://github.com/jobec/django-auth-adfs
+* Homepage: https://github.com/snok/django-auth-adfs
 * Documentation: http://django-auth-adfs.readthedocs.io/
 
 Features
