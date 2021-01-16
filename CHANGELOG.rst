@@ -1,6 +1,20 @@
 Changelog
 =========
 
+
+`1.4.0`_ - 2021-01-16
+---------------------
+
+**Features**
+* Added support for enterprice app SSO certificates #87
+* Added setting to disable user creation #96
+
+**Fixed**
+* Dependency compatibility for PyJWT 2.0 #120
+* Django 4.0 deprecation cleanup #
+* Fixed a bug where IntegrityError could occur if a users groups changed, and multiple requests were done quickly. #95
+
+
 `1.3.1`_ - 2019-11-06
 ---------------------
 
