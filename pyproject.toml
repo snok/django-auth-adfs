@@ -1,0 +1,54 @@
+[tool.poetry]
+name = 'django-auth-adfs'
+version = '1.4.0'  # Remember to also change __init__.py version
+description = 'A Django authentication backend for Microsoft ADFS and AzureAD'
+authors = ['Joris Beckers <joris.beckers@gmail.com>']
+maintainers = ['Jonas Krüger Svensson <jonas-ks@hotmail.com>', 'Sondre Lillebø Gundersen <sondrelg@live.no>']
+license = 'BSD'
+homepage = 'https://github.com/snok/django-auth-adfs'
+repository = 'https://github.com/snok/django-auth-adfs'
+documentation = 'https://django-auth-adfs.readthedocs.io/en/latest'
+keywords = ['django', 'authentication', 'adfs', 'azure', 'ad', 'oauth2']
+readme = 'README.rst'
+classifiers=[
+    'Environment :: Web Environment',
+    'Framework :: Django :: 1.11',
+    'Framework :: Django :: 2.0',
+    'Framework :: Django :: 2.1',
+    'Framework :: Django :: 2.2',
+    'Framework :: Django :: 3.0',
+    'Framework :: Django :: 3.1',
+    'Intended Audience :: Developers',
+    'Intended Audience :: End Users/Desktop',
+    'Operating System :: OS Independent',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Topic :: Internet :: WWW/HTTP',
+    'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+    'Topic :: Internet :: WWW/HTTP :: WSGI',
+    'Topic :: Software Development :: Libraries :: Application Frameworks',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Development Status :: 5 - Production/Stable',
+]
+include = ['CHANGELOG.rst']
+
+[tool.poetry.dependencies]
+python = '^3'
+django = ' ^3.0 ||^2.0 || ^1.1'
+requests = '^1 || ^2'
+cryptography = '^1.7 || ^2.0 || ^3.0'
+PyJWT = "^1.0.1 || ^2.0"
+
+[tool.poetry.dev-dependencies]
+responses = '*'
+mock = '*'
+coverage = '*'
+tox = '*'
+djangorestframework = '*'
+PyJWT = "^1.0.1"  # Even though PyJWT>=2 works for auth-adfs, the utils for our tests does not.
