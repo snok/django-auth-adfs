@@ -46,3 +46,18 @@ If you are proposing a feature:
 * Explain in detail how it would work.
 * Keep the scope as narrow as possible, to make it easier to implement.
 
+Set up your environment
+~~~~~~~~~~~~~~~~~~~~~~~
+1. Fork the upstream django-auth-adfs repository into a personal account.
+
+2. Install poetry running ``pip install poetry`` or ``curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -``
+
+3. Configure poetry to create a virtual environment in your project folder: ``poetry config virtualenvs.in-project true``
+
+3. Install dependencies by running ``poetry install``
+
+4. Create a new branch for you changes
+
+5. Push the topic branch to your personal fork
+
+6. Create a pull request to the django-auth-adfs repository with a detailed explanation

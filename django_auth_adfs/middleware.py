@@ -48,5 +48,4 @@ class LoginRequiredMiddleware:
                 except MFARequired:
                     return redirect_to_login('django_auth_adfs:login-force-mfa')
 
-        response = self.get_response(request)
-        return response
+        return self.get_response(request)
