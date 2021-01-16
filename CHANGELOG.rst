@@ -11,7 +11,7 @@ Changelog
 
 **Fixed**
 * Dependency compatibility for PyJWT 2.0 #120
-* Django 4.0 deprecation cleanup #
+* Django 4.0 deprecation cleanup
 * Fixed a bug where IntegrityError could occur if a users groups changed, and multiple requests were done quickly. #95
 
 
@@ -201,6 +201,7 @@ Changelog
 
 * Initial release
 
+.. _1.4.0: https://github.com/jobec/django-auth-adfs/compare/1.3.1...1.4.0
 .. _1.3.1: https://github.com/jobec/django-auth-adfs/compare/1.3.0...1.3.1
 .. _1.3.0: https://github.com/jobec/django-auth-adfs/compare/1.2.0...1.3.0
 .. _1.2.0: https://github.com/jobec/django-auth-adfs/compare/1.1.2...1.2.0
