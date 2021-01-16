@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'django-auth-adfs'
-version = '1.4.0'  # Remember to also change __init__.py version
+version = '1.4.1'  # Remember to also change __init__.py version
 description = 'A Django authentication backend for Microsoft ADFS and AzureAD'
 authors = ['Joris Beckers <joris.beckers@gmail.com>']
 maintainers = ['Jonas Krüger Svensson <jonas-ks@hotmail.com>', 'Sondre Lillebø Gundersen <sondrelg@live.no>']
@@ -52,3 +52,7 @@ coverage = '*'
 tox = '*'
 djangorestframework = '*'
 PyJWT = "^1.0.1"  # Even though PyJWT>=2 works for auth-adfs, the utils for our tests does not.
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

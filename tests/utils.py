@@ -73,6 +73,11 @@ def build_access_token_azure(request):
     return do_build_access_token(request, issuer)
 
 
+def do_build_mfa_error(request):
+    response = {'error_description': 'AADSTS50076'}
+    return 400, [], json.dumps(response)
+
+
 def do_build_access_token(request, issuer):
     issued_at = int(time.time())
     expires = issued_at + 3600
@@ -146,7 +151,7 @@ def build_adfs_meta(request):
     return 200, [], data
 
 
-def mock_adfs(adfs_version, empty_keys=False):
+def mock_adfs(adfs_version, empty_keys=False, mfa_error=False):
     if adfs_version not in ["2012", "2016", "azure"]:
         raise NotImplementedError("This version of ADFS is not implemented")
 
@@ -206,11 +211,18 @@ def mock_adfs(adfs_version, empty_keys=False):
                         content_type='application/json',
                     )
                 else:
-                    rsps.add_callback(
-                        rsps.POST, token_endpoint,
-                        callback=build_access_token_adfs,
-                        content_type='application/json',
-                    )
+                    if mfa_error:
+                        rsps.add_callback(
+                            rsps.POST, token_endpoint,
+                            callback=do_build_mfa_error,
+                            content_type='application/json',
+                        )
+                    else:
+                        rsps.add_callback(
+                            rsps.POST, token_endpoint,
+                            callback=build_access_token_adfs,
+                            content_type='application/json',
+                        )
 
                 test_func(*original_args, **original_kwargs)
         return wrapper

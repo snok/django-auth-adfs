@@ -293,13 +293,14 @@ class ProviderConfig(object):
         self.load_config()
         return request.build_absolute_uri(reverse("django_auth_adfs:callback"))
 
-    def build_authorization_endpoint(self, request, disable_sso=None):
+    def build_authorization_endpoint(self, request, disable_sso=None, force_mfa=False):
         """
         This function returns the ADFS authorization URL.
 
         Args:
             request(django.http.request.HttpRequest): A django Request object
             disable_sso(bool): Whether to disable single sign-on and force the ADFS server to show a login prompt.
+            force_mfa(bool): If MFA should be forced
 
         Returns:
             str: The redirect URI
@@ -322,6 +323,8 @@ class ProviderConfig(object):
             query["scope"] = "openid"
             if (disable_sso is None and settings.DISABLE_SSO) or disable_sso is True:
                 query["prompt"] = "login"
+            if force_mfa:
+                query["amr_values"] = "ngcmfa"
 
         return "{0}?{1}".format(self.authorization_endpoint, query.urlencode())
 

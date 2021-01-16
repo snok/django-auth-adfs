@@ -7,6 +7,7 @@ from django.conf import settings as django_settings
 from django.contrib.auth.views import redirect_to_login
 from django.urls import reverse
 
+from django_auth_adfs.exceptions import MFARequired
 from django_auth_adfs.config import settings
 
 LOGIN_EXEMPT_URLS = [
@@ -42,7 +43,9 @@ class LoginRequiredMiddleware:
         if not request.user.is_authenticated:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in LOGIN_EXEMPT_URLS):
-                return redirect_to_login(request.get_full_path())
+                try:
+                    return redirect_to_login(request.get_full_path())
+                except MFARequired:
+                    return redirect_to_login('django_auth_adfs:login-force-mfa')
 
-        response = self.get_response(request)
-        return response
+        return self.get_response(request)

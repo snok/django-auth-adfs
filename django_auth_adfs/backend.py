@@ -8,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, Per
 
 from django_auth_adfs import signals
 from django_auth_adfs.config import provider_config, settings
+from django_auth_adfs.exceptions import MFARequired
 
 logger = logging.getLogger("django_auth_adfs")
 
@@ -26,10 +27,11 @@ class AdfsBaseBackend(ModelBackend):
 
         logger.debug("Getting access token at: %s", provider_config.token_endpoint)
         response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
-
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
         if response.status_code == 400:
+            if response.json().get("error_description", "").startswith("AADSTS50076"):
+                raise MFARequired
             logger.error("ADFS server returned an error: %s", response.json()["error_description"])
             raise PermissionDenied
 

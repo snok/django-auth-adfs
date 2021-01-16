@@ -1,5 +1,7 @@
 import base64
 
+from django_auth_adfs.exceptions import MFARequired
+
 try:
     from urllib.parse import urlparse, parse_qs
 except ImportError:  # Python 2.7
@@ -56,6 +58,12 @@ class AuthenticationTests(TestCase):
         self.assertEqual(len(user.groups.all()), 2)
         self.assertEqual(user.groups.all()[0].name, "group1")
         self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("2016", mfa_error=True)
+    def test_mfa_error(self):
+        with self.assertRaises(MFARequired):
+            backend = AdfsAuthCodeBackend()
+            backend.authenticate(self.request, authorization_code="dummycode")
 
     @mock_adfs("azure")
     def test_with_auth_code_azure(self):
@@ -152,7 +160,21 @@ class AuthenticationTests(TestCase):
     def test_authentication(self):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], "/")
+        self.assertEqual(response['Location'], "/")\
+
+    @mock_adfs("2016")
+    def test_mfa_error(self):
+        with patch('django_auth_adfs.views.authenticate') as mock_auth:
+            mock_auth.side_effect = MFARequired('Mock error')
+            response = self.client.get("/oauth2/callback", {'code': 'testcode'})
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(
+                response['Location'],
+                "https://adfs.example.com/adfs/oauth2/authorize/?response_type=code&"
+                "client_id=your-configured-client-id&resource=your-adfs-RPT-name&"
+                "redirect_uri=http%3A%2F%2Ftestserver%2Foauth2%2Fcallback&state=Lw%3D%3D&scope=openid&"
+                "amr_values=ngcmfa"
+            )
 
     @mock_adfs("2016")
     def test_callback_redir(self):
