@@ -87,7 +87,7 @@ It will be become hidden after a short time, so be sure to note this one down qu
 
 
     
-Step 2 - Configuring AUTH_ADFS & AUTHENTICATION_BACKENDS in settings.py
+Step 2 - Configuring settings.py
 --------------------------------------------------------
 We need to update the ``settings.py`` to accomedate for our registered Azure AD application. 
 
@@ -97,23 +97,23 @@ Replace your AUTH_ADFS with this.
 
     # Client secret is not public information. Should store it as an environment variable.
     
-    Client_ID = 'Your client id here'
-    Client_Secret = 'Your client secret here'
-    Tenant_ID = 'Your tenant id here'
+    client_id = 'Your client id here'
+    cient_secret = 'Your client secret here'
+    tenant_id = 'Your tenant id here'
     
 
     AUTH_ADFS = {
-        'AUDIENCE': Client_ID,
-        'CLIENT_ID': Client_ID,
-        'CLIENT_SECRET': Client_Secret,
+        'AUDIENCE': client_id,
+        'CLIENT_ID': client_id,
+        'CLIENT_SECRET': cient_secret,
         'CLAIM_MAPPING': {'first_name': 'given_name',
                           'last_name': 'family_name',
                           'email': 'upn'},
         'GROUPS_CLAIM': 'roles',
         'MIRROR_GROUPS': True,
         'USERNAME_CLAIM': 'upn',
-        'TENANT_ID': Tenant_ID,
-        'RELYING_PARTY_ID': Client_ID,
+        'TENANT_ID': tenant_id,
+        'RELYING_PARTY_ID': client_id,
     }
     
 
