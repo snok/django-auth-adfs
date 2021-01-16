@@ -39,35 +39,40 @@ In your project's ``settings.py`` add these settings.
 
 .. code-block:: python
 
-    AUTHENTICATION_BACKENDS = (
+    AUTHENTICATION_BACKENDS = [
         ...
+        'django_auth_adfs.backend.AdfsAccessTokenBackend',
         'django_auth_adfs.backend.AdfsAuthCodeBackend',
         ...
-    )
+ ]
 
-    INSTALLED_APPS = (
+    INSTALLED_APPS = [
         ...
         # Needed for the ADFS redirect URI to function
         'django_auth_adfs',
         ...
+ ]
 
     # checkout the documentation for more settings
     AUTH_ADFS = {
-        "SERVER": "adfs.yourcompany.com",
-        "CLIENT_ID": "your-configured-client-id",
-        "RELYING_PARTY_ID": "your-adfs-RPT-name",
-        # Make sure to read the documentation about the AUDIENCE setting
-        # when you configured the identifier as a URL!
-        "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
-        "CA_BUNDLE": "/path/to/ca-bundle.pem",
-        "CLAIM_MAPPING": {"first_name": "given_name",
-                          "last_name": "family_name",
-                          "email": "email"},
+    'AUDIENCE': "your-configured-client-id",
+    'CLIENT_ID': "your-configured-client-id",
+    # AD_CLIENT_SECRET is confidential information, consider putting it in .env
+    'CLIENT_SECRET': "your-configured-secret",
+    'CLAIM_MAPPING': {'first_name': 'given_name',
+                      'last_name': 'family_name',
+                      'email': 'upn'},
+    'GROUPS_CLAIM': 'roles',
+    'MIRROR_GROUPS': True,
+    'USERNAME_CLAIM': 'upn',
+    'TENANT_ID': 'your-tenant-id',
+    'RELYING_PARTY_ID': "your-configured-client-id",
     }
 
     # Configure django to redirect users to the right URL for login
-    LOGIN_URL = "django_auth_adfs:login"
-    LOGIN_REDIRECT_URL = "/"
+    LOGIN_REDIRECT_URL = '/'
+    LOGIN_URL = 'django_auth_adfs:login'
+    LOGOUT_URL = 'django_auth_adfs:logout'
 
     ########################
     # OPTIONAL SETTINGS
@@ -88,8 +93,8 @@ In your project's ``urls.py`` add these paths:
 .. code-block:: python
 
     urlpatterns = [
-        ...
         path('oauth2/', include('django_auth_adfs.urls')),
+        path('oauth2/', include('django_auth_adfs.drf-urls')),
     ]
 
 This will add these paths to Django:
