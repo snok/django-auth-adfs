@@ -160,7 +160,21 @@ class AuthenticationTests(TestCase):
     def test_authentication(self):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], "/")
+        self.assertEqual(response['Location'], "/")\
+
+    @mock_adfs("2016")
+    def test_jonas_____________________________(self):
+        with patch('django_auth_adfs.views.authenticate') as mock_auth:
+            mock_auth.side_effect = MFARequired('Mock error')
+            response = self.client.get("/oauth2/callback", {'code': 'testcode'})
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(
+                response['Location'],
+                "https://adfs.example.com/adfs/oauth2/authorize/?response_type=code&"
+                "client_id=your-configured-client-id&resource=your-adfs-RPT-name&"
+                "redirect_uri=http%3A%2F%2Ftestserver%2Foauth2%2Fcallback&state=Lw%3D%3D&scope=openid&"
+                "amr_values=ngcmfa"
+            )
 
     @mock_adfs("2016")
     def test_callback_redir(self):
