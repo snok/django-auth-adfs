@@ -27,7 +27,6 @@ class AdfsBaseBackend(ModelBackend):
 
         logger.debug("Getting access token at: %s", provider_config.token_endpoint)
         response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
-
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
         if response.status_code == 400:

@@ -1,5 +1,7 @@
 import base64
 
+from django_auth_adfs.exceptions import MFARequired
+
 try:
     from urllib.parse import urlparse, parse_qs
 except ImportError:  # Python 2.7
@@ -56,6 +58,12 @@ class AuthenticationTests(TestCase):
         self.assertEqual(len(user.groups.all()), 2)
         self.assertEqual(user.groups.all()[0].name, "group1")
         self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("2016", mfa_error=True)
+    def test_mfa_error(self):
+        with self.assertRaises(MFARequired):
+            backend = AdfsAuthCodeBackend()
+            backend.authenticate(self.request, authorization_code="dummycode")
 
     @mock_adfs("azure")
     def test_with_auth_code_azure(self):
