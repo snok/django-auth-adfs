@@ -47,6 +47,11 @@ Write-Host "Configure ADFS..."
 # set-service kdssvc -StartupType Automatic
 Add-KdsRootKey -EffectiveTime (Get-Date).AddHours(-10)
 
+Write-Host "Creating Group Managed Service Account..."
+$Name = 'FsGmsa'
+$DNS_Name = $adfsHost+"."+(Get-ADDomain).Forest
+New-ADServiceAccount -Name $Name -DNSHostName $DNS_Name -PrincipalsAllowedToRetrieveManagedPassword "$env:computername`$"
+
 Import-Module ADFS
 Install-AdfsFarm `
 -CertificateThumbprint $cert.Thumbprint `

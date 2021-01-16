@@ -10,21 +10,17 @@ Prerequisites
 * The github repository should be cloned/downloaded in some directory.
 
 This guide assumes you're using VirtualBox, but another hypervisor should also work.
-If you choose to use another one, make sure there's a windows server 2016 or 2012 R2 vagrant box available for it.
+If you choose to use another one, make sure there's a windows server 2019 vagrant box available for it.
 
 Components
 ----------
 The demo consists of 2 parts:
 
 * A web server VM.
-* A windows server 2012 R2 or 2016 VM.
+* A windows server 2019 VM.
 
 The webserver will run Django and is reachable at ``http://web.example.com:8000``. The windows server will run a
 domain controller and ADFS service.
-
-There are 2 windows server versions to chose from. An 2012 R2 and 2016 version. **You should run only one of them
-at the same time!** Because, to make things work (the webserver needs to be able to contact it),
-they share the same IP address.
 
 Starting the environment
 ------------------------
@@ -60,27 +56,24 @@ ADFS server
 The next vagrant box to start is the ADFS server. The scripts used for provisioning the ADFS server can be found in the
 folder ``/vagrant`` inside the repository.
 
-Change the ``2016`` in the examples below to ``2012`` if you want to test against that version of windows server.
-**But don't run both of them at the same time**
-
 #. Navigate to the directory where you cloned/downloaded the github repository.
 #. Bring up the ADFS server by running the command::
 
-    vagrant up adfs2016
+    vagrant up adfs
 
 #. Wait as the vagrant box is downloaded and the needed software installed. **For this windows box, it takes a couple
    of coffees before it's done.**
 #. Next, open window showing the login screen of the windows server. The login credentials are::
 
-    username: administrator
+    username: vagrant
     password: vagrant
 
 #. Once logged in, install a browser like Chrome of Firefox.
 #. Next, in that browser on the windows server, verify you can open the page
    `http://web.example.com:8000 <http://web.example.com:8000>`__
 
-In the AD FS management console, you can check how the example project is configured. For windows 2016 the config is in
-the **Application Groups** folder. For windows 2012 it's in the **Trust Relationships** ➜ **Relying Party Trusts**.
+In the AD FS management console, you can check how the example project is configured. The config is in the
+**Application Groups** folder.
 
 .. note::
 

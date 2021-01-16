@@ -1,0 +1,22 @@
+name: Publish django-auth-adfs to PyPI 📦
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install poetry
+      uses: snok/install-poetry@v1.1.1
+    - name: Build and publish
+      run: |
+        poetry config pypi-token.pypi ${{ secrets.pypi_password }}
+        poetry publish --build --no-interaction

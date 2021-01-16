@@ -71,7 +71,7 @@ class AdfsBaseBackend(ModelBackend):
                     issuer=provider_config.issuer,
                     options=options,
                 )
-            except jwt.ExpiredSignature as error:
+            except jwt.ExpiredSignatureError as error:
                 logger.info("Signature has expired: %s", error)
                 raise PermissionDenied
             except jwt.DecodeError as error:
@@ -186,33 +186,25 @@ class AdfsBaseBackend(ModelBackend):
                 logger.debug("The configured groups claim '%s' was not found in the access token",
                              settings.GROUPS_CLAIM)
                 claim_groups = []
-
-            # Make a diff of the user's groups.
-            # Removing a user from all groups and then re-add them would cause
-            # the autoincrement value for the database table storing the
-            # user-to-group mappings to increment for no reason.
-            groups_to_remove = set(django_groups) - set(claim_groups)
-            groups_to_add = set(claim_groups) - set(django_groups)
-
-            # Loop through the groups in the group claim and
-            # add the user to these groups as needed.
-            for group_name in groups_to_remove:
-                group = Group.objects.get(name=group_name)
-                user.groups.remove(group)
-                logger.debug("User removed from group '%s'", group_name)
-
-            for group_name in groups_to_add:
-                try:
-                    if settings.MIRROR_GROUPS:
-                        group, _ = Group.objects.get_or_create(name=group_name)
-                        logger.debug("Created group '%s'", group_name)
-                    else:
-                        group = Group.objects.get(name=group_name)
-                    user.groups.add(group)
-                    logger.debug("User added to group '%s'", group_name)
-                except ObjectDoesNotExist:
-                    # Silently fail for non-existing groups.
-                    pass
+            if sorted(claim_groups) != sorted(django_groups):
+                existing_groups = list(Group.objects.filter(name__in=claim_groups).iterator())
+                existing_group_names = frozenset(group.name for group in existing_groups)
+                new_groups = []
+                if settings.MIRROR_GROUPS:
+                    new_groups = [
+                        Group.objects.get_or_create(name=name)[0]
+                        for name in claim_groups
+                        if name not in existing_group_names
+                    ]
+                else:
+                    for name in claim_groups:
+                        if name not in existing_group_names:
+                            try:
+                                group = Group.objects.get(name=name)
+                                new_groups.append(group)
+                            except ObjectDoesNotExist:
+                                pass
+                user.groups.set(existing_groups + new_groups)
 
     def update_user_flags(self, user, claims):
         """
