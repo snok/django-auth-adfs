@@ -69,6 +69,7 @@ class AdfsBaseBackend(ModelBackend):
                     audience=settings.AUDIENCE,
                     issuer=provider_config.issuer,
                     options=options,
+                    leeway=settings.JWT_LEEWAY
                 )
             except jwt.ExpiredSignatureError as error:
                 logger.info("Signature has expired: %s", error)
