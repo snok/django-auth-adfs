@@ -2,26 +2,34 @@ Changelog
 =========
 
 
+`1.5.0`_ - 2021-01-18
+---------------------
+
+**Features**
+
+* New parameter called `LEEWAY_JWT`, allowing you to set a leeway for validating the JWT token. #128
+
+
 `1.4.1`_ - 2021-01-16
 ---------------------
 
-**Fixed**  
+**Fixed**
 
-* AADSTS50076 error fixed in #101
+* AADSTS50076 error fixed. #101
 
 
 `1.4.0`_ - 2021-01-16
 ---------------------
 
-**Features**  
+**Features**
 
-* Added support for enterprice app SSO certificates #87
-* Added setting to disable user creation #96
+* Added support for enterprice app SSO certificates. #87
+* Added setting to disable user creation. #96
 
-**Fixed**  
+**Fixed**
 
-* Dependency compatibility for PyJWT 2.0 #120
-* Django 4.0 deprecation cleanup
+* Dependency compatibility for PyJWT 2.0. #120
+* Django 4.0 deprecation cleanup.
 * Fixed a bug where IntegrityError could occur if a users groups changed, and multiple requests were done quickly. #95
 
 
@@ -211,6 +219,7 @@ Changelog
 
 * Initial release
 
+.. _1.5.0: https://github.com/jobec/django-auth-adfs/compare/1.4.1...1.5.0
 .. _1.4.1: https://github.com/jobec/django-auth-adfs/compare/1.4.0...1.4.1
 .. _1.4.0: https://github.com/jobec/django-auth-adfs/compare/1.3.1...1.4.0
 .. _1.3.1: https://github.com/jobec/django-auth-adfs/compare/1.3.0...1.3.1

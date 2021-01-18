@@ -170,6 +170,17 @@ in a template instead of the regular ``<a href="{% url 'django_auth_adfs:login' 
     This does not work with ADFS 3.0 on windows 2012 because this setting requires OpenID Connect
     which is not supported on ADFS 3.0
 
+
+LEEWAY_JWT
+-----------
+* **Default**: ``0``
+* **Type**: ``str``
+
+Allows you to set a leeway of the JWT token. See the official
+`PyJWT <https://pyjwt.readthedocs.io/en/stable/usage.html>`__ docs for more information.
+
+
+
 GROUP_CLAIM
 -----------
 Alias of ``GROUPS_CLAIM``
