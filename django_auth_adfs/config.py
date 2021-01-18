@@ -68,6 +68,7 @@ class Settings(object):
         self.TENANT_ID = None  # Required
         self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
+        self.JWT_LEEWAY = 0
 
         required_settings = [
             "AUDIENCE",
