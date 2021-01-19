@@ -24,7 +24,6 @@ classifiers=[
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
@@ -39,7 +38,7 @@ classifiers=[
 include = ['CHANGELOG.rst']
 
 [tool.poetry.dependencies]
-python = '^3'
+python = '^3.6'
 django = ' ^3.0 ||^2.0 || ^1.1'
 requests = '^1 || ^2'
 cryptography = '^1.7 || ^2.0 || ^3.0'
@@ -51,7 +50,6 @@ mock = '*'
 coverage = '*'
 tox = '*'
 djangorestframework = '*'
-PyJWT = "^1.0.1"  # Even though PyJWT>=2 works for auth-adfs, the utils for our tests does not.
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
