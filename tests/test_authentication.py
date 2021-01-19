@@ -60,7 +60,7 @@ class AuthenticationTests(TestCase):
         self.assertEqual(user.groups.all()[1].name, "group2")
 
     @mock_adfs("2016", mfa_error=True)
-    def test_mfa_error(self):
+    def test_mfa_error_backends(self):
         with self.assertRaises(MFARequired):
             backend = AdfsAuthCodeBackend()
             backend.authenticate(self.request, authorization_code="dummycode")
@@ -160,7 +160,7 @@ class AuthenticationTests(TestCase):
     def test_authentication(self):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], "/")\
+        self.assertEqual(response['Location'], "/")
 
     @mock_adfs("2016")
     def test_mfa_error(self):
