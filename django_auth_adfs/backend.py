@@ -65,7 +65,6 @@ class AdfsBaseBackend(ModelBackend):
                     access_token,
                     key=key,
                     algorithms=['RS256', 'RS384', 'RS512'],
-                    verify=True,
                     audience=settings.AUDIENCE,
                     issuer=provider_config.issuer,
                     options=options,
