@@ -65,10 +65,10 @@ class AdfsBaseBackend(ModelBackend):
                     access_token,
                     key=key,
                     algorithms=['RS256', 'RS384', 'RS512'],
-                    verify=True,
                     audience=settings.AUDIENCE,
                     issuer=provider_config.issuer,
                     options=options,
+                    leeway=settings.JWT_LEEWAY
                 )
             except jwt.ExpiredSignatureError as error:
                 logger.info("Signature has expired: %s", error)

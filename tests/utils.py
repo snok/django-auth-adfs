@@ -109,7 +109,7 @@ def do_build_access_token(request, issuer):
         'refresh_token': 'random_refresh_token',
         'expires_in': 3600,
         'id_token': 'not_used',
-        'access_token': token.decode()
+        'access_token': token.decode() if isinstance(token, bytes) else token  # PyJWT>=2 returns a str instead of bytes
     }
     return 200, [], json.dumps(response)
 
