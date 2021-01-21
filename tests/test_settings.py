@@ -43,7 +43,7 @@ class SettingsTests(TestCase):
 
     def test_dotted_path_failed_response_setting(self):
         settings = deepcopy(django_settings)
-        settings.AUTH_ADFS["FAILED_RESPONSE_FUNCTION"] = '.views.test_failed_response'
+        settings.AUTH_ADFS["FAILED_RESPONSE_FUNCTION"] = 'tests.views.test_failed_response'
         with patch("django_auth_adfs.config.django_settings", settings):
             with patch("django_auth_adfs.config.settings", Settings()):
                 self.assertTrue(callable(settings.AUTH_ADFS["FAILED_RESPONSE_FUNCTION"]))
