@@ -1,6 +1,14 @@
 Changelog
 =========
 
+`1.5.1`_ - Not yet released
+---------------------
+
+**Features**
+
+* New parameter called `FAILED_RESPONSE_FUNCTION`, allowing you to set a custom django function view to handle login
+  failures. #?
+
 
 `1.5.0`_ - 2021-01-18
 ---------------------

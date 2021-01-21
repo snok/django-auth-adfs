@@ -13,7 +13,7 @@ from django_auth_adfs.exceptions import MFARequired
 logger = logging.getLogger("django_auth_adfs")
 
 
-def render_failed_response(request, error_message, status):
+def default_failed_response(request, error_message, status):
     # Return an error message
     return render(request, 'django_auth_adfs/login_failed.html', {
         'error_message': error_message,

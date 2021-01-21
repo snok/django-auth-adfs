@@ -21,6 +21,7 @@ try:
 except ImportError:  # Django < 1.10
     from django.core.urlresolvers import reverse
 
+
 logger = logging.getLogger("django_auth_adfs")
 
 AZURE_AD_SERVER = "login.microsoftonline.com"
@@ -69,7 +70,7 @@ class Settings(object):
         self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
         self.JWT_LEEWAY = 0
-        self.FAILED_RESPONSE_FUNCTION = 'django_auth_adfs.views.render_failed_response'
+        self.FAILED_RESPONSE_FUNCTION = 'django_auth_adfs.views.default_failed_response'
 
         required_settings = [
             "AUDIENCE",
@@ -153,8 +154,8 @@ class Settings(object):
                 raise ImproperlyConfigured(msg)
 
         # Setup dynamic settings
-        if "FAILED_RESPONSE_FUNCTION" in _settings and not callable(_settings["FAILED_RESPONSE_FUNCTION"]):
-            self.FAILED_RESPONSE_FUNCTION = import_string(_settings["FAILED_RESPONSE_FUNCTION"])
+        if not callable(self.FAILED_RESPONSE_FUNCTION):
+            self.FAILED_RESPONSE_FUNCTION = import_string(self.FAILED_RESPONSE_FUNCTION)
 
         # Validate setting conflicts
         usermodel = get_user_model()
