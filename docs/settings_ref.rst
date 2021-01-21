@@ -182,7 +182,7 @@ Allows you to set a leeway of the JWT token. See the official
 
 FAILED_RESPONSE_FUNCTION
 --------------------------------
-* **Default**: ``django_auth_adfs.views.default_failed_response``
+* **Default**: ``None``
 * **Type**: ``str`` or ``callable``
 
 Allows you to set a custom django function view to handle login failures. Can be a dot path to your

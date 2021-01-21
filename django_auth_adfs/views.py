@@ -3,7 +3,7 @@ import logging
 
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.utils.http import is_safe_url
 from django.views.generic import View
 
@@ -11,13 +11,6 @@ from django_auth_adfs.config import provider_config, settings
 from django_auth_adfs.exceptions import MFARequired
 
 logger = logging.getLogger("django_auth_adfs")
-
-
-def default_failed_response(request, error_message, status):
-    # Return an error message
-    return render(request, 'django_auth_adfs/login_failed.html', {
-        'error_message': error_message,
-    }, status=status)
 
 
 class OAuth2CallbackView(View):

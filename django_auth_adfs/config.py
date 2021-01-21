@@ -14,6 +14,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.http import QueryDict
+from django.shortcuts import render
 from django.utils.module_loading import import_string
 
 try:
@@ -49,6 +50,12 @@ class Settings(object):
     """
 
     def __init__(self):
+        def default_failed_response(request, error_message, status):
+            # Return an error message
+            return render(request, 'django_auth_adfs/login_failed.html', {
+                'error_message': error_message,
+            }, status=status)
+
         # Set defaults
         self.AUDIENCE = None  # Required
         self.BOOLEAN_CLAIM_MAPPING = {}
@@ -70,7 +77,7 @@ class Settings(object):
         self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
         self.JWT_LEEWAY = 0
-        self.FAILED_RESPONSE_FUNCTION = 'django_auth_adfs.views.default_failed_response'
+        self.FAILED_RESPONSE_FUNCTION = default_failed_response
 
         required_settings = [
             "AUDIENCE",
