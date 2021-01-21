@@ -153,8 +153,8 @@ class Settings(object):
                 raise ImproperlyConfigured(msg)
 
         # Setup dynamic settings
-        if not callable(_settings["FAILED_RESPONSE_FUNCTION"]):
-            _settings.FAILED_RESPONSE_FUNCTION = import_string(_settings["FAILED_RESPONSE_FUNCTION"])
+        if "FAILED_RESPONSE_FUNCTION" in _settings and not callable(_settings["FAILED_RESPONSE_FUNCTION"]):
+            self.FAILED_RESPONSE_FUNCTION = import_string(_settings["FAILED_RESPONSE_FUNCTION"])
 
         # Validate setting conflicts
         usermodel = get_user_model()
