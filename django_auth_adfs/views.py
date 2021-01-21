@@ -13,6 +13,13 @@ from django_auth_adfs.exceptions import MFARequired
 logger = logging.getLogger("django_auth_adfs")
 
 
+def render_failed_response(request, error_message, status):
+    # Return an error message
+    return render(request, 'django_auth_adfs/login_failed.html', {
+        'error_message': error_message,
+    }, status=status)
+
+
 class OAuth2CallbackView(View):
     def get(self, request):
         """
@@ -25,9 +32,11 @@ class OAuth2CallbackView(View):
         code = request.GET.get("code")
         if not code:
             # Return an error message
-            return render(request, 'django_auth_adfs/login_failed.html', {
-                'error_message': "No authorization code was provided.",
-            }, status=400)
+            return django_settings.FAILED_RESPONSE_FUNCTION(
+                request,
+                error_message="No authorization code was provided.",
+                status=400
+            )
 
         redirect_to = request.GET.get("state")
         try:
@@ -54,14 +63,18 @@ class OAuth2CallbackView(View):
                 return redirect(redirect_to)
             else:
                 # Return a 'disabled account' error message
-                return render(request, 'django_auth_adfs/login_failed.html', {
-                    'error_message': "Your account is disabled.",
-                }, status=403)
+                return django_settings.FAILED_RESPONSE_FUNCTION(
+                    request,
+                    error_message="Your account is disabled.",
+                    status=403
+                )
         else:
             # Return an 'invalid login' error message
-            return render(request, 'django_auth_adfs/login_failed.html', {
-                'error_message': "Login failed.",
-            }, status=401)
+            return django_settings.FAILED_RESPONSE_FUNCTION(
+                request,
+                error_message="Login failed.",
+                status=401
+            )
 
 
 class OAuth2LoginView(View):

@@ -69,6 +69,7 @@ class Settings(object):
         self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
         self.JWT_LEEWAY = 0
+        self.FAILED_RESPONSE_FUNCTION = 'django_auth_adfs.views.render_failed_response'
 
         required_settings = [
             "AUDIENCE",
@@ -150,6 +151,10 @@ class Settings(object):
             if not getattr(self, setting):
                 msg = "django_auth_adfs setting '{0}' has not been set".format(setting)
                 raise ImproperlyConfigured(msg)
+
+        # Setup dynamic settings
+        if not callable(_settings.FAILED_RESPONSE_FUNCTION):
+            _settings.FAILED_RESPONSE_FUNCTION = import_string(_settings.FAILED_RESPONSE_FUNCTION)
 
         # Validate setting conflicts
         usermodel = get_user_model()
