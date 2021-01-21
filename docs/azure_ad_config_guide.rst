@@ -135,6 +135,6 @@ Add this path to your projects ``urls.py`` file.
 
     urlpatterns = [
         ...
-        path('oauth2/', include('django_auth_adfs.drf-urls')),
+        path('oauth2/', include('django_auth_adfs.urls')),
         ...
     ] 
