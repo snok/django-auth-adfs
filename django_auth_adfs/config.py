@@ -153,7 +153,7 @@ class Settings(object):
                 raise ImproperlyConfigured(msg)
 
         # Setup dynamic settings
-        if not callable(_settings.FAILED_RESPONSE_FUNCTION):
+        if not callable(_settings["FAILED_RESPONSE_FUNCTION"]):
             _settings.FAILED_RESPONSE_FUNCTION = import_string(_settings.FAILED_RESPONSE_FUNCTION)
 
         # Validate setting conflicts
