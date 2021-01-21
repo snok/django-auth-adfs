@@ -32,7 +32,7 @@ give you info about who the user is. The access token returned by OpenID Connect
 a signed JWT token (JSON Web Token) containing claims about the user.
 
 ``django-auth-adfs`` uses this access token to validate the issuer of the token by verifying the
-signature and also uses it to keep de Django users database up to date and at the same time
+signature and also uses it to keep the Django users database up to date and at the same time
 authenticate users.
 
 Depending on the version of ADFS, there's support for different pieces of these protocol.
