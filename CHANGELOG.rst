@@ -1,7 +1,7 @@
 Changelog
 =========
 
-`1.5.1`_ - 2021-01-25
+`1.6.0`_ - 2021-01-25
 ---------------------
 
 **Features**
@@ -227,7 +227,7 @@ Changelog
 
 * Initial release
 
-.. _1.5.1: https://github.com/snok/django-auth-adfs/compare/1.5.0...1.5.1
+.. _1.6.0: https://github.com/snok/django-auth-adfs/compare/1.5.0...1.6.0
 .. _1.5.0: https://github.com/jobec/django-auth-adfs/compare/1.4.1...1.5.0
 .. _1.4.1: https://github.com/jobec/django-auth-adfs/compare/1.4.0...1.4.1
 .. _1.4.0: https://github.com/jobec/django-auth-adfs/compare/1.3.1...1.4.0
