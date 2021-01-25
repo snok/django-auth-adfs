@@ -7,7 +7,7 @@ Changelog
 **Features**
 
 * New parameter called `CUSTOM_FAILED_RESPONSE_VIEW`, allowing you to set a custom django function view to handle login
-  failures. #?
+  failures. #136
 
 
 `1.5.0`_ - 2021-01-18
