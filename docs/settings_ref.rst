@@ -180,9 +180,9 @@ Allows you to set a leeway of the JWT token. See the official
 `PyJWT <https://pyjwt.readthedocs.io/en/stable/usage.html>`__ docs for more information.
 
 
-FAILED_RESPONSE_FUNCTION
+CUSTOM_FAILED_RESPONSE_VIEW
 --------------------------------
-* **Default**: ``None``
+* **Default**: ``lambda``
 * **Type**: ``str`` or ``callable``
 
 Allows you to set a custom django function view to handle login failures. Can be a dot path to your

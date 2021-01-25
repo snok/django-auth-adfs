@@ -25,7 +25,7 @@ class OAuth2CallbackView(View):
         code = request.GET.get("code")
         if not code:
             # Return an error message
-            return settings.FAILED_RESPONSE_FUNCTION(
+            return settings.CUSTOM_FAILED_RESPONSE_VIEW(
                 request,
                 error_message="No authorization code was provided.",
                 status=400
@@ -56,14 +56,14 @@ class OAuth2CallbackView(View):
                 return redirect(redirect_to)
             else:
                 # Return a 'disabled account' error message
-                return settings.FAILED_RESPONSE_FUNCTION(
+                return settings.CUSTOM_FAILED_RESPONSE_VIEW(
                     request,
                     error_message="Your account is disabled.",
                     status=403
                 )
         else:
             # Return an 'invalid login' error message
-            return settings.FAILED_RESPONSE_FUNCTION(
+            return settings.CUSTOM_FAILED_RESPONSE_VIEW(
                 request,
                 error_message="Login failed.",
                 status=401

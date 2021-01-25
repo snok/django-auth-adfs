@@ -50,12 +50,6 @@ class Settings(object):
     """
 
     def __init__(self):
-        def default_failed_response(request, error_message, status):
-            # Return an error message
-            return render(request, 'django_auth_adfs/login_failed.html', {
-                'error_message': error_message,
-            }, status=status)
-
         # Set defaults
         self.AUDIENCE = None  # Required
         self.BOOLEAN_CLAIM_MAPPING = {}
@@ -77,7 +71,9 @@ class Settings(object):
         self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
         self.JWT_LEEWAY = 0
-        self.FAILED_RESPONSE_FUNCTION = default_failed_response
+        self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
+            request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
+        )
 
         required_settings = [
             "AUDIENCE",
@@ -161,8 +157,8 @@ class Settings(object):
                 raise ImproperlyConfigured(msg)
 
         # Setup dynamic settings
-        if not callable(self.FAILED_RESPONSE_FUNCTION):
-            self.FAILED_RESPONSE_FUNCTION = import_string(self.FAILED_RESPONSE_FUNCTION)
+        if not callable(self.CUSTOM_FAILED_RESPONSE_VIEW):
+            self.CUSTOM_FAILED_RESPONSE_VIEW = import_string(self.CUSTOM_FAILED_RESPONSE_VIEW)
 
         # Validate setting conflicts
         usermodel = get_user_model()

@@ -84,7 +84,7 @@ In your project's ``settings.py`` add these settings.
     )
 
     # You can point login failures to a custom Django function based view for customization of the UI
-    FAILED_RESPONSE_FUNCTION = 'dot.path.to.custom.views.login_failed'
+    CUSTOM_FAILED_RESPONSE_VIEW = 'dot.path.to.custom.views.login_failed'
 
 In your project's ``urls.py`` add these paths:
 
