@@ -14,12 +14,14 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.http import QueryDict
+from django.shortcuts import render
 from django.utils.module_loading import import_string
 
 try:
     from django.urls import reverse
 except ImportError:  # Django < 1.10
     from django.core.urlresolvers import reverse
+
 
 logger = logging.getLogger("django_auth_adfs")
 
@@ -69,6 +71,9 @@ class Settings(object):
         self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
         self.JWT_LEEWAY = 0
+        self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
+            request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
+        )
 
         required_settings = [
             "AUDIENCE",
@@ -150,6 +155,10 @@ class Settings(object):
             if not getattr(self, setting):
                 msg = "django_auth_adfs setting '{0}' has not been set".format(setting)
                 raise ImproperlyConfigured(msg)
+
+        # Setup dynamic settings
+        if not callable(self.CUSTOM_FAILED_RESPONSE_VIEW):
+            self.CUSTOM_FAILED_RESPONSE_VIEW = import_string(self.CUSTOM_FAILED_RESPONSE_VIEW)
 
         # Validate setting conflicts
         usermodel = get_user_model()

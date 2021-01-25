@@ -1,6 +1,14 @@
 Changelog
 =========
 
+`1.6.0`_ - 2021-01-25
+---------------------
+
+**Features**
+
+* New parameter called `CUSTOM_FAILED_RESPONSE_VIEW`, allowing you to set a custom django function view to handle login
+  failures. #136
+
 
 `1.5.0`_ - 2021-01-18
 ---------------------
@@ -219,6 +227,7 @@ Changelog
 
 * Initial release
 
+.. _1.6.0: https://github.com/snok/django-auth-adfs/compare/1.5.0...1.6.0
 .. _1.5.0: https://github.com/jobec/django-auth-adfs/compare/1.4.1...1.5.0
 .. _1.4.1: https://github.com/jobec/django-auth-adfs/compare/1.4.0...1.4.1
 .. _1.4.0: https://github.com/jobec/django-auth-adfs/compare/1.3.1...1.4.0

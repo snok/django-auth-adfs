@@ -3,11 +3,11 @@ import logging
 
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.utils.http import is_safe_url
 from django.views.generic import View
 
-from django_auth_adfs.config import provider_config
+from django_auth_adfs.config import provider_config, settings
 from django_auth_adfs.exceptions import MFARequired
 
 logger = logging.getLogger("django_auth_adfs")
@@ -25,9 +25,11 @@ class OAuth2CallbackView(View):
         code = request.GET.get("code")
         if not code:
             # Return an error message
-            return render(request, 'django_auth_adfs/login_failed.html', {
-                'error_message': "No authorization code was provided.",
-            }, status=400)
+            return settings.CUSTOM_FAILED_RESPONSE_VIEW(
+                request,
+                error_message="No authorization code was provided.",
+                status=400
+            )
 
         redirect_to = request.GET.get("state")
         try:
@@ -54,14 +56,18 @@ class OAuth2CallbackView(View):
                 return redirect(redirect_to)
             else:
                 # Return a 'disabled account' error message
-                return render(request, 'django_auth_adfs/login_failed.html', {
-                    'error_message': "Your account is disabled.",
-                }, status=403)
+                return settings.CUSTOM_FAILED_RESPONSE_VIEW(
+                    request,
+                    error_message="Your account is disabled.",
+                    status=403
+                )
         else:
             # Return an 'invalid login' error message
-            return render(request, 'django_auth_adfs/login_failed.html', {
-                'error_message': "Login failed.",
-            }, status=401)
+            return settings.CUSTOM_FAILED_RESPONSE_VIEW(
+                request,
+                error_message="Login failed.",
+                status=401
+            )
 
 
 class OAuth2LoginView(View):

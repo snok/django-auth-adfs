@@ -180,6 +180,24 @@ Allows you to set a leeway of the JWT token. See the official
 `PyJWT <https://pyjwt.readthedocs.io/en/stable/usage.html>`__ docs for more information.
 
 
+CUSTOM_FAILED_RESPONSE_VIEW
+--------------------------------
+* **Default**: ``lambda``
+* **Type**: ``str`` or ``callable``
+
+Allows you to set a custom django function view to handle login failures. Can be a dot path to your
+Django function based view function or a callable.
+
+Callable must have the following method signature accepting ``error_message`` and ``status`` arguments:
+
+.. code-block:: python
+
+    def failed_response(request, error_message, status):
+        # Return an error message
+        return render(request, 'myapp/login_failed.html', {
+            'error_message': error_message,
+        }, status=status)
+
 
 GROUP_CLAIM
 -----------
