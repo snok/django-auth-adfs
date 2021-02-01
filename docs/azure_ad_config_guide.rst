@@ -7,9 +7,9 @@ itself, it might take some tries to get all settings right.
 This guide tries to give a basic overview of how to configure Azure AD and how to determine the settings for
 django-auth-adfs. Installing and configuring the basics of Azure AD is not explained here.
 
-.. _step-1:
+
 Step 1 - Register a backend application
---------------------------------
+---------------------------------------
 
 After signing in to `Azure <https://portal.azure.com>`_. Open the **Azure Active Directory** dashboard. 
 
@@ -88,7 +88,7 @@ It will be become hidden after a short time, so be sure to note this one down qu
 
     
 Step 2 - Configuring settings.py
---------------------------------------------------------
+--------------------------------
 We need to update the ``settings.py`` to accomedate for our registered Azure AD application. 
 
 Replace your AUTH_ADFS with this.
@@ -140,8 +140,8 @@ Add this path to your projects ``urls.py`` file.
     ] 
     
 Step 3 - Register and configure an Azure AD frontend application
---------------------------------------------------------
-Just like we did with our backend application in step 1 We have to register a new app for our frontend. Here we need to set it to SPA and the redirect URI value must match with the domain where your frontend application is located(eg. http://localhost:3000).
+----------------------------------------------------------------
+Just like we did with our backend application in step 1, we have to register a new app for our frontend. In this example we are authenticating a Django Rest Framework token through a single page application(SPA). The redirect URI value must match with the domain where your frontend application is located(eg. http://localhost:3000).
 
 
 
@@ -217,7 +217,7 @@ Then we have to press **My API's** and then select the backend application. (Thi
 .. image:: _static/2021/18_add_permission.PNG
     :scale: 50 %
 
-------------k
+------------
 
 Here we can give our frontend the permission scope we created earlier. Press **Delegated permissions** (should be default) and select the permission you created and press **add permission**
 
@@ -225,5 +225,3 @@ Here we can give our frontend the permission scope we created earlier. Press **D
 
 .. image:: _static/2021/19_add-permission-2.PNG
     :scale: 50 %
-
-------------
