@@ -10,7 +10,7 @@ You can see this logging in your console, or in you web server log if you're usi
 like Apache with mod_wsgi.
 
 More details about logging in Django can be found in
-`the official Django documentation <https://docs.djangoproject.com/en/latest/topics/logging/>`_
+`the official Django documentation <https://docs.djangoproject.com/en/dev/topics/logging/>`_
 
 .. code-block:: python
 
