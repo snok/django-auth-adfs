@@ -121,10 +121,10 @@ class AdfsBaseBackend(ModelBackend):
         """
         # Create the user
         username_claim = settings.USERNAME_CLAIM
+        usermodel = get_user_model()
         if settings.USERNAME_MATCH:
             username_match = settings.USERNAME_MATCH
         else:
-            usermodel = get_user_model()
             username_match = usermodel.USERNAME_FIELD
         userdata = {username_match: claims[username_claim]}
 
