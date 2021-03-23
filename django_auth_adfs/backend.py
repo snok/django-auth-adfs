@@ -123,10 +123,9 @@ class AdfsBaseBackend(ModelBackend):
         username_claim = settings.USERNAME_CLAIM
         usermodel = get_user_model()
         
-        if claims.get( username_claim, None ) is None:
-            logger.error( "User claim's doesn't have the claim '%s' in his list of claims: %s" % (username_claim, claims) )
+        if claims.get(username_claim, None) is None:
+            logger.error("User claim's doesn't have the claim '%s' in his list of claims: %s" % (username_claim, claims))
             raise ImproperlyConfigured
-        
         userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
 
         try:
