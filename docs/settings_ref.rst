@@ -171,7 +171,7 @@ in a template instead of the regular ``<a href="{% url 'django_auth_adfs:login' 
     which is not supported on ADFS 3.0
 
 
-LEEWAY_JWT
+JWT_LEEWAY
 -----------
 * **Default**: ``0``
 * **Type**: ``str``
