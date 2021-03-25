@@ -125,7 +125,7 @@ class AdfsBaseBackend(ModelBackend):
 
         if claims.get(username_claim, None) is None:
             logger.error("User claim's doesn't have the claim '%s' in his claims: %s" % (username_claim, claims))
-            raise ImproperlyConfigured
+            raise PermissionDenied
         userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
 
         try:
