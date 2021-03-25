@@ -122,6 +122,10 @@ class AdfsBaseBackend(ModelBackend):
         # Create the user
         username_claim = settings.USERNAME_CLAIM
         usermodel = get_user_model()
+
+        if not claims.get(username_claim):
+            logger.error("User claim's doesn't have the claim '%s' in his claims: %s" % (username_claim, claims))
+            raise PermissionDenied
         userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
 
         try:
