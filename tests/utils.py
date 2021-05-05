@@ -115,6 +115,7 @@ def do_build_access_token(request, issuer, schema=None):
         claims['http://schemas.microsoft.com/identity/claims/tenantid'] = schema
     if issuer.startswith('https://sts.windows.net'):
         claims['upn'] = 'testuser'
+        claims['groups'] = claims['group']
     token = jwt.encode(claims, signing_key_b, algorithm="RS256")
     response = {
         'resource': 'django_website.adfs.relying_party_id',
@@ -165,7 +166,7 @@ def build_adfs_meta(request):
     return 200, [], data
 
 
-def mock_adfs(adfs_version, empty_keys=False, mfa_error=False):
+def mock_adfs(adfs_version, empty_keys=False, mfa_error=False, guest=False):
     if adfs_version not in ["2012", "2016", "azure"]:
         raise NotImplementedError("This version of ADFS is not implemented")
 
@@ -219,6 +220,12 @@ def mock_adfs(adfs_version, empty_keys=False, mfa_error=False):
                     content_type='application/xml',
                 )
                 if adfs_version == "azure":
+                    if guest:
+                        rsps.add_callback(
+                            rsps.POST, token_endpoint,
+                            callback=build_access_token_azure_guest,
+                            content_type='application/json',
+                        )
                     rsps.add_callback(
                         rsps.POST, token_endpoint,
                         callback=build_access_token_azure,
@@ -239,7 +246,9 @@ def mock_adfs(adfs_version, empty_keys=False, mfa_error=False):
                         )
 
                 test_func(*original_args, **original_kwargs)
+
         return wrapper
+
     return do_mock
 
 
