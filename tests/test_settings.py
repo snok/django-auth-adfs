@@ -14,27 +14,31 @@ class SettingsTests(TestCase):
         settings = deepcopy(django_settings)
         del settings.AUTH_ADFS
         with patch("django_auth_adfs.config.django_settings", settings):
-            self.assertRaises(ImproperlyConfigured, Settings)
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
 
     def test_claim_mapping_overlapping_username_field(self):
         settings = deepcopy(django_settings)
         settings.AUTH_ADFS["CLAIM_MAPPING"] = {"username": "samaccountname"}
         with patch("django_auth_adfs.config.django_settings", settings):
-            self.assertRaises(ImproperlyConfigured, Settings)
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
 
     def test_tenant_and_server(self):
         settings = deepcopy(django_settings)
-        settings.AUTH_ADFS["TENEANT_ID"] = "abc"
-        settings.AUTH_ADFS["server"] = "abc"
+        settings.AUTH_ADFS["TENANT_ID"] = "abc"
+        settings.AUTH_ADFS["SERVER"] = "abc"
         with patch("django_auth_adfs.config.django_settings", settings):
-            self.assertRaises(ImproperlyConfigured, Settings)
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
 
     def test_no_tenant_but_block_guest(self):
         settings = deepcopy(django_settings)
-        settings.AUTH_ADFS["server"] = "abc"
+        settings.AUTH_ADFS["SERVER"] = "abc"
         settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = True
         with patch("django_auth_adfs.config.django_settings", settings):
-            self.assertRaises(ImproperlyConfigured, Settings)
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
 
     def test_tenant_with_block_users(self):
         settings = deepcopy(django_settings)
@@ -42,20 +46,22 @@ class SettingsTests(TestCase):
         settings.AUTH_ADFS["TENANT_ID"] = "abc"
         settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = True
         with patch("django_auth_adfs.config.django_settings", settings):
-            settings = Settings()
-            self.assertTrue(settings.BLOCK_GUEST_USERS)
+            current_settings = Settings()
+            self.assertTrue(current_settings.BLOCK_GUEST_USERS)
 
     def test_unknown_setting(self):
         settings = deepcopy(django_settings)
         settings.AUTH_ADFS["dummy"] = "abc"
         with patch("django_auth_adfs.config.django_settings", settings):
-            self.assertRaises(ImproperlyConfigured, Settings)
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
 
     def test_required_setting(self):
         settings = deepcopy(django_settings)
         del settings.AUTH_ADFS["AUDIENCE"]
         with patch("django_auth_adfs.config.django_settings", settings):
-            self.assertRaises(ImproperlyConfigured, Settings)
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
 
     def test_default_failed_response_setting(self):
         settings = deepcopy(django_settings)

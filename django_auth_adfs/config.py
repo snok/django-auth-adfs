@@ -75,7 +75,6 @@ class Settings(object):
         self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
             request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
         )
-
         required_settings = [
             "AUDIENCE",
             "CLIENT_ID",
@@ -96,7 +95,6 @@ class Settings(object):
             msg = "The configuration directive 'AUTH_ADFS' was not found in your Django settings"
             raise ImproperlyConfigured(msg)
         _settings = django_settings.AUTH_ADFS
-
         # Settings class is loaded by now. Delete this setting
         if "SETTINGS_CLASS" in _settings:
             del _settings["SETTINGS_CLASS"]
@@ -123,7 +121,6 @@ class Settings(object):
         if "RESOURCE" in _settings:
             _settings["RELYING_PARTY_ID"] = _settings["RESOURCE"]
             del _settings["RESOURCE"]
-
         if "TENANT_ID" in _settings:
             # If a tenant ID was set, switch to Azure AD mode
             if "SERVER" in _settings:
@@ -143,17 +140,13 @@ class Settings(object):
                 msg = "'{0}' is not a valid configuration directive for django_auth_adfs."
                 raise ImproperlyConfigured(msg.format(setting))
 
-        # Validate required settings
-        if not self.TENANT_ID and not self.SERVER:
-            msg = "Exactly one of the settings TENANT_ID or SERVER must be set"
-            raise ImproperlyConfigured(msg)
-        elif self.TENANT_ID is None:
+        if self.SERVER != AZURE_AD_SERVER and self.BLOCK_GUEST_USERS:
+            raise ImproperlyConfigured("You can only set BLOCK_GUEST_USERS when self.TENANT_ID is set")
+
+        if self.TENANT_ID is None:
             # For on premises ADFS, the tenant ID is set to adfs
             # On AzureAD the adfs part in the URL happens to be replace by the tenant ID.
             self.TENANT_ID = "adfs"
-        if self.BLOCK_GUEST_USERS and not self.TENANT_ID:
-            msg = "You can only set BLOCK_GUEST_USERS when self.TENANT_ID is set"
-            raise ImproperlyConfigured(msg)
 
         for setting in required_settings:
             if not getattr(self, setting):

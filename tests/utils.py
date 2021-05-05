@@ -88,7 +88,7 @@ def do_build_mfa_error(request):
     return 400, [], json.dumps(response)
 
 
-def do_build_access_token(request, issuer, schema = None):
+def do_build_access_token(request, issuer, schema=None):
     issued_at = int(time.time())
     expires = issued_at + 3600
     auth_time = datetime.utcnow()

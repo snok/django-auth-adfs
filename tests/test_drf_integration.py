@@ -95,7 +95,6 @@ class RestFrameworkIntegrationTests(TestCase):
                         user, token = self.drf_auth_class.authenticate(request)
                         self.assertEqual(user.username, "testuser")
 
-
     @mock_adfs("2012")
     def test_access_token_exceptions(self):
         access_token_header = "Bearer non-existing-token"
