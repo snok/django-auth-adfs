@@ -52,6 +52,7 @@ class Settings(object):
     def __init__(self):
         # Set defaults
         self.AUDIENCE = None  # Required
+        self.BLOCK_GUEST_USERS = False
         self.BOOLEAN_CLAIM_MAPPING = {}
         self.CA_BUNDLE = True
         self.CLAIM_MAPPING = {}
@@ -150,6 +151,9 @@ class Settings(object):
             # For on premises ADFS, the tenant ID is set to adfs
             # On AzureAD the adfs part in the URL happens to be replace by the tenant ID.
             self.TENANT_ID = "adfs"
+        if self.BLOCK_GUEST_USERS and not self.TENANT_ID:
+            msg = "You can only set BLOCK_GUEST_USERS when self.TENANT_ID is set"
+            raise ImproperlyConfigured(msg)
 
         for setting in required_settings:
             if not getattr(self, setting):
@@ -229,7 +233,6 @@ class ProviderConfig(object):
         config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
             settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
         )
-
         try:
             logger.info("Trying to get OpenID Connect config from %s", config_url)
             response = self.session.get(config_url, timeout=settings.TIMEOUT)

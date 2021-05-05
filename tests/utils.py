@@ -73,12 +73,22 @@ def build_access_token_azure(request):
     return do_build_access_token(request, issuer)
 
 
+def build_access_token_azure_not_guest(request):
+    issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
+    return do_build_access_token(request, issuer, schema='dummy_tenant_id')
+
+
+def build_access_token_azure_guest(request):
+    issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
+    return do_build_access_token(request, issuer, schema='guest_tenant_id')
+
+
 def do_build_mfa_error(request):
     response = {'error_description': 'AADSTS50076'}
     return 400, [], json.dumps(response)
 
 
-def do_build_access_token(request, issuer):
+def do_build_access_token(request, issuer, schema = None):
     issued_at = int(time.time())
     expires = issued_at + 3600
     auth_time = datetime.utcnow()
@@ -101,6 +111,10 @@ def do_build_access_token(request, issuer):
         "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
         "ver": "1.0"
     }
+    if schema:
+        claims['http://schemas.microsoft.com/identity/claims/tenantid'] = schema
+    if issuer.startswith('https://sts.windows.net'):
+        claims['upn'] = 'testuser'
     token = jwt.encode(claims, signing_key_b, algorithm="RS256")
     response = {
         'resource': 'django_website.adfs.relying_party_id',

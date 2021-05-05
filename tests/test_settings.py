@@ -29,6 +29,22 @@ class SettingsTests(TestCase):
         with patch("django_auth_adfs.config.django_settings", settings):
             self.assertRaises(ImproperlyConfigured, Settings)
 
+    def test_no_tenant_but_block_guest(self):
+        settings = deepcopy(django_settings)
+        settings.AUTH_ADFS["server"] = "abc"
+        settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = True
+        with patch("django_auth_adfs.config.django_settings", settings):
+            self.assertRaises(ImproperlyConfigured, Settings)
+
+    def test_tenant_with_block_users(self):
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "abc"
+        settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = True
+        with patch("django_auth_adfs.config.django_settings", settings):
+            settings = Settings()
+            self.assertTrue(settings.BLOCK_GUEST_USERS)
+
     def test_unknown_setting(self):
         settings = deepcopy(django_settings)
         settings.AUTH_ADFS["dummy"] = "abc"
