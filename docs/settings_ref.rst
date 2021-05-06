@@ -411,3 +411,14 @@ The value of the claim must be a unique value. No 2 users should ever have the s
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
+   
+   
+.. _version_setting:
+
+VERSION
+--------------
+* **Default**: ``v1.0`` 
+* **Type**: ``string``
+
+Version of openid configurations API. By default it is set to 'v1.0'. Developers who wants to use new version can set in their main settings.py file. 
+
