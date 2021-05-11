@@ -74,6 +74,7 @@ class Settings(object):
         self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
             request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
         )
+        self.VERSION = 'v1.0'
 
         required_settings = [
             "AUDIENCE",
@@ -226,9 +227,14 @@ class ProviderConfig(object):
             logger.info("issuer:                 %s", self.issuer)
 
     def _load_openid_config(self):
-        config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
-            settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
-        )
+        if settings.VERSION != 'v1.0':
+            config_url = "https://{}/{}/{}/.well-known/openid-configuration?appid={}".format(
+                settings.SERVER, settings.TENANT_ID, settings.VERSION, settings.CLIENT_ID
+            )
+        else:
+            config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
+                settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
+            )
 
         try:
             logger.info("Trying to get OpenID Connect config from %s", config_url)
