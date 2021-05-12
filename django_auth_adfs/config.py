@@ -22,7 +22,6 @@ try:
 except ImportError:  # Django < 1.10
     from django.core.urlresolvers import reverse
 
-
 logger = logging.getLogger("django_auth_adfs")
 
 AZURE_AD_SERVER = "login.microsoftonline.com"
@@ -209,8 +208,8 @@ class ProviderConfig(object):
 
             if not loaded:
                 if self._config_timestamp is None:
-                    msg = "Could not load any data from ADFS server. "\
-                          "Authentication against ADFS not be possible. "\
+                    msg = "Could not load any data from ADFS server. " \
+                          "Authentication against ADFS not be possible. " \
                           "Verify your settings and the connection with the ADFS server."
                     logger.critical(msg)
                     raise RuntimeError(msg)
