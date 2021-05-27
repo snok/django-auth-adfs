@@ -420,5 +420,4 @@ VERSION
 * **Default**: ``v1.0`` 
 * **Type**: ``string``
 
-Version of openid configurations API. By default it is set to 'v1.0'. Developers who wants to use new version can set in their main settings.py file. 
-
+Version of the Azure Active Directory endpoint version. By default it is set to ``v1.0``. At the time of writing this documentation, it can also be set to ``v2.0``. For new projects, ``v2.0`` is recommended. ``v1.0`` is kept as a default for backwards compatibility.
