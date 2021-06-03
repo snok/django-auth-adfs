@@ -84,6 +84,46 @@ class AuthenticationTests(TestCase):
                     self.assertEqual(user.groups.all()[0].name, "group1")
                     self.assertEqual(user.groups.all()[1].name, "group2")
 
+    @mock_adfs("azure", guest=True)
+    def test_with_auth_code_azure_guest_block(self):
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = True
+        # Patch audience since we're patching django_auth_adfs.backend.settings to load Settings() as well
+        settings.AUTH_ADFS["AUDIENCE"] = 'microsoft:identityserver:your-RelyingPartyTrust-identifier'
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch('django_auth_adfs.backend.settings', Settings()):
+                with patch("django_auth_adfs.config.settings", Settings()):
+                    with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                        with self.assertRaises(PermissionDenied, msg=''):
+                            backend = AdfsAuthCodeBackend()
+                            _ = backend.authenticate(self.request, authorization_code="dummycode")
+
+    @mock_adfs("azure", guest=True)
+    def test_with_auth_code_azure_guest_no_block(self):
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = False
+        # Patch audience since we're patching django_auth_adfs.backend.settings to load Settings() as well
+        settings.AUTH_ADFS["AUDIENCE"] = 'microsoft:identityserver:your-RelyingPartyTrust-identifier'
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch('django_auth_adfs.backend.settings', Settings()):
+                with patch("django_auth_adfs.config.settings", Settings()):
+                    with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                        backend = AdfsAuthCodeBackend()
+                        user = backend.authenticate(self.request, authorization_code="dummycode")
+                        self.assertIsInstance(user, User)
+                        self.assertEqual(user.first_name, "John")
+                        self.assertEqual(user.last_name, "Doe")
+                        self.assertEqual(user.email, "john.doe@example.com")
+                        self.assertEqual(len(user.groups.all()), 2)
+                        self.assertEqual(user.groups.all()[0].name, "group1")
+                        self.assertEqual(user.groups.all()[1].name, "group2")
+
     @mock_adfs("2016")
     def test_empty(self):
         backend = AdfsAuthCodeBackend()
