@@ -90,6 +90,13 @@ class AdfsBaseBackend(ModelBackend):
 
         logger.debug("Received access token: %s", access_token)
         claims = self.validate_access_token(access_token)
+        if (
+            settings.BLOCK_GUEST_USERS
+            and claims.get('http://schemas.microsoft.com/identity/claims/tenantid')
+            != settings.TENANT_ID
+        ):
+            logger.info('Guest user denied')
+            raise PermissionDenied
         if not claims:
             raise PermissionDenied
 

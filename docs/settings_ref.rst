@@ -27,6 +27,18 @@ Examples
 | https://adfs.yourcompany.com/adfs/services/trust | https://adfs.yourcompany.com/adfs/services/trust           |
 +--------------------------------------------------+------------------------------------------------------------+
 
+
+.. _block_guest_users_setting:
+
+BLOCK_GUEST_USERS
+-----------------
+* **Default**: ``False``
+* **Type**: ``boolean``
+
+Whether guest users of your Azure AD is allowed to log into the site. This is validated by matching
+the ``http://schemas.microsoft.com/identity/claims/tenantid``-key in the claims towards the configured tenant.
+
+
 .. _boolean_claim_mapping_setting:
 
 BOOLEAN_CLAIM_MAPPING
@@ -171,7 +183,7 @@ in a template instead of the regular ``<a href="{% url 'django_auth_adfs:login' 
     which is not supported on ADFS 3.0
 
 
-LEEWAY_JWT
+JWT_LEEWAY
 -----------
 * **Default**: ``0``
 * **Type**: ``str``

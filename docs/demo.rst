@@ -6,7 +6,13 @@ authentication to ADFS authentication.
 Prerequisites
 -------------
 * A hypervisor like `virtualbox <https://www.virtualbox.org/>`__.
-* A working `vagrant <https://www.vagrantup.com/>`__ installation.
+* A working `vagrant <https://www.vagrantup.com/>`__ installation. On Debian 11 (bullseye) if you use the `stock vagrant package <https://packages.debian.org/bullseye/vagrant>`__ you need to install these plugins::
+
+    vagrant plugin install winrm
+    vagrant plugin install winrm-fs
+    vagrant plugin install winrm-elevated
+    vagrant plugin install vagrant-reload
+
 * The github repository should be cloned/downloaded in some directory.
 
 This guide assumes you're using VirtualBox, but another hypervisor should also work.
