@@ -128,7 +128,7 @@ class AdfsBaseBackend(ModelBackend):
         """
         # Create the user
         username_claim = settings.USERNAME_CLAIM
-        guest_username_claim = settings.SECOND_USERNAME_CLAIM
+        guest_username_claim = settings.GUEST_USERNAME_CLAIM
         usermodel = get_user_model()
 
         if (

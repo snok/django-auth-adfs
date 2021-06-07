@@ -71,7 +71,7 @@ class Settings(object):
         self.TENANT_ID = None  # Required
         self.TIMEOUT = 5
         self.USERNAME_CLAIM = "winaccountname"
-        self.SECOND_USERNAME_CLAIM = "email"
+        self.GUEST_USERNAME_CLAIM = "email"
         self.JWT_LEEWAY = 0
         self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
             request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
