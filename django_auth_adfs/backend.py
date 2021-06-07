@@ -137,12 +137,12 @@ class AdfsBaseBackend(ModelBackend):
             != settings.TENANT_ID
         ):
             username_claim = guest_username_claim
-        
+
         if not claims.get(username_claim):
             logger.error("User claim's doesn't have the claim '%s' in his claims: %s" %
                          (username_claim, claims))
             raise PermissionDenied
-        
+
         userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
 
         try:
