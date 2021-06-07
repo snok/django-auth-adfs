@@ -2,6 +2,15 @@ Changelog
 =========
 
 
+`1.7.0`_ - 2021-06-07
+---------------------
+
+**Features**
+
+* Setting to block guest users from authenticating.
+* Setting to set the Azure AD endpoint version
+
+
 `1.6.1`_ - 2021-03-25
 ---------------------
 
@@ -237,6 +246,7 @@ Changelog
 
 * Initial release
 
+.. _1.7.0: https://github.com/snok/django-auth-adfs/compare/1.6.1...1.7.0
 .. _1.6.1: https://github.com/snok/django-auth-adfs/compare/1.6.0...1.6.1
 .. _1.6.0: https://github.com/snok/django-auth-adfs/compare/1.5.0...1.6.0
 .. _1.5.0: https://github.com/jobec/django-auth-adfs/compare/1.4.1...1.5.0
