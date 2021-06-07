@@ -22,7 +22,6 @@ try:
 except ImportError:  # Django < 1.10
     from django.core.urlresolvers import reverse
 
-
 logger = logging.getLogger("django_auth_adfs")
 
 AZURE_AD_SERVER = "login.microsoftonline.com"
@@ -75,6 +74,9 @@ class Settings(object):
         self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
             request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
         )
+
+        self.VERSION = 'v1.0'
+
         required_settings = [
             "AUDIENCE",
             "CLIENT_ID",
@@ -131,6 +133,10 @@ class Settings(object):
             self.CLAIM_MAPPING = {"first_name": "given_name",
                                   "last_name": "family_name",
                                   "email": "email"}
+        else:
+            if "VERSION" in _settings:
+                print('got here')
+                raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is set.")
 
         # Overwrite defaults with user settings
         for setting, value in _settings.items():
@@ -205,8 +211,8 @@ class ProviderConfig(object):
 
             if not loaded:
                 if self._config_timestamp is None:
-                    msg = "Could not load any data from ADFS server. "\
-                          "Authentication against ADFS not be possible. "\
+                    msg = "Could not load any data from ADFS server. " \
+                          "Authentication against ADFS not be possible. " \
                           "Verify your settings and the connection with the ADFS server."
                     logger.critical(msg)
                     raise RuntimeError(msg)
@@ -223,9 +229,15 @@ class ProviderConfig(object):
             logger.info("issuer:                 %s", self.issuer)
 
     def _load_openid_config(self):
-        config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
-            settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
-        )
+        if settings.VERSION != 'v1.0':
+            config_url = "https://{}/{}/{}/.well-known/openid-configuration?appid={}".format(
+                settings.SERVER, settings.TENANT_ID, settings.VERSION, settings.CLIENT_ID
+            )
+        else:
+            config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
+                settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
+            )
+
         try:
             logger.info("Trying to get OpenID Connect config from %s", config_url)
             response = self.session.get(config_url, timeout=settings.TIMEOUT)
