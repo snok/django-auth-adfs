@@ -166,7 +166,7 @@ def build_adfs_meta(request):
     return 200, [], data
 
 
-def mock_adfs(adfs_version, empty_keys=False, mfa_error=False, guest=False):
+def mock_adfs(adfs_version, empty_keys=False, mfa_error=False, guest=False, version=None):
     if adfs_version not in ["2012", "2016", "azure"]:
         raise NotImplementedError("This version of ADFS is not implemented")
 
@@ -178,7 +178,10 @@ def mock_adfs(adfs_version, empty_keys=False, mfa_error=False, guest=False):
                 "azure": "https://login.microsoftonline.com",
             }
             prefix = prefix_table[adfs_version]
-            openid_cfg = re.compile(prefix + r".*\.well-known/openid-configuration")
+            if version:
+                openid_cfg = re.compile(prefix + r".*{}/\.well-known/openid-configuration".format(version))
+            else:
+                openid_cfg = re.compile(prefix + r".*\.well-known/openid-configuration")
             openid_keys = re.compile(prefix + r".*/discovery/keys")
             adfs_meta = re.compile(prefix + r".*/FederationMetadata/2007-06/FederationMetadata\.xml")
             token_endpoint = re.compile(prefix + r".*/oauth2/token")

@@ -133,6 +133,10 @@ class Settings(object):
             self.CLAIM_MAPPING = {"first_name": "given_name",
                                   "last_name": "family_name",
                                   "email": "email"}
+        else:
+            if "VERSION" in _settings:
+                print('got here')
+                raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is set.")
 
         # Overwrite defaults with user settings
         for setting, value in _settings.items():
