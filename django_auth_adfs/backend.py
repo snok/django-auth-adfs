@@ -132,9 +132,9 @@ class AdfsBaseBackend(ModelBackend):
         usermodel = get_user_model()
 
         if not claims.get(username_claim) and not claims.get(second_username_claim):
-            logger.error("User claim's doesn't have the claim's '%s' or '%s' in his claims: %s" % (username_claim, second_username_claim, claims))
+            logger.error("User claim's doesn't have the claim's '%s' or '%s' in his claims: %s" % 
+                        (username_claim, second_username_claim, claims))
             raise PermissionDenied
-        
         # If there is no first username_claim we override it with the second wich is checked that exists
         if not claims.get(username_claim):
             username_claim = second_username_claim
