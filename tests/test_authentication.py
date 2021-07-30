@@ -222,7 +222,7 @@ class AuthenticationTests(TestCase):
     def test_group_to_flag_mapping(self):
         group_to_flag_mapping = {
             "is_staff": ["group1", "group4"],
-            "is_superuser": "group3",
+            "is_superuser": "group2",
         }
         with patch("django_auth_adfs.backend.settings.GROUP_TO_FLAG_MAPPING", group_to_flag_mapping):
             with patch("django_auth_adfs.backend.settings.BOOLEAN_CLAIM_MAPPING", {}):
@@ -235,7 +235,7 @@ class AuthenticationTests(TestCase):
                 self.assertEqual(user.email, "john.doe@example.com")
                 self.assertEqual(len(user.groups.all()), 2)
                 self.assertTrue(user.is_staff)
-                self.assertFalse(user.is_superuser)
+                self.assertTrue(user.is_superuser)
 
     @mock_adfs("2016")
     def test_boolean_claim_mapping(self):

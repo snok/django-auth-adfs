@@ -235,8 +235,10 @@ class AdfsBaseBackend(ModelBackend):
 
             for flag, group in settings.GROUP_TO_FLAG_MAPPING.items():
                 if hasattr(user, flag):
-                    if ((isinstance(group, list) and any(group_list_item in access_token_groups for group_list_item in group))
-                            or group in access_token_groups):
+                    if not isinstance(group, list):
+                        group = [group]
+
+                    if any(group_list_item in access_token_groups for group_list_item in group):
                         value = True
                     else:
                         value = False
