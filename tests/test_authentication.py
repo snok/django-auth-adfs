@@ -219,6 +219,42 @@ class AuthenticationTests(TestCase):
         self.assertEqual(user.groups.all()[1].name, "group2")
 
     @mock_adfs("2016")
+    def test_group_to_flag_mapping(self):
+        group_to_flag_mapping = {
+            "is_staff": ["group1", "group4"],
+            "is_superuser": "group3",
+        }
+        with patch("django_auth_adfs.backend.settings.GROUP_TO_FLAG_MAPPING", group_to_flag_mapping):
+            with patch("django_auth_adfs.backend.settings.BOOLEAN_CLAIM_MAPPING", {}):
+                backend = AdfsAuthCodeBackend()
+
+                user = backend.authenticate(self.request, authorization_code="dummycode")
+                self.assertIsInstance(user, User)
+                self.assertEqual(user.first_name, "John")
+                self.assertEqual(user.last_name, "Doe")
+                self.assertEqual(user.email, "john.doe@example.com")
+                self.assertEqual(len(user.groups.all()), 2)
+                self.assertTrue(user.is_staff)
+                self.assertFalse(user.is_superuser)
+
+    @mock_adfs("2016")
+    def test_boolean_claim_mapping(self):
+        boolean_claim_mapping = {
+            "is_superuser": "user_is_superuser",
+        }
+        with patch("django_auth_adfs.backend.settings.BOOLEAN_CLAIM_MAPPING", boolean_claim_mapping):
+            backend = AdfsAuthCodeBackend()
+
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            self.assertEqual(len(user.groups.all()), 2)
+            self.assertFalse(user.is_staff)
+            self.assertTrue(user.is_superuser)
+
+    @mock_adfs("2016")
     def test_authentication(self):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
