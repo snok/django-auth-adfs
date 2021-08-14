@@ -247,14 +247,14 @@ For example, if a user is a member of the group ``Django Staff``, you can automa
 field of the user to ``True``.
 
 The **key** represents the boolean user model field (e.g. ``is_staff``)
-and the **value** represents the group name (e.g. ``Django Staff``).
+and the **value**, which can either be a single String or an array of Strings, represents the group(s) name (e.g. ``Django Staff``).
 
 example
 
 .. code-block:: python
 
     AUTH_ADFS = {
-        "GROUP_TO_FLAG_MAPPING": {"is_staff": "Django Staff",
+        "GROUP_TO_FLAG_MAPPING": {"is_staff": ["Django Staff", "Other Django Staff"],
                                   "is_superuser": "Django Admins"},
     }
 
