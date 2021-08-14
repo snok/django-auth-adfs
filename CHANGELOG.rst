@@ -5,6 +5,7 @@ Changelog
 ---------------------
 
 **Features**
+
 * ``GROUP_TO_FLAG_MAPPING`` can now be a list of groups. @joachimBurket #104
 
 

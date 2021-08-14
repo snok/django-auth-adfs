@@ -133,10 +133,8 @@ class Settings(object):
             self.CLAIM_MAPPING = {"first_name": "given_name",
                                   "last_name": "family_name",
                                   "email": "email"}
-        else:
-            if "VERSION" in _settings:
-                print('got here')
-                raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is set.")
+        elif "VERSION" in _settings:
+            raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is set.")
 
         # Overwrite defaults with user settings
         for setting, value in _settings.items():
@@ -165,7 +163,7 @@ class Settings(object):
 
         # Validate setting conflicts
         usermodel = get_user_model()
-        if usermodel.USERNAME_FIELD in self.CLAIM_MAPPING.keys():
+        if usermodel.USERNAME_FIELD in self.CLAIM_MAPPING:
             raise ImproperlyConfigured("You cannot set the username field of the user model from "
                                        "the CLAIM_MAPPING setting. Instead use the USERNAME_CLAIM setting.")
 
