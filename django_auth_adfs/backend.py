@@ -132,9 +132,10 @@ class AdfsBaseBackend(ModelBackend):
         usermodel = get_user_model()
 
         if (
-            settings.BLOCK_GUEST_USERS is False
-            and claims.get('tid')
-            != settings.TENANT_ID
+            guest_username_claim
+            and not claims.get(username_claim)
+            and not settings.BLOCK_GUEST_USERS
+            and claims.get('tid') != settings.TENANT_ID
         ):
             username_claim = guest_username_claim
 
