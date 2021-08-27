@@ -92,7 +92,7 @@ class AdfsBaseBackend(ModelBackend):
         claims = self.validate_access_token(access_token)
         if (
             settings.BLOCK_GUEST_USERS
-            and claims.get('http://schemas.microsoft.com/identity/claims/tenantid')
+            and claims.get('tid')
             != settings.TENANT_ID
         ):
             logger.info('Guest user denied')
@@ -245,12 +245,15 @@ class AdfsBaseBackend(ModelBackend):
 
             for flag, group in settings.GROUP_TO_FLAG_MAPPING.items():
                 if hasattr(user, flag):
-                    if group in access_token_groups:
+                    if not isinstance(group, list):
+                        group = [group]
+
+                    if any(group_list_item in access_token_groups for group_list_item in group):
                         value = True
                     else:
                         value = False
                     setattr(user, flag, value)
-                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", user, flag, value)
+                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", flag, user, value)
                 else:
                     msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                     raise ImproperlyConfigured(msg.format(flag))
@@ -261,7 +264,7 @@ class AdfsBaseBackend(ModelBackend):
                 if claim in claims and str(claims[claim]).lower() in ['y', 'yes', 't', 'true', 'on', '1']:
                     bool_val = True
                 setattr(user, field, bool_val)
-                logger.debug('Attribute "%s" for user "%s" was set to "%s".', user, field, bool_val)
+                logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, bool_val)
             else:
                 msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                 raise ImproperlyConfigured(msg.format(field))

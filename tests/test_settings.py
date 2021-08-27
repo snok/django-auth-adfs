@@ -76,6 +76,25 @@ class SettingsTests(TestCase):
             s = Settings()
             self.assertTrue(callable(s.CUSTOM_FAILED_RESPONSE_VIEW))
 
+    def test_settings_version(self):
+        settings = deepcopy(django_settings)
+        current_settings = Settings()
+        self.assertEqual(current_settings.VERSION, "v1.0")
+        settings.AUTH_ADFS["TENANT_ID"] = "abc"
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["VERSION"] = "v2.0"
+        with patch("django_auth_adfs.config.django_settings", settings):
+            current_settings = Settings()
+            self.assertEqual(current_settings.VERSION, "v2.0")
+
+    def test_not_azure_but_version_is_set(self):
+        settings = deepcopy(django_settings)
+        settings.AUTH_ADFS["SERVER"] = "abc"
+        settings.AUTH_ADFS["VERSION"] = "v2.0"
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
+
 
 class CustomSettingsTests(SimpleTestCase):
     def setUp(self):
