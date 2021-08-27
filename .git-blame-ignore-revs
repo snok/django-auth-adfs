@@ -1,0 +1,4 @@
+# Run 'git config blame.ignoreRevsFile .git-blame-ignore-revs' to enable ignored revs
+# -----------------------------------------------------------------------
+# black, isort, and other pre-commit linters being run for the first time
+c9a0789e705ee095ed5b602e27b2f19af2da237f
