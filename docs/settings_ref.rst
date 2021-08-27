@@ -262,6 +262,25 @@ example
    The group doesn't need to exist in Django for this to work. This will work as long as it's in the groups claim
    in the access token.
 
+GUEST_USERNAME_CLAIM
+--------------------
+* **Default**: ``None``
+* **Type**: ``string``
+
+When these criteria are met:
+
+1. A ``guest_username_claim`` is configured
+2. Token claims do not have the configured ``settings.USERNAME_CLAIM`` in it
+3. The ``settings.BLOCK_GUEST_USERS`` is set to ``False``
+4. The claims ``tid`` does not match ``settings.TENANT_ID``
+
+Then, the ``GUEST_USERNAME_CLAIM`` can be used to populate a username, when the ``USERNAME_CLAIM`` cannot be found in
+the claims.
+
+This can be useful when you want to use ``upn`` as a username claim for your own users,
+but some guest users (such as normal outlook users) don't have that claim.
+
+
 LOGIN_EXEMPT_URLS
 -----------------
 * **Default**: ``None``
@@ -423,13 +442,13 @@ The value of the claim must be a unique value. No 2 users should ever have the s
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
-   
-   
+
+
 .. _version_setting:
 
 VERSION
 --------------
-* **Default**: ``v1.0`` 
+* **Default**: ``v1.0``
 * **Type**: ``string``
 
 Version of the Azure Active Directory endpoint version. By default it is set to ``v1.0``. At the time of writing this documentation, it can also be set to ``v2.0``. For new projects, ``v2.0`` is recommended. ``v1.0`` is kept as a default for backwards compatibility.

@@ -115,6 +115,23 @@ class RestFrameworkIntegrationTests(TestCase):
                         user, token = self.drf_auth_class.authenticate(request)
                         self.assertEqual(user.username, "john.doe@example.com")
 
+    @mock_adfs("azure")
+    def test_access_token_azure_guest_but_no_upn_but_no_guest_username_claim(self):
+        access_token_header = "Bearer {}".format(self.access_token_azure_guest_no_upn)
+        request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["GUEST_USERNAME_CLAIM"] = None  # <--- Set to None, should not be validated as OK
+        settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = False
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch('django_auth_adfs.backend.settings', Settings()):
+                with patch("django_auth_adfs.config.settings", Settings()):
+                    with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                        with self.assertRaises(exceptions.AuthenticationFailed):
+                            self.drf_auth_class.authenticate(request)
+
     @mock_adfs("2012")
     def test_access_token_exceptions(self):
         access_token_header = "Bearer non-existing-token"

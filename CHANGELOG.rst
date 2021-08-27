@@ -1,6 +1,14 @@
 Changelog
 =========
 
+`1.9.0`_ - 2021-08-27
+---------------------
+
+**Features**
+
+* Add ``GUEST_USERNAME_CLAIM``, a setting that allow you to use a different username claim for guest users. @JonasKs and @Seykotron #166
+
+
 `1.8.1`_ - 2021-08-27
 ---------------------
 
@@ -261,6 +269,7 @@ Changelog
 
 * Initial release
 
+.. _1.9.0: https://github.com/snok/django-auth-adfs/compare/1.8.1...1.9.0
 .. _1.8.1: https://github.com/snok/django-auth-adfs/compare/1.8.0...1.8.1
 .. _1.8.0: https://github.com/snok/django-auth-adfs/compare/1.7.0...1.8.0
 .. _1.7.0: https://github.com/snok/django-auth-adfs/compare/1.6.1...1.7.0
