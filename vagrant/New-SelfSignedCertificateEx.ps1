@@ -39,7 +39,7 @@ function New-SelfSignedCertificateEx {
 	ECDH_P256
 	ECDH_P384
 	ECDH_P521
-	
+
 	In addition, KeyLength parameter must be specified explicitly when non-RSA algorithm is used.
 .Parameter KeyLength
 	Specifies the key length to generate. By default 2048-bit key is generated.
@@ -62,12 +62,12 @@ function New-SelfSignedCertificateEx {
 	NonRepudiation
 	DigitalSignature
 	DecipherOnly
-	
+
 	you can combine key usages values by using bitwise OR operation. when combining multiple
 	flags, they must be enclosed in quotes and separated by a comma character. For example,
 	to combine KeyEncipherment and DigitalSignature flags you should type:
 	"KeyEncipherment, DigitalSignature".
-	
+
 	If the certificate is CA certificate (see IsCA parameter), key usages extension is generated
 	automatically with the following key usages: Certificate Signing, Off-line CRL Signing, CRL Signing.
 .Parameter SubjectAlternativeName
@@ -123,7 +123,7 @@ function New-SelfSignedCertificateEx {
 .Example
 	New-SelfsignedCertificateEx -Subject "CN=Test Code Signing" -EKU "Code Signing" -KeySpec "Signature" `
 	-KeyUsage "DigitalSignature" -FriendlyName "Test code signing" -NotAfter $([datetime]::now.AddYears(5))
-	
+
 	Creates a self-signed certificate intended for code signing and which is valid for 5 years. Certificate
 	is saved in the Personal store of the current user account.
 .Example
@@ -131,7 +131,7 @@ function New-SelfSignedCertificateEx {
 	-KeyUsage "KeyEcipherment, DigitalSignature" -SAN "sub.domain.com","www.domain.com","192.168.1.1" `
 	-AllowSMIME -Path C:\test\ssl.pfx -Password (ConvertTo-SecureString "P@ssw0rd" -AsPlainText -Force) -Exportable `
 	-StoreLocation "LocalMachine"
-	
+
 	Creates a self-signed SSL certificate with multiple subject names and saves it to a file. Additionally, the
 	certificate is saved in the Personal store of the Local Machine store. Private key is marked as exportable,
 	so you can export the certificate with a associated private key to a file at any time. The certificate
@@ -141,7 +141,7 @@ function New-SelfSignedCertificateEx {
 	-KeyUsage "KeyEcipherment, DigitalSignature" -SAN "sub.domain.com","www.domain.com","192.168.1.1" `
 	-StoreLocation "LocalMachine" -ProviderName "Microsoft Software Key Storae Provider" -AlgorithmName ecdh_256 `
 	-KeyLength 256 -SignatureAlgorithm sha256
-	
+
 	Creates a self-signed SSL certificate with multiple subject names and saves it to a file. Additionally, the
 	certificate is saved in the Personal store of the Local Machine store. Private key is marked as exportable,
 	so you can export the certificate with a associated private key to a file at any time. Certificate uses
@@ -150,7 +150,7 @@ function New-SelfSignedCertificateEx {
 .Example
 	New-SelfsignedCertificateEx -Subject "CN=Test Root CA, OU=Sandbox" -IsCA $true -ProviderName `
 	"Microsoft Software Key Storage Provider" -Exportable
-	
+
 	Creates self-signed root CA certificate.
 #>
 [OutputType('[System.Security.Cryptography.X509Certificates.X509Certificate2]')]
@@ -227,7 +227,7 @@ function New-SelfSignedCertificateEx {
 	New-Variable -Name PFXExportChainNoRoot -Value 0x1 -Option Constant
 	New-Variable -Name PFXExportChainWithRoot -Value 0x2 -Option Constant
 #endregion
-	
+
 #region Subject processing
 	# http://msdn.microsoft.com/en-us/library/aa377051(VS.85).aspx
 	$SubjectDN = New-Object -ComObject X509Enrollment.CX500DistinguishedName
@@ -371,7 +371,7 @@ function New-SelfSignedCertificateEx {
 	$Cert.SignatureInformation.HashAlgorithm = $SigOID
 	# completing certificate request template building
 	$Cert.Encode()
-	
+
 	# interface: http://msdn.microsoft.com/en-us/library/aa377809(VS.85).aspx
 	$Request = New-Object -ComObject X509Enrollment.CX509enrollment
 	$Request.InitializeFromRequest($Cert)

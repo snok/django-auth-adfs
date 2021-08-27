@@ -23,7 +23,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
         },
-        'DIRS': 'templates'
+        'DIRS': 'templates',
     },
 ]
 
@@ -34,7 +34,6 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'django_auth_adfs.middleware.LoginRequiredMiddleware',
 )
 
@@ -45,13 +44,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'django_auth_adfs',
     'tests',
 )
 
 AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",
+    'django.contrib.auth.backends.ModelBackend',
     'django_auth_adfs.backend.AdfsAuthCodeBackend',
     'django_auth_adfs.backend.AdfsAccessTokenBackend',
 )
@@ -62,18 +60,22 @@ STATIC_ROOT = '/tmp/'  # Dummy
 STATIC_URL = '/static/'
 
 AUTH_ADFS = {
-    "SERVER": "adfs.example.com",
-    "CLIENT_ID": "your-configured-client-id",
-    "RELYING_PARTY_ID": "your-adfs-RPT-name",
-    "AUDIENCE": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
-    "CA_BUNDLE": "/path/to/ca-bundle.pem",
-    "CLAIM_MAPPING": {"first_name": "given_name",
-                      "last_name": "family_name",
-                      "email": "email"},
-    "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
-                              "is_superuser": "user_is_superuser"},
-    "CONFIG_RELOAD_INTERVAL": 0,  # Always reload settings
+    'SERVER': 'adfs.example.com',
+    'CLIENT_ID': 'your-configured-client-id',
+    'RELYING_PARTY_ID': 'your-adfs-RPT-name',
+    'AUDIENCE': 'microsoft:identityserver:your-RelyingPartyTrust-identifier',
+    'CA_BUNDLE': '/path/to/ca-bundle.pem',
+    'CLAIM_MAPPING': {
+        'first_name': 'given_name',
+        'last_name': 'family_name',
+        'email': 'email',
+    },
+    'BOOLEAN_CLAIM_MAPPING': {
+        'is_staff': 'user_is_staff',
+        'is_superuser': 'user_is_superuser',
+    },
+    'CONFIG_RELOAD_INTERVAL': 0,  # Always reload settings
 }
 
-LOGIN_URL = "django_auth_adfs:login"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = 'django_auth_adfs:login'
+LOGIN_REDIRECT_URL = '/'

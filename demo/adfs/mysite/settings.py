@@ -108,21 +108,23 @@ AUTHENTICATION_BACKENDS = (
 )
 
 AUTH_ADFS = {
-    "SERVER": "adfs.example.com",
-    "CLIENT_ID": "487d8ff7-80a8-4f62-b926-c2852ab06e94",
-    "RELYING_PARTY_ID": "web.example.com",
+    'SERVER': 'adfs.example.com',
+    'CLIENT_ID': '487d8ff7-80a8-4f62-b926-c2852ab06e94',
+    'RELYING_PARTY_ID': 'web.example.com',
     # Make sure to read the documentation about the AUDIENCE setting
     # when you configured the identifier as a URL!
-    "AUDIENCE": "microsoft:identityserver:web.example.com",
-    "CA_BUNDLE": False,  # <<<-- !!! DON'T DO THIS IN A PRODUCTION SETUP !!!
-    "CLAIM_MAPPING": {"first_name": "given_name",
-                      "last_name": "family_name",
-                      "email":          "email"},
+    'AUDIENCE': 'microsoft:identityserver:web.example.com',
+    'CA_BUNDLE': False,  # <<<-- !!! DON'T DO THIS IN A PRODUCTION SETUP !!!
+    'CLAIM_MAPPING': {
+        'first_name': 'given_name',
+        'last_name': 'family_name',
+        'email': 'email',
+    },
     #                   ^^ = Model field   ^^ = Claim
-    "GROUP_TO_FLAG_MAPPING": {"is_superuser":   "django_admins"},
+    'GROUP_TO_FLAG_MAPPING': {'is_superuser': 'django_admins'},
     #                            ^^ = Model field    ^^ = Group
     # "BOOLEAN_CLAIM_MAPPING": {"is_staff": "is_staff"},
-    "CONFIG_RELOAD_INTERVAL": 0.1,
+    'CONFIG_RELOAD_INTERVAL': 0.1,
 }
 
 # Internationalization
@@ -143,24 +145,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-LOGIN_URL = "django_auth_adfs:login"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = 'django_auth_adfs:login'
+LOGIN_REDIRECT_URL = '/'
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(name)s %(message)s'
-        },
+        'verbose': {'format': '%(levelname)s %(asctime)s %(name)s %(message)s'},
     },
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'},
     },
     'loggers': {
         'django_auth_adfs': {
@@ -170,11 +167,9 @@ LOGGING = {
     },
 }
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ),
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticatedOrReadOnly',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'django_auth_adfs.rest_framework.AdfsAccessTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    )
+    ),
 }

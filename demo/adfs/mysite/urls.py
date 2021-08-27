@@ -26,9 +26,7 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
     path('polls/', include('polls.urls')),
     path('api/', include('polls.api.urls')),
-
     path('admin/', admin.site.urls, name='admin'),
-
     # The default rest framework urls shouldn't be included
     # If we include them, we'll end up with the DRF login page,
     # instead of being redirected to the ADFS login page.

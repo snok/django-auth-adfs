@@ -11,7 +11,7 @@ django-auth-adfs. Installing and configuring the basics of Azure AD is not expla
 Step 1 - Register a backend application
 ---------------------------------------
 
-After signing in to `Azure <https://portal.azure.com>`_. Open the **Azure Active Directory** dashboard. 
+After signing in to `Azure <https://portal.azure.com>`_. Open the **Azure Active Directory** dashboard.
 
 .. image:: _static/AzureAD/01-azure_active_directory.png
    :scale: 50 %
@@ -37,9 +37,9 @@ Navigate to **App Registrations**, then click **New registration** in the upper 
 ------------
 
 
-Here you register your application. 
+Here you register your application.
 
-1. The display name of your application. 
+1. The display name of your application.
 2. What type of accounts can access your application.
 3. Here you need to add allowed redirect URIs. The Redirect URI value must match with the domain where your Django application is located(*eg. http://localhost:8000/oauth2/callback*).
 
@@ -50,7 +50,7 @@ Here you register your application.
 ------------
 
 
-When done registering, you will be redirected to your applications overview. Here you need to note down your **Client_ID**. This is how your Django project finds the right Azure application.  
+When done registering, you will be redirected to your applications overview. Here you need to note down your **Client_ID**. This is how your Django project finds the right Azure application.
 
 
 .. image:: _static/AzureAD/05-application_overview.png
@@ -59,7 +59,7 @@ When done registering, you will be redirected to your applications overview. Her
 ------------
 
 
-Next we need to generate a **Client_Secret**. Your application will use this to prove its identity when requesting a token. 
+Next we need to generate a **Client_Secret**. Your application will use this to prove its identity when requesting a token.
 
 
 .. image:: _static/AzureAD/06-add_Secret.png
@@ -86,21 +86,21 @@ It will be become hidden after a short time, so be sure to note this one down qu
 ------------
 
 
-    
+
 Step 2 - Configuring settings.py
 --------------------------------
-We need to update the ``settings.py`` to accomedate for our registered Azure AD application. 
+We need to update the ``settings.py`` to accomedate for our registered Azure AD application.
 
 Replace your AUTH_ADFS with this.
 
 .. code-block:: python
 
     # Client secret is not public information. Should store it as an environment variable.
-    
+
     client_id = 'Your client id here'
     cient_secret = 'Your client secret here'
     tenant_id = 'Your tenant id here'
-    
+
 
     AUTH_ADFS = {
         'AUDIENCE': client_id,
@@ -115,7 +115,7 @@ Replace your AUTH_ADFS with this.
         'TENANT_ID': tenant_id,
         'RELYING_PARTY_ID': client_id,
     }
-    
+
 
 Add this to your AUTHENTICATION_BACKENDS.
 
@@ -137,8 +137,8 @@ Add this path to your projects ``urls.py`` file.
         ...
         path('oauth2/', include('django_auth_adfs.urls')),
         ...
-    ] 
-    
+    ]
+
 Step 3 - Register and configure an Azure AD frontend application
 ----------------------------------------------------------------
 Just like we did with our backend application in step 1, we have to register a new app for our frontend. In this example we are authenticating a Django Rest Framework token through a single page application(SPA). The redirect URI value must match with the domain where your frontend application is located(eg. http://localhost:3000).
@@ -160,7 +160,7 @@ Copy your frontend's client ID, you will need later
 
 ------------
 
-Now we need to add a scope of permissions to our API. 
+Now we need to add a scope of permissions to our API.
 Navigate back to app registrations and click on your backend application.
 Go to **Expose an API** in the sidebar and press **add a scope**.
 

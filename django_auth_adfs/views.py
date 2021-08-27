@@ -10,7 +10,7 @@ from django.views.generic import View
 from django_auth_adfs.config import provider_config, settings
 from django_auth_adfs.exceptions import MFARequired
 
-logger = logging.getLogger("django_auth_adfs")
+logger = logging.getLogger('django_auth_adfs')
 
 
 class OAuth2CallbackView(View):
@@ -22,16 +22,14 @@ class OAuth2CallbackView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        code = request.GET.get("code")
+        code = request.GET.get('code')
         if not code:
             # Return an error message
             return settings.CUSTOM_FAILED_RESPONSE_VIEW(
-                request,
-                error_message="No authorization code was provided.",
-                status=400
+                request, error_message='No authorization code was provided.', status=400
             )
 
-        redirect_to = request.GET.get("state")
+        redirect_to = request.GET.get('state')
         try:
             user = authenticate(request=request, authorization_code=code)
         except MFARequired:
@@ -57,17 +55,11 @@ class OAuth2CallbackView(View):
             else:
                 # Return a 'disabled account' error message
                 return settings.CUSTOM_FAILED_RESPONSE_VIEW(
-                    request,
-                    error_message="Your account is disabled.",
-                    status=403
+                    request, error_message='Your account is disabled.', status=403
                 )
         else:
             # Return an 'invalid login' error message
-            return settings.CUSTOM_FAILED_RESPONSE_VIEW(
-                request,
-                error_message="Login failed.",
-                status=401
-            )
+            return settings.CUSTOM_FAILED_RESPONSE_VIEW(request, error_message='Login failed.', status=401)
 
 
 class OAuth2LoginView(View):

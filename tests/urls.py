@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.conf.urls import include, url
 
 urlpatterns = [
     url(r'^oauth2/', include('django_auth_adfs.urls')),

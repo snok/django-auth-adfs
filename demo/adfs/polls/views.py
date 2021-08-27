@@ -17,9 +17,7 @@ class IndexView(generic.ListView):
         Return the last five published questions (not including those set to be
         published in the future).
         """
-        return Question.objects.filter(
-            pub_date__lte=timezone.now()
-        ).order_by('-pub_date')[:5]
+        return Question.objects.filter(pub_date__lte=timezone.now()).order_by('-pub_date')[:5]
 
 
 class DetailView(generic.DetailView):
@@ -49,10 +47,14 @@ class VoteView(LoginRequiredMixin, generic.DetailView):
             selected_choice = question.choice_set.get(pk=request.POST['choice'])
         except (KeyError, Choice.DoesNotExist):
             # Redisplay the question voting form.
-            return render(request, 'polls/vote.html', {
-                'question': question,
-                'error_message': "You didn't select a choice.",
-            })
+            return render(
+                request,
+                'polls/vote.html',
+                {
+                    'question': question,
+                    'error_message': "You didn't select a choice.",
+                },
+            )
         else:
             selected_choice.vote()
             # Always return an HttpResponseRedirect after successfully dealing

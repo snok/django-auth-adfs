@@ -7,7 +7,7 @@ from django.conf.urls import url
 
 from django_auth_adfs import views
 
-app_name = "rest_framework"
+app_name = 'rest_framework'
 
 urlpatterns = [
     url(r'^login$', views.OAuth2LoginView.as_view(), name='login'),

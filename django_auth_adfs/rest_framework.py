@@ -1,16 +1,13 @@
-from __future__ import absolute_import
-
 from django.contrib.auth import authenticate
 from rest_framework import exceptions
-from rest_framework.authentication import (
-    BaseAuthentication, get_authorization_header
-)
+from rest_framework.authentication import BaseAuthentication, get_authorization_header
 
 
 class AdfsAccessTokenAuthentication(BaseAuthentication):
     """
     ADFS access Token authentication
     """
+
     www_authenticate_realm = 'api'
 
     def authenticate(self, request):

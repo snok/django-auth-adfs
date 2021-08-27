@@ -1,4 +1,4 @@
-class Settings(object):
+class Settings:
     RETRIES = 1
     CA_BUNDLE = False
 
