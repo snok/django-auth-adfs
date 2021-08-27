@@ -92,7 +92,7 @@ class AdfsBaseBackend(ModelBackend):
         claims = self.validate_access_token(access_token)
         if (
             settings.BLOCK_GUEST_USERS
-            and claims.get('http://schemas.microsoft.com/identity/claims/tenantid')
+            and claims.get('tid')
             != settings.TENANT_ID
         ):
             logger.info('Guest user denied')
