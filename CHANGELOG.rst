@@ -1,6 +1,14 @@
 Changelog
 =========
 
+`1.8.1`_ - 2021-08-27
+---------------------
+
+**Features**
+
+* Fix broken ``BLOCK_GUEST_USERS`` setting. @JonasKs #180
+
+
 `1.8.0`_ - 2021-08-14
 ---------------------
 
@@ -253,6 +261,7 @@ Changelog
 
 * Initial release
 
+.. _1.8.1: https://github.com/snok/django-auth-adfs/compare/1.8.0...1.8.1
 .. _1.8.0: https://github.com/snok/django-auth-adfs/compare/1.7.0...1.8.0
 .. _1.7.0: https://github.com/snok/django-auth-adfs/compare/1.6.1...1.7.0
 .. _1.6.1: https://github.com/snok/django-auth-adfs/compare/1.6.0...1.6.1
