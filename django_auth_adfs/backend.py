@@ -133,7 +133,7 @@ class AdfsBaseBackend(ModelBackend):
 
         if (
             settings.BLOCK_GUEST_USERS is False
-            and claims.get('http://schemas.microsoft.com/identity/claims/tenantid')
+            and claims.get('tid')
             != settings.TENANT_ID
         ):
             username_claim = guest_username_claim
