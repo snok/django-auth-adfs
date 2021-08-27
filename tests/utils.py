@@ -112,7 +112,7 @@ def do_build_access_token(request, issuer, schema=None):
         "ver": "1.0"
     }
     if schema:
-        claims['http://schemas.microsoft.com/identity/claims/tenantid'] = schema
+        claims['tid'] = schema
     if issuer.startswith('https://sts.windows.net'):
         claims['upn'] = 'testuser'
         claims['groups'] = claims['group']
