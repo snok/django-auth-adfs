@@ -1,6 +1,14 @@
 Changelog
 =========
 
+`1.9.1`_ - 2021-10-01
+---------------------
+
+**Updates**
+
+* Update `urllib3` deprecated arguments (from `method_whitelist` to `allowed_methods`) @kdleijer  #188 #190
+
+
 `1.9.0`_ - 2021-08-27
 ---------------------
 
@@ -269,6 +277,7 @@ Changelog
 
 * Initial release
 
+.. _1.9.1: https://github.com/snok/django-auth-adfs/compare/1.9.0...1.9.1
 .. _1.9.0: https://github.com/snok/django-auth-adfs/compare/1.8.1...1.9.0
 .. _1.8.1: https://github.com/snok/django-auth-adfs/compare/1.8.0...1.8.1
 .. _1.8.0: https://github.com/snok/django-auth-adfs/compare/1.7.0...1.8.0
