@@ -180,7 +180,7 @@ class ProviderConfig(object):
         self.end_session_endpoint = None
         self.issuer = None
 
-        method_whitelist = frozenset([
+        allowed_methods = frozenset([
             'HEAD', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'TRACE', 'POST'
         ])
 
@@ -189,7 +189,7 @@ class ProviderConfig(object):
             read=settings.RETRIES,
             connect=settings.RETRIES,
             backoff_factor=0.3,
-            method_whitelist=method_whitelist
+            allowed_methods=allowed_methods
         )
         self.session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=retry)
