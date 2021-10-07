@@ -1,8 +1,8 @@
 Azure AD
 ========
 
-Getting this module to work is sometimes not so straight forward. If your not familiar with JWT tokens or Azure AD
-itself, it might take some tries to get all settings right.
+Getting this module to work is sometimes not so straightforward. If you're not familiar with JWT tokens or Azure AD
+itself, it might take some tries to get all the settings right.
 
 This guide tries to give a basic overview of how to configure Azure AD and how to determine the settings for
 django-auth-adfs. Installing and configuring the basics of Azure AD is not explained here.
@@ -19,7 +19,7 @@ After signing in to `Azure <https://portal.azure.com>`_. Open the **Azure Active
 ------------
 
 
-Note down your **Tenant_ID** you will need it later.
+Note down your **Tenant_ID** as you will need it later.
 
 
 .. image:: _static/AzureAD/02-azure_dashboard.png
@@ -68,7 +68,7 @@ Next we need to generate a **Client_Secret**. Your application will use this to 
 ------------
 
 
-Give it a short name. It is not important what it is, only used by you, to better keep track of them incase you make more.
+Give it a short (display) name. This is only used by you, to help keep track of in case you make more client secrets.
 
 
 .. image:: _static/AzureAD/07-add_Secret_name.png
@@ -77,7 +77,7 @@ Give it a short name. It is not important what it is, only used by you, to bette
 ------------
 
 
-It will be become hidden after a short time, so be sure to note this one down quick.
+Copy your secret (value). It will be become hidden after a short time, so be sure to note this quickly.
 
 
 .. image:: _static/AzureAD/08-copy_Secret.png
@@ -89,7 +89,7 @@ It will be become hidden after a short time, so be sure to note this one down qu
     
 Step 2 - Configuring settings.py
 --------------------------------
-We need to update the ``settings.py`` to accomedate for our registered Azure AD application. 
+We need to update the ``settings.py`` to accommodate our registered Azure AD application. 
 
 Replace your AUTH_ADFS with this.
 
@@ -98,14 +98,14 @@ Replace your AUTH_ADFS with this.
     # Client secret is not public information. Should store it as an environment variable.
     
     client_id = 'Your client id here'
-    cient_secret = 'Your client secret here'
+    client_secret = 'Your client secret here'
     tenant_id = 'Your tenant id here'
     
 
     AUTH_ADFS = {
         'AUDIENCE': client_id,
         'CLIENT_ID': client_id,
-        'CLIENT_SECRET': cient_secret,
+        'CLIENT_SECRET': client_secret,
         'CLAIM_MAPPING': {'first_name': 'given_name',
                           'last_name': 'family_name',
                           'email': 'upn'},
@@ -129,7 +129,7 @@ Add this to your AUTHENTICATION_BACKENDS.
 
 
 
-Add this path to your projects ``urls.py`` file.
+Add this path to your project's ``urls.py`` file.
 
 .. code-block:: python
 
@@ -203,7 +203,7 @@ Here you need to paste in your frontend application (client) id.
 
 ------------
 
-Now navigate back to app registrations. Click on your **frontend** application and navigate to API permissions. Press **add a permisson**.
+Now navigate back to app registrations. Click on your **frontend** application and navigate to API permissions. Press **add a permission**.
 
 
 .. image:: _static/AzureAD/17_navigate_to_api_permissions.PNG

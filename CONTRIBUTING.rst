@@ -56,7 +56,7 @@ Set up your environment
 
 3. Install dependencies by running ``poetry install``
 
-4. Create a new branch for you changes
+4. Create a new branch for your changes
 
 5. Push the topic branch to your personal fork
 
