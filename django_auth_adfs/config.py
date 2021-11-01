@@ -135,7 +135,7 @@ class Settings(object):
                                   "last_name": "family_name",
                                   "email": "email"}
         elif "VERSION" in _settings:
-            raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is set.")
+            raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is not set.")
 
         # Overwrite defaults with user settings
         for setting, value in _settings.items():
