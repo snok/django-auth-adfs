@@ -116,7 +116,9 @@ class Settings(object):
             for idp_name, idp_settings in _settings['IDPS'].items():
                 for setting in REQUIRED_SETTINGS:
                     if setting not in idp_settings:
-                        raise ImproperlyConfigured("django_auth_adfs setting '{0}' has not been set for IDP key '{1}'".format(setting, idp_name))
+                        raise ImproperlyConfigured(
+                            "django_auth_adfs setting '{}' has not been set for IDP key '{}'".format(setting, idp_name)
+                        )
 
         else:
             # Handle deprecated settings
