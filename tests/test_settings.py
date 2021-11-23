@@ -5,7 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, SimpleTestCase, override_settings
 from mock import patch
 from django_auth_adfs.config import django_settings
-from django_auth_adfs.config import Settings
+from django_auth_adfs.config import Settings, REQUIRED_SETTINGS
 from .custom_config import Settings as CustomSettings
 
 
@@ -23,6 +23,47 @@ class SettingsTests(TestCase):
         with patch("django_auth_adfs.config.django_settings", settings):
             with self.assertRaises(ImproperlyConfigured):
                 Settings()
+
+    def test_idps_as_mutually_exclusive(self):
+        settings = deepcopy(django_settings)
+        settings.AUTH_ADFS["IDPS"] = {}
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with self.assertRaises(ImproperlyConfigured):
+                Settings()
+
+    def test_idps_empty_entries(self):
+        settings = deepcopy(django_settings)
+        for setting in REQUIRED_SETTINGS:
+            if setting in settings.AUTH_ADFS:
+                del settings.AUTH_ADFS[setting]
+        settings.AUTH_ADFS["IDPS"] = {}
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with self.assertRaises(ImproperlyConfigured) as cm:
+                Settings()
+
+            self.assertEqual(
+                str(cm.exception),
+                "The IDPS configuration must have at least one configuration defined."
+            )
+
+    def test_idps_missing_required_settings_in_entry(self):
+        settings = deepcopy(django_settings)
+        for setting in REQUIRED_SETTINGS:
+            if setting in settings.AUTH_ADFS:
+                del settings.AUTH_ADFS[setting]
+        settings.AUTH_ADFS["IDPS"] = {
+            "adfs": {
+                "CLIENT_ID": "abc"
+            }
+        }
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with self.assertRaises(ImproperlyConfigured) as cm:
+                Settings()
+
+            self.assertEqual(
+                str(cm.exception),
+                "django_auth_adfs setting 'AUDIENCE' has not been set for IDP key 'adfs'"
+            )
 
     def test_tenant_and_server(self):
         settings = deepcopy(django_settings)

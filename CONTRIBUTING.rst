@@ -60,4 +60,6 @@ Set up your environment
 
 5. Push the topic branch to your personal fork
 
-6. Create a pull request to the django-auth-adfs repository with a detailed explanation
+6. Test your code by running the test suite ``poetry run coverage run manage.py test -v 2``
+
+7. Create a pull request to the django-auth-adfs repository with a detailed explanation
