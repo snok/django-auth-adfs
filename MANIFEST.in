@@ -1,6 +1,5 @@
 include CONTRIBUTING.rst
 include README.rst
-include CHANGELOG.rst
 
 recursive-include tests *
 recursive-exclude * __pycache__

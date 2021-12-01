@@ -43,4 +43,3 @@ Contents
     troubleshooting
     faq
     contributing
-    changelog
