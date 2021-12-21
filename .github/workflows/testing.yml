@@ -26,7 +26,6 @@ jobs:
           flake8 .
 
   test:
-    needs: [linting, get-python-versions]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
