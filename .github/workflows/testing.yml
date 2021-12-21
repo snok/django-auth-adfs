@@ -17,22 +17,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
-      - run: python -m pip install flake8  # isort black
+      - run: python -m pip install flake8
       - run: |
           flake8 .
-#          black . --check
-#          isort .
-
-  get-python-versions:
-    runs-on: ubuntu-latest
-    outputs:
-      python-matrix: ${{ steps.get-python-versions-action.outputs.latest-python-versions }}
-    steps:
-    - uses: snok/latest-python-versions@v1
-      id: get-python-versions-action
-      with:
-        min-version: 3.8
-        include-prereleases: true
 
   test:
     needs: [linting, get-python-versions]
@@ -40,8 +27,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.set-python-versions.outputs.python-matrix) }}
-        django-version: [ "2.2", "3.0", "3.1", "3.2" ]
+        python-version: [ "3.8", "3.9", "3.10" ]
+        django-version: [ "2.2", "3.0", "3.1", "3.2", "4.0" ]
         drf-version: [ "3.10", "3.11", "3.12" ]
     steps:
       - name: Check out repository
