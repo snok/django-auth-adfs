@@ -10,7 +10,7 @@ repository = 'https://github.com/snok/django-auth-adfs'
 documentation = 'https://django-auth-adfs.readthedocs.io/en/latest'
 keywords = ['django', 'authentication', 'adfs', 'azure', 'ad', 'oauth2']
 readme = 'README.rst'
-classifiers=[
+classifiers = [
     'Environment :: Web Environment',
     'Framework :: Django :: 2.2',
     'Framework :: Django :: 3.0',
@@ -35,7 +35,10 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = '^3.6'
-django = '^3.0 ||^2.2'
+django = [
+    { version = '^2.2 || ^3', python = '<=3.7' },
+    { version = '^2.2 || ^3 || ^4', python = '>=3.8' },
+]
 requests = '^1 || ^2'
 urllib3 = '^1.26.0'
 cryptography = '>=1.7,<39.0'
