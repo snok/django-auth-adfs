@@ -1,6 +1,6 @@
-from django.conf.urls import url, include
+from django.urls import include, re_path
 
 urlpatterns = [
-    url(r'^oauth2/', include('django_auth_adfs.urls')),
-    url(r'^oauth2/', include('django_auth_adfs.drf_urls')),
+    re_path(r'^oauth2/', include('django_auth_adfs.urls')),
+    re_path(r'^oauth2/', include('django_auth_adfs.drf_urls')),
 ]

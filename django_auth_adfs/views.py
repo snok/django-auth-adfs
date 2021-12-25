@@ -4,7 +4,11 @@ import logging
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
-from django.utils.http import is_safe_url
+try:
+    from django.utils.http import url_has_allowed_host_and_scheme
+except ImportError:
+    # Django <3.0
+    from django.utils.http import is_safe_url as url_has_allowed_host_and_scheme
 from django.views.generic import View
 
 from django_auth_adfs.config import provider_config, settings
@@ -47,7 +51,7 @@ class OAuth2CallbackView(View):
                     redirect_to = base64.urlsafe_b64decode(redirect_to.encode()).decode()
                 else:
                     redirect_to = django_settings.LOGIN_REDIRECT_URL
-                url_is_safe = is_safe_url(
+                url_is_safe = url_has_allowed_host_and_scheme(
                     url=redirect_to,
                     allowed_hosts=[request.get_host()],
                     require_https=request.is_secure(),
