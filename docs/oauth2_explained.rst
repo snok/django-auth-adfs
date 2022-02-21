@@ -17,7 +17,7 @@ What's `OAuth2 <https://tools.ietf.org/html/rfc6749>`__?
 
 What's important is that it's only an **authorization** framework. It only
 tells you what the user is allowed to do but it doesn't tell you who the user is.
-At it's core, there's nothing in the protocol that gives you info about the user.
+At its core, there's nothing in the protocol that gives you info about the user.
 
 To solve this, there's the `OpenID Connect <https://openid.net/specs/openid-connect-core-1_0.html>`__
 framework.
@@ -236,7 +236,7 @@ and use a bit more comprehensible terms:
 
 The following things changed:
 
-* A ``resource`` parameter was added to step **A**. This is an ADFS specific thing used to identify which application .
+* A ``resource`` parameter was added to step **A**. This is an ADFS specific thing used to identify which application.
 * Step **G** was extended up to the web browser. Resembling the session cookie sent back to the web browser.
 * ``Resource Owner`` ➜ ``User``
 * ``User-Agent`` ➜ ``Web Browser``
@@ -255,7 +255,7 @@ The **authentication backend** maps to the ``Resource Server`` role,
 authenticating/authorizing the user and creating the session.
 The session you can think of as being the protected resource.
 
-Once the session is created, OAuth2 isn't used anymore. Django uses it's sessions to
+Once the session is created, OAuth2 isn't used anymore. Django uses its sessions to
 authenticate and authorize the user on subsequent requests.
 
 On the ADFS side, you need to configure both the ``Client`` role part of Django
