@@ -272,7 +272,7 @@ When these criteria are met:
 1. A ``guest_username_claim`` is configured
 2. Token claims do not have the configured ``settings.USERNAME_CLAIM`` in it
 3. The ``settings.BLOCK_GUEST_USERS`` is set to ``False``
-4. The claims ``tid`` does not match ``settings.TENANT_ID``
+4. The claims ``tid`` does not match ``settings.TENANT_ID`` or claims ``idp`` does not match ``iss``.
 
 Then, the ``GUEST_USERNAME_CLAIM`` can be used to populate a username, when the ``USERNAME_CLAIM`` cannot be found in
 the claims.
