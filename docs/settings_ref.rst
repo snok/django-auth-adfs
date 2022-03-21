@@ -8,7 +8,7 @@ Settings Reference
 AUDIENCE
 --------
 * **Default**:
-* **Type**: ``string``
+* **Type**: ``string`` or ``list``
 
 **Required**
 
