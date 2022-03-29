@@ -9,7 +9,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from django_auth_adfs.config import ProviderConfig, Settings
 from django_auth_adfs.rest_framework import AdfsAccessTokenAuthentication
 from .utils import build_access_token_adfs, build_access_token_azure, build_access_token_azure_guest, \
-    build_access_token_azure_guest_no_upn, build_access_token_azure_not_guest, mock_adfs
+    build_access_token_azure_guest_no_upn, build_access_token_azure_not_guest, \
+    build_access_token_azure_guest_with_idp, mock_adfs
 
 
 class RestFrameworkIntegrationTests(TestCase):
@@ -30,6 +31,9 @@ class RestFrameworkIntegrationTests(TestCase):
 
         azure_response_guest = build_access_token_azure_guest_no_upn(RequestFactory().get('/'))[2]
         self.access_token_azure_guest_no_upn = json.loads(azure_response_guest)['access_token']
+
+        azure_response_guest = build_access_token_azure_guest_with_idp(RequestFactory().get('/'))[2]
+        self.access_token_azure_guest_with_idp = json.loads(azure_response_guest)['access_token']
 
     @mock_adfs("2012")
     def test_access_token_2012(self):
@@ -101,6 +105,23 @@ class RestFrameworkIntegrationTests(TestCase):
     @mock_adfs("azure")
     def test_access_token_azure_guest_but_no_upn(self):
         access_token_header = "Bearer {}".format(self.access_token_azure_guest_no_upn)
+        request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["GUEST_USERNAME_CLAIM"] = "email"
+        settings.AUTH_ADFS["BLOCK_GUEST_USERS"] = False
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch('django_auth_adfs.backend.settings', Settings()):
+                with patch("django_auth_adfs.config.settings", Settings()):
+                    with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                        user, token = self.drf_auth_class.authenticate(request)
+                        self.assertEqual(user.username, "john.doe@example.com")
+
+    @mock_adfs("azure")
+    def test_access_token_azure_guest_with_idp(self):
+        access_token_header = "Bearer {}".format(self.access_token_azure_guest_with_idp)
         request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
         from django_auth_adfs.config import django_settings
         settings = deepcopy(django_settings)

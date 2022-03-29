@@ -88,12 +88,17 @@ def build_access_token_azure_guest_no_upn(request):
     return do_build_access_token(request, issuer, schema='guest_tenant_id', no_upn=True)
 
 
+def build_access_token_azure_guest_with_idp(request):
+    issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
+    return do_build_access_token(request, issuer, schema='dummy_tenant_id', no_upn=True, idp="guest_idp")
+
+
 def do_build_mfa_error(request):
     response = {'error_description': 'AADSTS50076'}
     return 400, [], json.dumps(response)
 
 
-def do_build_access_token(request, issuer, schema=None, no_upn=False):
+def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None):
     issued_at = int(time.time())
     expires = issued_at + 3600
     auth_time = datetime.utcnow()
@@ -101,6 +106,7 @@ def do_build_access_token(request, issuer, schema=None, no_upn=False):
     claims = {
         "aud": "microsoft:identityserver:your-RelyingPartyTrust-identifier",
         "iss": issuer,
+        "idp": idp or issuer,
         "iat": issued_at,
         "exp": expires,
         "winaccountname": "testuser",
