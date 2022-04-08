@@ -199,7 +199,7 @@ class AdfsBaseBackend(ModelBackend):
         """
         if settings.GROUPS_CLAIM is not None:
             # Update the user's group memberships
-            django_groups = [group.name for group in user.groups.all()]
+            django_groups = user.groups.all().values_list("name", flat=True)
 
             if settings.GROUPS_CLAIM in claims:
                 claim_groups = claims[settings.GROUPS_CLAIM]
@@ -210,8 +210,8 @@ class AdfsBaseBackend(ModelBackend):
                              settings.GROUPS_CLAIM)
                 claim_groups = []
             if sorted(claim_groups) != sorted(django_groups):
-                existing_groups = list(Group.objects.filter(name__in=claim_groups).iterator())
-                existing_group_names = frozenset(group.name for group in existing_groups)
+                existing_groups = Group.objects.filter(name__in=claim_groups)
+                existing_group_names = frozenset(existing_groups.values_list("name", flat=True))
                 new_groups = []
                 if settings.MIRROR_GROUPS:
                     new_groups = [
@@ -227,7 +227,7 @@ class AdfsBaseBackend(ModelBackend):
                                 new_groups.append(group)
                             except ObjectDoesNotExist:
                                 pass
-                user.groups.set(existing_groups + new_groups)
+                user.groups.add(*existing_groups, *new_groups)
 
     def update_user_flags(self, user, claims):
         """
