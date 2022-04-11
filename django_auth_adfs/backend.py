@@ -227,7 +227,7 @@ class AdfsBaseBackend(ModelBackend):
                                 new_groups.append(group)
                             except ObjectDoesNotExist:
                                 pass
-                user.groups.add(*existing_groups, *new_groups)
+                user.groups.set(list(existing_groups.iterator()) + new_groups)
 
     def update_user_flags(self, user, claims):
         """
