@@ -339,6 +339,7 @@ class ProviderConfig(object):
         if self._mode == "openid_connect":
             if settings.VERSION == 'v2.0':
                 query["scope"] = f"openid api://{settings.RELYING_PARTY_ID}/.default"
+                query.pop("resource")
             else:
                 query["scope"] = "openid"
             if (disable_sso is None and settings.DISABLE_SSO) or disable_sso is True:
