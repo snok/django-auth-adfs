@@ -330,7 +330,7 @@ class AuthenticationTests(TestCase):
         self.assertEqual(qs, qs_expected)
 
     @mock_adfs("azure")
-    def test_oauth_redir_azure(self):
+    def test_oauth_redir_azure_version_one(self):
         from django_auth_adfs.config import django_settings
         settings = deepcopy(django_settings)
         del settings.AUTH_ADFS["SERVER"]
@@ -348,6 +348,32 @@ class AuthenticationTests(TestCase):
                 'state': ['L3Rlc3Qv'],
                 'response_type': ['code'],
                 'resource': ['your-adfs-RPT-name'],
+                'redirect_uri': ['http://testserver/oauth2/callback']
+            }
+            self.assertEqual(redir.scheme, 'https')
+            self.assertEqual(redir.hostname, 'login.microsoftonline.com')
+            self.assertEqual(redir.path.rstrip("/"), '/01234567-89ab-cdef-0123-456789abcdef/oauth2/authorize')
+            self.assertEqual(qs, sq_expected)
+
+    @mock_adfs("azure")
+    def test_oauth_redir_azure_version_two(self):
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["VERSION"] = 'v2.0'
+        with patch("django_auth_adfs.config.django_settings", settings), \
+                patch("django_auth_adfs.config.settings", Settings()), \
+                patch("django_auth_adfs.views.provider_config", ProviderConfig()):
+            response = self.client.get("/oauth2/login?next=/test/")
+            self.assertEqual(response.status_code, 302)
+            redir = urlparse(response["Location"])
+            qs = parse_qs(redir.query)
+            sq_expected = {
+                'scope': ['openid api://your-adfs-RPT-name/.default'],
+                'client_id': ['your-configured-client-id'],
+                'state': ['L3Rlc3Qv'],
+                'response_type': ['code'],
                 'redirect_uri': ['http://testserver/oauth2/callback']
             }
             self.assertEqual(redir.scheme, 'https')
