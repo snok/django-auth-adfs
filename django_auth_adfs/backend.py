@@ -280,13 +280,13 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
     """
 
     def authenticate(self, request=None, authorization_code=None, **kwargs):
-        # If loaded data is too old, reload it again
-        provider_config.load_config()
-
         # If there's no token or code, we pass control to the next authentication backend
         if authorization_code is None or authorization_code == '':
             logger.debug("django_auth_adfs authentication backend was called but no authorization code was received")
             return
+
+        # If loaded data is too old, reload it again
+        provider_config.load_config()
 
         adfs_response = self.exchange_auth_code(authorization_code, request)
         access_token = adfs_response["access_token"]
