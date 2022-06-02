@@ -459,4 +459,4 @@ PROXIES
 * **Type**: ``dict``
 
 An optional proxy for all communication with the server. Example: ``{'http': '10.0.0.1', 'https': '10.0.0.2'}``
-Also see the `request docs <https://requests.readthedocs.io/en/v3.0.0/api/#requests.Session.proxies>`__.
+See the `requests documentation <https://requests.readthedocs.io/en/v3.0.0/api/#requests.Session.proxies>`__ for more information.
