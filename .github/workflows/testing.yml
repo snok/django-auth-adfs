@@ -64,7 +64,6 @@ jobs:
           source .venv/bin/activate
           pip install "Django==${{ matrix.django-version }}"
           pip install "djangorestframework==${{ matrix.drf-version }}"
-          pip install pyjwt==1.7.1
       - name: Run tests
         run: |
           source .venv/bin/activate
