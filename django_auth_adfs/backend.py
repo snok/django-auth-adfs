@@ -161,7 +161,8 @@ class AdfsBaseBackend(ModelBackend):
             user.set_unusable_password()
         return user
 
-    def update_user_attributes(self, user, claims):
+    # https://github.com/snok/django-auth-adfs/issues/241
+    def update_user_attributes(self, user, claims, mapped_fields=settings.CLAIM_MAPPING):
         """
         Updates user attributes based on the CLAIM_MAPPING setting.
 
@@ -172,22 +173,25 @@ class AdfsBaseBackend(ModelBackend):
 
         required_fields = [field.name for field in user._meta.fields if field.blank is False]
 
-        for field, claim in settings.CLAIM_MAPPING.items():
-            if hasattr(user, field):
-                if claim in claims:
-                    setattr(user, field, claims[claim])
-                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, claims[claim])
-                else:
-                    if field in required_fields:
-                        msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
-                        raise ImproperlyConfigured(msg.format(claim))
+        for field, claim in mapped_fields.items():
+            if type(claim) != dict:
+                if hasattr(user, field):
+                    if claim in claims:
+                        setattr(user, field, claims[claim])
+                        logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, claims[claim])
                     else:
-                        logger.warning("Claim '%s' for user field '%s' was not found in "
-                                       "the access token for user '%s'. "
-                                       "Field is not required and will be left empty", claim, field, user)
+                        if field in required_fields:
+                            msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
+                            raise ImproperlyConfigured(msg.format(claim))
+                        else:
+                            logger.warning("Claim '%s' for user field '%s' was not found in "
+                                        "the access token for user '%s'. "
+                                        "Field is not required and will be left empty", claim, field, user)
+                else:
+                    msg = "User model has no field named '{}'. Check ADFS claims mapping."
+                    raise ImproperlyConfigured(msg.format(field))
             else:
-                msg = "User model has no field named '{}'. Check ADFS claims mapping."
-                raise ImproperlyConfigured(msg.format(field))
+                self.update_user_attributes(getattr(user, field), claims, mapped_fields=mapped_fields[field])
 
     def update_user_groups(self, user, claims):
         """
