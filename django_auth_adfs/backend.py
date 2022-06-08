@@ -165,6 +165,9 @@ class AdfsBaseBackend(ModelBackend):
     def update_user_attributes(self, user, claims, claim_mapping=settings.CLAIM_MAPPING):
         """
         Updates user attributes based on the CLAIM_MAPPING setting.
+        
+        Recursively updates related fields if CLAIM_MAPPING settings has
+        nested dictionaries.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
@@ -178,20 +181,20 @@ class AdfsBaseBackend(ModelBackend):
                 if not isinstance(claim, dict):
                     if claim in claims:
                         setattr(user, field, claims[claim])
-                        logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, claims[claim])
+                        logger.debug("Attribute '%s' for instance '%s' was set to '%s'.", field, user, claims[claim])
                     else:
                         if field in required_fields:
                             msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
                             raise ImproperlyConfigured(msg.format(claim))
                         else:
-                            logger.warning("Claim '%s' for user field '%s' was not found in "
-                                        "the access token for user '%s'. "
+                            logger.warning("Claim '%s' for field '%s' was not found in "
+                                        "the access token for instance '%s'. "
                                         "Field is not required and will be left empty", claim, field, user)
                 else:
                     self.update_user_attributes(getattr(user, field), claims, claim_mapping=claim)
             else:
-                msg = "User model has no field named '{}'. Check ADFS claims mapping."
-                raise ImproperlyConfigured(msg.format(field))
+                msg = "Model '{}' has no field named '{}'. Check ADFS claims mapping."
+                raise ImproperlyConfigured(msg.format(user._meta.model_name, field))
 
     def update_user_groups(self, user, claims):
         """
