@@ -452,3 +452,11 @@ VERSION
 * **Type**: ``string``
 
 Version of the Azure Active Directory endpoint version. By default it is set to ``v1.0``. At the time of writing this documentation, it can also be set to ``v2.0``. For new projects, ``v2.0`` is recommended. ``v1.0`` is kept as a default for backwards compatibility.
+
+PROXIES
+-------
+* **Default**: ``None``
+* **Type**: ``dict``
+
+An optional proxy for all communication with the server. Example: ``{'http': '10.0.0.1', 'https': '10.0.0.2'}``
+See the `requests documentation <https://requests.readthedocs.io/en/v3.0.0/api/#requests.Session.proxies>`__ for more information.
