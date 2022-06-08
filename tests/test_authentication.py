@@ -255,6 +255,23 @@ class AuthenticationTests(TestCase):
             self.assertTrue(user.is_superuser)
 
     @mock_adfs("2016")
+    def test_extended_model_claim_mapping(self):
+        claim_mapping = {
+            "profile": {
+                "employee_id": 182
+            },
+        }
+        with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", claim_mapping):
+            backend = AdfsAuthCodeBackend()
+
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            self.assertEqual(user.profile.employee_id, 182)
+
+    @mock_adfs("2016")
     def test_authentication(self):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
