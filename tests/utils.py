@@ -115,6 +115,7 @@ def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None):
         "family_name": "Doe",
         "email": "john.doe@example.com",
         "sub": "john.doe@example.com",
+        "custom_employee_id": 182,
         "user_is_staff": "True",
         "user_is_superuser": "yes",
         "appid": "your-configured-client-id",

@@ -10,14 +10,15 @@ except ImportError:  # Python 2.7
 from copy import deepcopy
 
 from django.contrib.auth.models import User, Group
-from .models import Profile
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db.models.signals import post_save
 from django.test import TestCase, RequestFactory
 from mock import Mock, patch
 
 from django_auth_adfs import signals
 from django_auth_adfs.backend import AdfsAuthCodeBackend
 from django_auth_adfs.config import ProviderConfig, Settings
+from .models import Profile
 from .utils import mock_adfs
 
 
@@ -256,10 +257,42 @@ class AuthenticationTests(TestCase):
             self.assertTrue(user.is_superuser)
 
     @mock_adfs("2016")
-    def test_extended_model_claim_mapping(self):
+    def test_extended_model_claim_mapping_missing_instance(self):
+
         claim_mapping = {
+            "first_name": "given_name",
+            "last_name": "family_name",
+            "email": "email",
             "profile": {
-                "employee_id": 182
+                "employee_id": "custom_employee_id",
+            },
+        }
+        with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", claim_mapping):
+            backend = AdfsAuthCodeBackend()
+
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            with self.assertRaises(ObjectDoesNotExist):
+                user.profile  # noqa
+
+    @mock_adfs("2016")
+    def test_extended_model_claim_mapping(self):
+
+        def create_profile(sender, instance, created, **kwargs):
+            """Create a profile for any user that's created."""
+            if created:
+                Profile.objects.create(user=instance)
+        post_save.connect(create_profile, sender=User)
+
+        claim_mapping = {
+            "first_name": "given_name",
+            "last_name": "family_name",
+            "email": "email",
+            "profile": {
+                "employee_id": "custom_employee_id",
             },
         }
         with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", claim_mapping):

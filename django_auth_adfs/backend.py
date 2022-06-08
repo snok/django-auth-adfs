@@ -162,10 +162,10 @@ class AdfsBaseBackend(ModelBackend):
         return user
 
     # https://github.com/snok/django-auth-adfs/issues/241
-    def update_user_attributes(self, user, claims, claim_mapping=settings.CLAIM_MAPPING):
+    def update_user_attributes(self, user, claims, claim_mapping=None):
         """
         Updates user attributes based on the CLAIM_MAPPING setting.
-        
+
         Recursively updates related fields if CLAIM_MAPPING settings has
         nested dictionaries.
 
@@ -173,11 +173,12 @@ class AdfsBaseBackend(ModelBackend):
             user (django.contrib.auth.models.User): User model instance
             claims (dict): claims from the access token
         """
-
-        required_fields = [field.name for field in user._meta.fields if field.blank is False]
+        if claim_mapping is None:
+            claim_mapping = settings.CLAIM_MAPPING
+        required_fields = [field.name for field in user._meta.get_fields() if getattr(field, 'blank', True) is False]
 
         for field, claim in claim_mapping.items():
-            if hasattr(user, field):
+            if hasattr(user, field) or user._meta.fields_map.get(field):
                 if not isinstance(claim, dict):
                     if claim in claims:
                         setattr(user, field, claims[claim])
@@ -188,10 +189,14 @@ class AdfsBaseBackend(ModelBackend):
                             raise ImproperlyConfigured(msg.format(claim))
                         else:
                             logger.warning("Claim '%s' for field '%s' was not found in "
-                                        "the access token for instance '%s'. "
-                                        "Field is not required and will be left empty", claim, field, user)
+                                           "the access token for instance '%s'. "
+                                           "Field is not required and will be left empty", claim, field, user)
                 else:
-                    self.update_user_attributes(getattr(user, field), claims, claim_mapping=claim)
+                    try:
+                        self.update_user_attributes(getattr(user, field), claims, claim_mapping=claim)
+                    except ObjectDoesNotExist:
+                        logger.warning("Object for field '{}' does not exist for: '{}'.".format(field, user))
+
             else:
                 msg = "Model '{}' has no field named '{}'. Check ADFS claims mapping."
                 raise ImproperlyConfigured(msg.format(user._meta.model_name, field))
