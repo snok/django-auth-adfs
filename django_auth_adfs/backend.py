@@ -162,7 +162,7 @@ class AdfsBaseBackend(ModelBackend):
         return user
 
     # https://github.com/snok/django-auth-adfs/issues/241
-    def update_user_attributes(self, user, claims, mapped_fields=settings.CLAIM_MAPPING):
+    def update_user_attributes(self, user, claims, claim_mapping=settings.CLAIM_MAPPING):
         """
         Updates user attributes based on the CLAIM_MAPPING setting.
 
@@ -173,9 +173,9 @@ class AdfsBaseBackend(ModelBackend):
 
         required_fields = [field.name for field in user._meta.fields if field.blank is False]
 
-        for field, claim in mapped_fields.items():
-            if type(claim) != dict:
-                if hasattr(user, field):
+        for field, claim in claim_mapping.items():
+            if hasattr(user, field):
+                if not isinstance(claim, dict):
                     if claim in claims:
                         setattr(user, field, claims[claim])
                         logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, claims[claim])
@@ -188,10 +188,10 @@ class AdfsBaseBackend(ModelBackend):
                                         "the access token for user '%s'. "
                                         "Field is not required and will be left empty", claim, field, user)
                 else:
-                    msg = "User model has no field named '{}'. Check ADFS claims mapping."
-                    raise ImproperlyConfigured(msg.format(field))
+                    self.update_user_attributes(getattr(user, field), claims, claim_mapping=claim)
             else:
-                self.update_user_attributes(getattr(user, field), claims, mapped_fields=mapped_fields[field])
+                msg = "User model has no field named '{}'. Check ADFS claims mapping."
+                raise ImproperlyConfigured(msg.format(field))
 
     def update_user_groups(self, user, claims):
         """
