@@ -113,6 +113,20 @@ example
                           "email": "email"},
     }
 
+The dictionary can also map extra details to the Django user account using an `Extension of the User model <https://docs.djangoproject.com/en/4.0/topics/auth/customizing/#extending-the-existing-user-model>`_
+Set a dictionary as value in the CLAIM_MAPPING setting with as key the name User model. 
+
+example
+
+.. code-block:: python
+
+    'CLAIM_MAPPING': {'first_name': 'given_name', 
+                      'last_name': 'family_name', 
+                      'email': 'upn', 
+                      'userprofile': {
+                          'employee_id': 'employeeid'
+                          },
+
 .. NOTE::
    You can find the short name for the claims you configure in the ADFS management console underneath
    **ADFS** ➜ **Service** ➜ **Claim Descriptions**
