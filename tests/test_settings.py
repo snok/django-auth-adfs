@@ -6,6 +6,7 @@ from django.test import TestCase, SimpleTestCase, override_settings
 from mock import patch
 from django_auth_adfs.config import django_settings
 from django_auth_adfs.config import Settings
+from django_auth_adfs.config import ProviderConfig
 from .custom_config import Settings as CustomSettings
 
 
@@ -94,6 +95,17 @@ class SettingsTests(TestCase):
         with patch("django_auth_adfs.config.django_settings", settings):
             with self.assertRaises(ImproperlyConfigured):
                 Settings()
+
+    def test_configured_proxy(self):
+        settings = Settings()
+        settings.PROXIES = {'http': '10.0.0.1'}
+        with patch("django_auth_adfs.config.settings", settings):
+            provider_config = ProviderConfig()
+            self.assertEqual(provider_config.session.proxies, {'http': '10.0.0.1'})
+
+    def test_no_configured_proxy(self):
+        provider_config = ProviderConfig()
+        self.assertIsNone(provider_config.session.proxies)
 
 
 class CustomSettingsTests(SimpleTestCase):
