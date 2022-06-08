@@ -10,7 +10,7 @@ except ImportError:  # Python 2.7
 from copy import deepcopy
 
 from django.contrib.auth.models import User, Group
-from models import Profile
+from .models import Profile
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase, RequestFactory
 from mock import Mock, patch
