@@ -75,6 +75,7 @@ class Settings(object):
         self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
             request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
         )
+        self.PROXIES = None
 
         self.VERSION = 'v1.0'
 
@@ -195,6 +196,8 @@ class ProviderConfig(object):
         adapter = requests.adapters.HTTPAdapter(max_retries=retry)
         self.session.mount('https://', adapter)
         self.session.verify = settings.CA_BUNDLE
+        if hasattr(settings, "PROXIES"):
+            self.session.proxies = settings.PROXIES
 
     def load_config(self):
         # If loaded data is too old, reload it again
@@ -337,7 +340,11 @@ class ProviderConfig(object):
             "state": redirect_to,
         })
         if self._mode == "openid_connect":
-            query["scope"] = "openid"
+            if settings.VERSION == 'v2.0':
+                query["scope"] = f"openid api://{settings.RELYING_PARTY_ID}/.default"
+                query.pop("resource")
+            else:
+                query["scope"] = "openid"
             if (disable_sso is None and settings.DISABLE_SSO) or disable_sso is True:
                 query["prompt"] = "login"
             if force_mfa:

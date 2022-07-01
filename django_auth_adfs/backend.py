@@ -161,33 +161,45 @@ class AdfsBaseBackend(ModelBackend):
             user.set_unusable_password()
         return user
 
-    def update_user_attributes(self, user, claims):
+    # https://github.com/snok/django-auth-adfs/issues/241
+    def update_user_attributes(self, user, claims, claim_mapping=None):
         """
         Updates user attributes based on the CLAIM_MAPPING setting.
+
+        Recursively updates related fields if CLAIM_MAPPING settings has
+        nested dictionaries.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
             claims (dict): claims from the access token
         """
+        if claim_mapping is None:
+            claim_mapping = settings.CLAIM_MAPPING
+        required_fields = [field.name for field in user._meta.get_fields() if getattr(field, 'blank', True) is False]
 
-        required_fields = [field.name for field in user._meta.fields if field.blank is False]
-
-        for field, claim in settings.CLAIM_MAPPING.items():
-            if hasattr(user, field):
-                if claim in claims:
-                    setattr(user, field, claims[claim])
-                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, claims[claim])
-                else:
-                    if field in required_fields:
-                        msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
-                        raise ImproperlyConfigured(msg.format(claim))
+        for field, claim in claim_mapping.items():
+            if hasattr(user, field) or user._meta.fields_map.get(field):
+                if not isinstance(claim, dict):
+                    if claim in claims:
+                        setattr(user, field, claims[claim])
+                        logger.debug("Attribute '%s' for instance '%s' was set to '%s'.", field, user, claims[claim])
                     else:
-                        logger.warning("Claim '%s' for user field '%s' was not found in "
-                                       "the access token for user '%s'. "
-                                       "Field is not required and will be left empty", claim, field, user)
+                        if field in required_fields:
+                            msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
+                            raise ImproperlyConfigured(msg.format(claim))
+                        else:
+                            logger.warning("Claim '%s' for field '%s' was not found in "
+                                           "the access token for instance '%s'. "
+                                           "Field is not required and will be left empty", claim, field, user)
+                else:
+                    try:
+                        self.update_user_attributes(getattr(user, field), claims, claim_mapping=claim)
+                    except ObjectDoesNotExist:
+                        logger.warning("Object for field '{}' does not exist for: '{}'.".format(field, user))
+
             else:
-                msg = "User model has no field named '{}'. Check ADFS claims mapping."
-                raise ImproperlyConfigured(msg.format(field))
+                msg = "Model '{}' has no field named '{}'. Check ADFS claims mapping."
+                raise ImproperlyConfigured(msg.format(user._meta.model_name, field))
 
     def update_user_groups(self, user, claims):
         """
@@ -280,13 +292,13 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
     """
 
     def authenticate(self, request=None, authorization_code=None, **kwargs):
-        # If loaded data is too old, reload it again
-        provider_config.load_config()
-
         # If there's no token or code, we pass control to the next authentication backend
         if authorization_code is None or authorization_code == '':
             logger.debug("django_auth_adfs authentication backend was called but no authorization code was received")
             return
+
+        # If loaded data is too old, reload it again
+        provider_config.load_config()
 
         adfs_response = self.exchange_auth_code(authorization_code, request)
         access_token = adfs_response["access_token"]

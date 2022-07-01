@@ -10,13 +10,15 @@ except ImportError:  # Python 2.7
 from copy import deepcopy
 
 from django.contrib.auth.models import User, Group
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db.models.signals import post_save
 from django.test import TestCase, RequestFactory
 from mock import Mock, patch
 
 from django_auth_adfs import signals
 from django_auth_adfs.backend import AdfsAuthCodeBackend
 from django_auth_adfs.config import ProviderConfig, Settings
+from .models import Profile
 from .utils import mock_adfs
 
 
@@ -255,6 +257,55 @@ class AuthenticationTests(TestCase):
             self.assertTrue(user.is_superuser)
 
     @mock_adfs("2016")
+    def test_extended_model_claim_mapping_missing_instance(self):
+
+        claim_mapping = {
+            "first_name": "given_name",
+            "last_name": "family_name",
+            "email": "email",
+            "profile": {
+                "employee_id": "custom_employee_id",
+            },
+        }
+        with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", claim_mapping):
+            backend = AdfsAuthCodeBackend()
+
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            with self.assertRaises(ObjectDoesNotExist):
+                user.profile  # noqa
+
+    @mock_adfs("2016")
+    def test_extended_model_claim_mapping(self):
+
+        def create_profile(sender, instance, created, **kwargs):
+            """Create a profile for any user that's created."""
+            if created:
+                Profile.objects.create(user=instance)
+        post_save.connect(create_profile, sender=User)
+
+        claim_mapping = {
+            "first_name": "given_name",
+            "last_name": "family_name",
+            "email": "email",
+            "profile": {
+                "employee_id": "custom_employee_id",
+            },
+        }
+        with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", claim_mapping):
+            backend = AdfsAuthCodeBackend()
+
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            self.assertEqual(user.profile.employee_id, 182)
+
+    @mock_adfs("2016")
     def test_authentication(self):
         response = self.client.get("/oauth2/callback", {'code': 'testcode'})
         self.assertEqual(response.status_code, 302)
@@ -330,7 +381,7 @@ class AuthenticationTests(TestCase):
         self.assertEqual(qs, qs_expected)
 
     @mock_adfs("azure")
-    def test_oauth_redir_azure(self):
+    def test_oauth_redir_azure_version_one(self):
         from django_auth_adfs.config import django_settings
         settings = deepcopy(django_settings)
         del settings.AUTH_ADFS["SERVER"]
@@ -348,6 +399,32 @@ class AuthenticationTests(TestCase):
                 'state': ['L3Rlc3Qv'],
                 'response_type': ['code'],
                 'resource': ['your-adfs-RPT-name'],
+                'redirect_uri': ['http://testserver/oauth2/callback']
+            }
+            self.assertEqual(redir.scheme, 'https')
+            self.assertEqual(redir.hostname, 'login.microsoftonline.com')
+            self.assertEqual(redir.path.rstrip("/"), '/01234567-89ab-cdef-0123-456789abcdef/oauth2/authorize')
+            self.assertEqual(qs, sq_expected)
+
+    @mock_adfs("azure")
+    def test_oauth_redir_azure_version_two(self):
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["VERSION"] = 'v2.0'
+        with patch("django_auth_adfs.config.django_settings", settings), \
+                patch("django_auth_adfs.config.settings", Settings()), \
+                patch("django_auth_adfs.views.provider_config", ProviderConfig()):
+            response = self.client.get("/oauth2/login?next=/test/")
+            self.assertEqual(response.status_code, 302)
+            redir = urlparse(response["Location"])
+            qs = parse_qs(redir.query)
+            sq_expected = {
+                'scope': ['openid api://your-adfs-RPT-name/.default'],
+                'client_id': ['your-configured-client-id'],
+                'state': ['L3Rlc3Qv'],
+                'response_type': ['code'],
                 'redirect_uri': ['http://testserver/oauth2/callback']
             }
             self.assertEqual(redir.scheme, 'https')
