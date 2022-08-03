@@ -175,8 +175,14 @@ class RestFrameworkIntegrationTests(TestCase):
             with patch('django_auth_adfs.backend.settings', Settings()):
                 with patch("django_auth_adfs.config.settings", Settings()):
                     with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                        with patch("django_auth_adfs.backend.AdfsBaseBackend.get_obo_access_token", return_value="123456"):
-                            with patch("django_auth_adfs.backend.AdfsBaseBackend.get_group_memberships_from_ms_graph", return_value=["group1", "group2"]):
+                        with patch(
+                            "django_auth_adfs.backend.AdfsBaseBackend.get_obo_access_token",
+                            return_value="123456"
+                        ):
+                            with patch(
+                                "django_auth_adfs.backend.AdfsBaseBackend.get_group_memberships_from_ms_graph",
+                                return_value=["group1", "group2"]
+                            ):
                                 user, _ = self.drf_auth_class.authenticate(request)
                                 self.assertEqual(user.username, "testuser")
                                 self.assertEqual(user.groups.all()[0].name, "group1")

@@ -114,7 +114,6 @@ class AdfsBaseBackend(ModelBackend):
             claim_groups.append(group_data["displayName"])
         return claim_groups
 
-
     def validate_access_token(self, access_token):
         for idx, key in enumerate(provider_config.signing_keys):
             try:

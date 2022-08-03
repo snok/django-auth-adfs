@@ -144,7 +144,10 @@ def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, 
         }
         claims['_claim_sources'] = {
             "src1": {
-                "endpoint": "https://graph.windows.net/01234567-89ab-cdef-0123-456789abcdef/users/23456789-01bc-defg-1234-56789bcdefg/getMemberObjects",
+                "endpoint": (
+                    "https://graph.windows.net/01234567-89ab-cdef-0123-456789abcdef"
+                    "/users/23456789-01bc-defg-1234-56789bcdefg/getMemberObjects"
+                ),
             }
         }
     token = jwt.encode(claims, signing_key_b, algorithm="RS256")
