@@ -180,6 +180,7 @@ class ProviderConfig(object):
         self.token_endpoint = None
         self.end_session_endpoint = None
         self.issuer = None
+        self.msgraph_endpoint = None
 
         allowed_methods = frozenset([
             'HEAD', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'TRACE', 'POST'
@@ -229,6 +230,7 @@ class ProviderConfig(object):
             logger.info("token endpoint:         %s", self.token_endpoint)
             logger.info("end session endpoint:   %s", self.end_session_endpoint)
             logger.info("issuer:                 %s", self.issuer)
+            logger.info("msgraph endpoint:       %s", self.msgraph_endpoint)
 
     def _load_openid_config(self):
         if settings.VERSION != 'v1.0':
@@ -262,8 +264,10 @@ class ProviderConfig(object):
             self.end_session_endpoint = openid_cfg["end_session_endpoint"]
             if settings.TENANT_ID != 'adfs':
                 self.issuer = openid_cfg["issuer"]
+                self.msgraph_endpoint = openid_cfg["msgraph_host"]
             else:
                 self.issuer = openid_cfg["access_token_issuer"]
+                self.msgraph_endpoint = "graph.microsoft.com"
         except KeyError:
             raise ConfigLoadError
         return True
@@ -299,6 +303,7 @@ class ProviderConfig(object):
         self.authorization_endpoint = base_url + "/oauth2/authorize"
         self.token_endpoint = base_url + "/oauth2/token"
         self.end_session_endpoint = base_url + "/ls/?wa=wsignout1.0"
+        self.msgraph_endpoint = "graph.microsoft.com"
         return True
 
     def _load_keys(self, certificates):

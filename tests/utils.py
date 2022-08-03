@@ -93,12 +93,17 @@ def build_access_token_azure_guest_with_idp(request):
     return do_build_access_token(request, issuer, schema='dummy_tenant_id', no_upn=True, idp="guest_idp")
 
 
+def build_access_token_azure_groups_in_claim_source(request):
+    issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
+    return do_build_access_token(request, issuer, groups_in_claim_names=True)
+
+
 def do_build_mfa_error(request):
     response = {'error_description': 'AADSTS50076'}
     return 400, [], json.dumps(response)
 
 
-def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None):
+def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, groups_in_claim_names=False):
     issued_at = int(time.time())
     expires = issued_at + 3600
     auth_time = datetime.utcnow()
@@ -130,6 +135,18 @@ def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None):
         claims['groups'] = claims['group']
     if no_upn:
         del claims['upn']
+    if groups_in_claim_names:
+        if 'groups' in claims:
+            del claims['groups']
+        del claims['group']
+        claims['_claim_names'] = {
+            "groups": "src1",
+        }
+        claims['_claim_sources'] = {
+            "src1": {
+                "endpoint": "https://graph.windows.net/01234567-89ab-cdef-0123-456789abcdef/users/23456789-01bc-defg-1234-56789bcdefg/getMemberObjects",
+            }
+        }
     token = jwt.encode(claims, signing_key_b, algorithm="RS256")
     response = {
         'resource': 'django_website.adfs.relying_party_id',
