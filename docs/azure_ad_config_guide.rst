@@ -225,3 +225,11 @@ Here we can give our frontend the permission scope we created earlier. Press **D
 
 .. image:: _static/AzureAD/19_add-permission-2.PNG
     :scale: 50 %
+
+------------
+
+Finally, sometimes the plugin will need to obtain the user groups claim from MS Graph (for example when the user has too many groups to fit in the access token), to ensure the plugin can do this successfully add the GroupMember.Read.All permission.
+
+
+.. image:: _static/AzureAD/20_add-permission-3.PNG
+    :scale: 50 %

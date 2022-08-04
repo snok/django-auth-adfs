@@ -108,7 +108,10 @@ class AdfsBaseBackend(ModelBackend):
         claim_groups = []
         for group_data in response.json()["value"]:
             if group_data["displayName"] is None:
-                logger.error("The application does not have the required permission to read user groups from MS Graph")
+                logger.error(
+                    "The application does not have the required permission to read user groups from "
+                    "MS Graph (GroupMember.Read.All)"
+                )
                 raise PermissionDenied
 
             claim_groups.append(group_data["displayName"])
