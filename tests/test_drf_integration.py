@@ -162,7 +162,7 @@ class RestFrameworkIntegrationTests(TestCase):
                         with self.assertRaises(exceptions.AuthenticationFailed):
                             self.drf_auth_class.authenticate(request)
 
-    @mock_adfs("azure")
+    @mock_adfs("azure", requires_obo=True)
     def test_process_group_claim_from_ms_graph(self):
         access_token_header = "Bearer {}".format(self.access_token_azure_groups_in_claim_source)
         request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
@@ -175,18 +175,61 @@ class RestFrameworkIntegrationTests(TestCase):
             with patch('django_auth_adfs.backend.settings', Settings()):
                 with patch("django_auth_adfs.config.settings", Settings()):
                     with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                        with patch(
-                            "django_auth_adfs.backend.AdfsBaseBackend.get_obo_access_token",
-                            return_value="123456"
-                        ):
-                            with patch(
-                                "django_auth_adfs.backend.AdfsBaseBackend.get_group_memberships_from_ms_graph",
-                                return_value=["group1", "group2"]
-                            ):
-                                user, _ = self.drf_auth_class.authenticate(request)
-                                self.assertEqual(user.username, "testuser")
-                                self.assertEqual(user.groups.all()[0].name, "group1")
-                                self.assertEqual(user.groups.all()[1].name, "group2")
+                        user, _ = self.drf_auth_class.authenticate(request)
+                        self.assertEqual(user.username, "testuser")
+                        self.assertEqual(user.groups.all()[0].name, "group1")
+                        self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("azure", requires_obo=True, mfa_error=True)
+    def test_get_obo_access_token_mfa_error(self):
+        access_token_header = "Bearer {}".format(self.access_token_azure_groups_in_claim_source)
+        request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
+
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch('django_auth_adfs.backend.settings', Settings()):
+                with patch("django_auth_adfs.config.settings", Settings()):
+                    with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                        with self.assertRaises(AuthenticationFailed):
+                            self.drf_auth_class.authenticate(request)
+
+    @mock_adfs("azure", requires_obo=True, version='v2.0')
+    def test_get_obo_access_token_version_2(self):
+        access_token_header = "Bearer {}".format(self.access_token_azure_groups_in_claim_source)
+        request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
+
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["VERSION"] = 'v2.0'
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch('django_auth_adfs.backend.settings', Settings()):
+                with patch("django_auth_adfs.config.settings", Settings()):
+                    with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                        user, _ = self.drf_auth_class.authenticate(request)
+                        self.assertEqual(user.username, "testuser")
+                        self.assertEqual(user.groups.all()[0].name, "group1")
+                        self.assertEqual(user.groups.all()[1].name, "group2")
+
+    @mock_adfs("azure", requires_obo=True, missing_graph_group_perm=True)
+    def test_missing_ms_graph_group_permission(self):
+        access_token_header = "Bearer {}".format(self.access_token_azure_groups_in_claim_source)
+        request = RequestFactory().get('/api', HTTP_AUTHORIZATION=access_token_header)
+
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        with patch("django_auth_adfs.config.django_settings", settings):
+            with patch('django_auth_adfs.backend.settings', Settings()):
+                with patch("django_auth_adfs.config.settings", Settings()):
+                    with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
+                        with self.assertRaises(AuthenticationFailed):
+                            self.drf_auth_class.authenticate(request)
 
     @mock_adfs("2012")
     def test_access_token_exceptions(self):

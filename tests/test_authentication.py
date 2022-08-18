@@ -164,6 +164,17 @@ class AuthenticationTests(TestCase):
             self.assertEqual(user.email, "john.doe@example.com")
             self.assertEqual(len(user.groups.all()), 0)
 
+    @mock_adfs("2016")
+    def test_no_group_claim(self):
+        backend = AdfsAuthCodeBackend()
+        with patch("django_auth_adfs.backend.settings.GROUPS_CLAIM", None):
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            self.assertEqual(len(user.groups.all()), 0)
+
     @mock_adfs("2016", empty_keys=True)
     def test_empty_keys(self):
         backend = AdfsAuthCodeBackend()
