@@ -42,6 +42,81 @@ class AdfsBaseBackend(ModelBackend):
         adfs_response = response.json()
         return adfs_response
 
+    def get_obo_access_token(self, access_token):
+        """
+        Gets an On Behalf Of (OBO) access token, which is required to make queries against MS Graph
+
+        Args:
+            access_token (str): Original authorization access token from the user
+
+        Returns:
+            obo_access_token (str): OBO access token that can be used with the MS Graph API
+        """
+        logger.debug("Getting OBO access token: %s", provider_config.token_endpoint)
+        data = {
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            "client_id": settings.CLIENT_ID,
+            "client_secret": settings.CLIENT_SECRET,
+            "assertion": access_token,
+            "requested_token_use": "on_behalf_of",
+        }
+        if provider_config.token_endpoint.endswith("/v2.0/token"):
+            data["scope"] = 'GroupMember.Read.All'
+        else:
+            data["resource"] = 'https://graph.microsoft.com'
+
+        response = provider_config.session.get(provider_config.token_endpoint, data=data, timeout=settings.TIMEOUT)
+        # 200 = valid token received
+        # 400 = 'something' is wrong in our request
+        if response.status_code == 400:
+            logger.error("ADFS server returned an error: %s", response.json()["error_description"])
+            raise PermissionDenied
+
+        if response.status_code != 200:
+            logger.error("Unexpected ADFS response: %s", response.content.decode())
+            raise PermissionDenied
+
+        obo_access_token = response.json()["access_token"]
+        logger.debug("Received OBO access token: %s", obo_access_token)
+        return obo_access_token
+
+    def get_group_memberships_from_ms_graph(self, obo_access_token):
+        """
+        Looks up a users group membership from the MS Graph API
+
+        Args:
+            obo_access_token (str): Access token obtained from the OBO authorization endpoint
+
+        Returns:
+            claim_groups (list): List of the users group memberships
+        """
+        graph_url = "https://{}/v1.0/me/transitiveMemberOf/microsoft.graph.group".format(
+            provider_config.msgraph_endpoint
+        )
+        headers = {"Authorization": "Bearer {}".format(obo_access_token)}
+        response = provider_config.session.get(graph_url, headers=headers, timeout=settings.TIMEOUT)
+        # 200 = valid token received
+        # 400 = 'something' is wrong in our request
+        if response.status_code in [400, 401]:
+            logger.error("MS Graph server returned an error: %s", response.json()["message"])
+            raise PermissionDenied
+
+        if response.status_code != 200:
+            logger.error("Unexpected MS Graph response: %s", response.content.decode())
+            raise PermissionDenied
+
+        claim_groups = []
+        for group_data in response.json()["value"]:
+            if group_data["displayName"] is None:
+                logger.error(
+                    "The application does not have the required permission to read user groups from "
+                    "MS Graph (GroupMember.Read.All)"
+                )
+                raise PermissionDenied
+
+            claim_groups.append(group_data["displayName"])
+        return claim_groups
+
     def validate_access_token(self, access_token):
         for idx, key in enumerate(provider_config.signing_keys):
             try:
@@ -100,10 +175,11 @@ class AdfsBaseBackend(ModelBackend):
         if not claims:
             raise PermissionDenied
 
+        groups = self.process_user_groups(claims, access_token)
         user = self.create_user(claims)
         self.update_user_attributes(user, claims)
-        self.update_user_groups(user, claims)
-        self.update_user_flags(user, claims)
+        self.update_user_groups(user, groups)
+        self.update_user_flags(user, claims, groups)
 
         signals.post_authenticate.send(
             sender=self,
@@ -115,6 +191,41 @@ class AdfsBaseBackend(ModelBackend):
         user.full_clean()
         user.save()
         return user
+
+    def process_user_groups(self, claims, access_token):
+        """
+        Checks the user groups are in the claim or pulls them from MS Graph if
+        applicable
+
+        Args:
+            claims (dict): claims from the access token
+            access_token (str): Used to make an OBO authentication request if
+            groups must be obtained from Microsoft Graph
+
+        Returns:
+            groups (list): Groups the user is a member of, taken from the access token or MS Graph
+        """
+        groups = []
+        if settings.GROUPS_CLAIM is None:
+            logger.debug("No group claim has been configured")
+            return groups
+
+        if settings.GROUPS_CLAIM in claims:
+            groups = claims[settings.GROUPS_CLAIM]
+            if not isinstance(groups, list):
+                groups = [groups, ]
+        elif (
+            settings.TENANT_ID != "adfs"
+            and "_claim_names" in claims
+            and settings.GROUPS_CLAIM in claims["_claim_names"]
+        ):
+            obo_access_token = self.get_obo_access_token(access_token)
+            groups = self.get_group_memberships_from_ms_graph(obo_access_token)
+        else:
+            logger.debug("The configured groups claim %s was not found in the access token",
+                         settings.GROUPS_CLAIM)
+
+        return groups
 
     def create_user(self, claims):
         """
@@ -201,26 +312,18 @@ class AdfsBaseBackend(ModelBackend):
                 msg = "Model '{}' has no field named '{}'. Check ADFS claims mapping."
                 raise ImproperlyConfigured(msg.format(user._meta.model_name, field))
 
-    def update_user_groups(self, user, claims):
+    def update_user_groups(self, user, claim_groups):
         """
         Updates user group memberships based on the GROUPS_CLAIM setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
-            claims (dict): Claims from the access token
+            claim_groups (list): User groups from the access token / MS Graph
         """
         if settings.GROUPS_CLAIM is not None:
             # Update the user's group memberships
             django_groups = [group.name for group in user.groups.all()]
 
-            if settings.GROUPS_CLAIM in claims:
-                claim_groups = claims[settings.GROUPS_CLAIM]
-                if not isinstance(claim_groups, list):
-                    claim_groups = [claim_groups, ]
-            else:
-                logger.debug("The configured groups claim '%s' was not found in the access token",
-                             settings.GROUPS_CLAIM)
-                claim_groups = []
             if sorted(claim_groups) != sorted(django_groups):
                 existing_groups = list(Group.objects.filter(name__in=claim_groups).iterator())
                 existing_group_names = frozenset(group.name for group in existing_groups)
@@ -241,29 +344,22 @@ class AdfsBaseBackend(ModelBackend):
                                 pass
                 user.groups.set(existing_groups + new_groups)
 
-    def update_user_flags(self, user, claims):
+    def update_user_flags(self, user, claims, claim_groups):
         """
         Updates user boolean attributes based on the BOOLEAN_CLAIM_MAPPING setting.
 
         Args:
             user (django.contrib.auth.models.User): User model instance
             claims (dict): Claims from the access token
+            claim_groups (list): User groups from the access token / MS Graph
         """
         if settings.GROUPS_CLAIM is not None:
-            if settings.GROUPS_CLAIM in claims:
-                access_token_groups = claims[settings.GROUPS_CLAIM]
-                if not isinstance(access_token_groups, list):
-                    access_token_groups = [access_token_groups, ]
-            else:
-                logger.debug("The configured group claim was not found in the access token")
-                access_token_groups = []
-
             for flag, group in settings.GROUP_TO_FLAG_MAPPING.items():
                 if hasattr(user, flag):
                     if not isinstance(group, list):
                         group = [group]
 
-                    if any(group_list_item in access_token_groups for group_list_item in group):
+                    if any(group_list_item in claim_groups for group_list_item in group):
                         value = True
                     else:
                         value = False
