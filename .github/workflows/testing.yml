@@ -10,11 +10,11 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: "3"
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip
@@ -39,14 +39,9 @@ jobs:
             python-version: 3.7
           - django-version: 4.1
             python-version: 3.7
-          # DRF 3.10 is incompatible with Django v4+
-          - django-version: 4.0
-            drf-version: 3.10
-          - django-version: 4.1
-            drf-version: 3.10
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: snok/install-poetry@v1
@@ -54,7 +49,7 @@ jobs:
           virtualenvs-in-project: true
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
