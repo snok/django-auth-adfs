@@ -414,7 +414,7 @@ class AdfsAccessTokenBackend(AdfsBaseBackend):
 
         # If there's no token or code, we pass control to the next authentication backend
         if access_token is None or access_token == '':
-            logger.debug("django_auth_adfs authentication backend was called but no authorization code was received")
+            logger.debug("django_auth_adfs authentication backend was called but no access token was received")
             return
 
         access_token = access_token.decode()
