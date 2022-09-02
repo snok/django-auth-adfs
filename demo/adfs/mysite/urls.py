@@ -23,19 +23,17 @@ from django.views.generic.base import TemplateView
 admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
-    path('', TemplateView.as_view(template_name='home.html'), name='home'),
-    path('polls/', include('polls.urls')),
-    path('api/', include('polls.api.urls')),
-
-    path('admin/', admin.site.urls, name='admin'),
-
+    path("", TemplateView.as_view(template_name="home.html"), name="home"),
+    path("polls/", include("polls.urls")),
+    path("api/", include("polls.api.urls")),
+    path("admin/", admin.site.urls, name="admin"),
     # The default rest framework urls shouldn't be included
     # If we include them, we'll end up with the DRF login page,
     # instead of being redirected to the ADFS login page.
     #
     # path('api-auth/', include('rest_framework.urls')),
     #
-    path('oauth2/', include('django_auth_adfs.urls')),
+    path("oauth2/", include("django_auth_adfs.urls")),
     # This overrides the DRF login page
-    path('oauth2/', include('django_auth_adfs.drf_urls')),
+    path("oauth2/", include("django_auth_adfs.drf_urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

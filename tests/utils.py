@@ -18,34 +18,33 @@ from cryptography.x509.oid import NameOID
 
 def generate_key_and_cert():
     signing_key = rsa.generate_private_key(
-        backend=crypto_default_backend(),
-        public_exponent=65537,
-        key_size=2048
+        backend=crypto_default_backend(), public_exponent=65537, key_size=2048
     )
-    subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"CA"),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, u"San Francisco"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"My Company"),
-        x509.NameAttribute(NameOID.COMMON_NAME, u"example.com"),
-    ])
-    signing_cert = x509.CertificateBuilder().subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        signing_key.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.utcnow()
-    ).not_valid_after(
-        # Our certificate will be valid for 10 days
-        datetime.utcnow() + timedelta(days=10)
-        # Sign our certificate with our private key
-    ).sign(
-        signing_key, hashes.SHA256(), crypto_default_backend()
-    ).public_bytes(crypto_serialization.Encoding.DER)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+            x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "CA"),
+            x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "My Company"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "example.com"),
+        ]
+    )
+    signing_cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(signing_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.utcnow())
+        .not_valid_after(
+            # Our certificate will be valid for 10 days
+            datetime.utcnow()
+            + timedelta(days=10)
+            # Sign our certificate with our private key
+        )
+        .sign(signing_key, hashes.SHA256(), crypto_default_backend())
+        .public_bytes(crypto_serialization.Encoding.DER)
+    )
     return signing_key, signing_cert
 
 
@@ -75,22 +74,24 @@ def build_access_token_azure(request):
 
 def build_access_token_azure_not_guest(request):
     issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
-    return do_build_access_token(request, issuer, schema='dummy_tenant_id')
+    return do_build_access_token(request, issuer, schema="dummy_tenant_id")
 
 
 def build_access_token_azure_guest(request):
     issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
-    return do_build_access_token(request, issuer, schema='guest_tenant_id')
+    return do_build_access_token(request, issuer, schema="guest_tenant_id")
 
 
 def build_access_token_azure_guest_no_upn(request):
     issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
-    return do_build_access_token(request, issuer, schema='guest_tenant_id', no_upn=True)
+    return do_build_access_token(request, issuer, schema="guest_tenant_id", no_upn=True)
 
 
 def build_access_token_azure_guest_with_idp(request):
     issuer = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
-    return do_build_access_token(request, issuer, schema='dummy_tenant_id', no_upn=True, idp="guest_idp")
+    return do_build_access_token(
+        request, issuer, schema="dummy_tenant_id", no_upn=True, idp="guest_idp"
+    )
 
 
 def build_access_token_azure_groups_in_claim_source(request):
@@ -99,7 +100,7 @@ def build_access_token_azure_groups_in_claim_source(request):
 
 
 def do_build_mfa_error(request):
-    response = {'error_description': 'AADSTS50076'}
+    response = {"error_description": "AADSTS50076"}
     return 400, [], json.dumps(response)
 
 
@@ -111,7 +112,9 @@ def do_build_graph_response_no_group_perm(request):
     return do_build_ms_graph_groups(request, missing_group_names=True)
 
 
-def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, groups_in_claim_names=False):
+def do_build_access_token(
+    request, issuer, schema=None, no_upn=False, idp=None, groups_in_claim_names=False
+):
     issued_at = int(time.time())
     expires = issued_at + 3600
     auth_time = datetime.utcnow()
@@ -134,23 +137,23 @@ def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, 
         "appid": "your-configured-client-id",
         "auth_time": auth_time.isoformat(),
         "authmethod": "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
-        "ver": "1.0"
+        "ver": "1.0",
     }
     if schema:
-        claims['tid'] = schema
-    if issuer.startswith('https://sts.windows.net'):
-        claims['upn'] = 'testuser'
-        claims['groups'] = claims['group']
+        claims["tid"] = schema
+    if issuer.startswith("https://sts.windows.net"):
+        claims["upn"] = "testuser"
+        claims["groups"] = claims["group"]
     if no_upn:
-        del claims['upn']
+        del claims["upn"]
     if groups_in_claim_names:
-        if 'groups' in claims:
-            del claims['groups']
-        del claims['group']
-        claims['_claim_names'] = {
+        if "groups" in claims:
+            del claims["groups"]
+        del claims["group"]
+        claims["_claim_names"] = {
             "groups": "src1",
         }
-        claims['_claim_sources'] = {
+        claims["_claim_sources"] = {
             "src1": {
                 "endpoint": (
                     "https://graph.windows.net/01234567-89ab-cdef-0123-456789abcdef"
@@ -160,13 +163,15 @@ def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, 
         }
     token = jwt.encode(claims, signing_key_b, algorithm="RS256")
     response = {
-        'resource': 'django_website.adfs.relying_party_id',
-        'token_type': 'bearer',
-        'refresh_token_expires_in': 28799,
-        'refresh_token': 'random_refresh_token',
-        'expires_in': 3600,
-        'id_token': 'not_used',
-        'access_token': token.decode() if isinstance(token, bytes) else token  # PyJWT>=2 returns a str instead of bytes
+        "resource": "django_website.adfs.relying_party_id",
+        "token_type": "bearer",
+        "refresh_token_expires_in": 28799,
+        "refresh_token": "random_refresh_token",
+        "expires_in": 3600,
+        "id_token": "not_used",
+        "access_token": token.decode()
+        if isinstance(token, bytes)
+        else token,  # PyJWT>=2 returns a str instead of bytes
     }
     return 200, [], json.dumps(response)
 
@@ -183,10 +188,7 @@ def do_build_obo_access_token(request):
         "aio": (
             "AUQAu/8TBCDAcvfLrjwjR53Uci8V5KCONDvJXGEFM/gMeVSp6/LV338RTspRjxIhbmNLcAGa80KVXXglM7+ea1uqRKkRNCa9bQ=="
         ),
-        "amr": [
-            "wia",
-            "mfa"
-        ],
+        "amr": ["wia", "mfa"],
         "app_displayname": "AppName",
         "appid": "2345a5bc-123a-0a1b-0a12-a12345b6cd7e",
         "appidacr": "1",
@@ -201,9 +203,7 @@ def do_build_obo_access_token(request):
         "puid": "10030000AD9D1530",
         "rh": "0.AS8A1AA4aCjPK0uCpKTt25xSNwMAAAAAAAAAwAAAAAAAAAAvAEQ.",
         "scp": "email GroupMember.Read.All openid profile User.Read",
-        "signin_state": [
-            "inknownntwk"
-        ],
+        "signin_state": ["inknownntwk"],
         "sub": "PZBipRglYn2dgemAP_qDM3QzF1nosfdylWx8hsEwzYA",
         "tenant_region_scope": "EU",
         "tid": "01234567-89ab-cdef-0123-456789abcdef",
@@ -214,19 +214,21 @@ def do_build_obo_access_token(request):
         "wids": [
             "2345a5bc-123a-0a1b-0a12-a12345b6cd7e",
         ],
-        "xms_tcdt": 1467198948
+        "xms_tcdt": 1467198948,
     }
     token = jwt.encode(obo_token, signing_key_b, algorithm="RS256")
     response = {
-        'token_type': 'bearer',
-        'scope': 'email GroupMember.Read.All openid profile User.Read',
-        'expires_in': '4872',
-        'ext_expires_in': '4872',
-        'expires_on': '1660856510',
-        'not_before': '1660851337',
-        'resource': 'https://graph.microsoft.com',
-        'refresh_token': 'not_used',
-        'access_token': token.decode() if isinstance(token, bytes) else token  # PyJWT>=2 returns a str instead of bytes
+        "token_type": "bearer",
+        "scope": "email GroupMember.Read.All openid profile User.Read",
+        "expires_in": "4872",
+        "ext_expires_in": "4872",
+        "expires_on": "1660856510",
+        "not_before": "1660851337",
+        "resource": "https://graph.microsoft.com",
+        "refresh_token": "not_used",
+        "access_token": token.decode()
+        if isinstance(token, bytes)
+        else token,  # PyJWT>=2 returns a str instead of bytes
     }
     return 200, [], json.dumps(response)
 
@@ -267,7 +269,7 @@ def do_build_ms_graph_groups(request, missing_group_names=False):
                 "securityIdentifier": "S-1-12-1-1234567891-1234567891-1234567891-1234567891",
                 "theme": None,
                 "visibility": None,
-                "onPremisesProvisioningErrors": []
+                "onPremisesProvisioningErrors": [],
             },
             {
                 "id": "23ab456c-7abc-427f-85ca-93fc0cc7f00d",
@@ -301,9 +303,9 @@ def do_build_ms_graph_groups(request, missing_group_names=False):
                 "securityIdentifier": "S-1-12-1-1234567891-1234567891-1234567891-1234567891",
                 "theme": None,
                 "visibility": None,
-                "onPremisesProvisioningErrors": []
+                "onPremisesProvisioningErrors": [],
             },
-        ]
+        ],
     }
     if missing_group_names:
         for group in response["value"]:
@@ -324,7 +326,9 @@ def build_openid_keys(request, empty_keys=False):
                     "x5t": "dummythumbprint",
                     "n": "somebase64encodedmodulus",
                     "e": "somebase64encodedexponent",
-                    "x5c": [base64.b64encode(signing_cert_a).decode(), ]
+                    "x5c": [
+                        base64.b64encode(signing_cert_a).decode(),
+                    ],
                 },
                 {
                     "kty": "RSA",
@@ -333,7 +337,9 @@ def build_openid_keys(request, empty_keys=False):
                     "x5t": "dummythumbprint",
                     "n": "somebase64encodedmodulus",
                     "e": "somebase64encodedexponent",
-                    "x5c": [base64.b64encode(signing_cert_b).decode(), ]
+                    "x5c": [
+                        base64.b64encode(signing_cert_b).decode(),
+                    ],
                 },
             ]
         }
@@ -341,10 +347,17 @@ def build_openid_keys(request, empty_keys=False):
 
 
 def build_adfs_meta(request):
-    with open(os.path.join(os.path.dirname(__file__), "mock_files/FederationMetadata.xml"), mode="r") as f:
+    with open(
+        os.path.join(os.path.dirname(__file__), "mock_files/FederationMetadata.xml"),
+        mode="r",
+    ) as f:
         data = "".join(f.readlines())
-    data = data.replace("REPLACE_WITH_CERT_A", base64.b64encode(signing_cert_a).decode())
-    data = data.replace("REPLACE_WITH_CERT_B", base64.b64encode(signing_cert_b).decode())
+    data = data.replace(
+        "REPLACE_WITH_CERT_A", base64.b64encode(signing_cert_a).decode()
+    )
+    data = data.replace(
+        "REPLACE_WITH_CERT_B", base64.b64encode(signing_cert_b).decode()
+    )
     return 200, [], data
 
 
@@ -370,106 +383,126 @@ def mock_adfs(
             prefix = prefix_table[adfs_version]
             ms_graph_endpoint = "https://graph.microsoft.com/"
             if version == "v2.0":
-                openid_cfg = re.compile(prefix + r".*{}/\.well-known/openid-configuration".format(version))
-                token_endpoint = re.compile(prefix + r".*/oauth2/{}/token".format(version))
+                openid_cfg = re.compile(
+                    prefix + r".*{}/\.well-known/openid-configuration".format(version)
+                )
+                token_endpoint = re.compile(
+                    prefix + r".*/oauth2/{}/token".format(version)
+                )
             else:
                 openid_cfg = re.compile(prefix + r".*\.well-known/openid-configuration")
                 token_endpoint = re.compile(prefix + r".*/oauth2/token")
             openid_keys = re.compile(prefix + r".*/discovery/keys")
-            adfs_meta = re.compile(prefix + r".*/FederationMetadata/2007-06/FederationMetadata\.xml")
-            ms_graph_groups = re.compile(ms_graph_endpoint + r".*/transitiveMemberOf/microsoft.graph.group")
+            adfs_meta = re.compile(
+                prefix + r".*/FederationMetadata/2007-06/FederationMetadata\.xml"
+            )
+            ms_graph_groups = re.compile(
+                ms_graph_endpoint + r".*/transitiveMemberOf/microsoft.graph.group"
+            )
             with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
                 # https://github.com/getsentry/responses
                 if adfs_version == "2016":
                     rsps.add(
-                        rsps.GET, openid_cfg,
-                        json=load_json("mock_files/adfs-openid-configuration.json")
+                        rsps.GET,
+                        openid_cfg,
+                        json=load_json("mock_files/adfs-openid-configuration.json"),
                     )
                     rsps.add_callback(
-                        rsps.GET, openid_keys,
+                        rsps.GET,
+                        openid_keys,
                         callback=partial(build_openid_keys, empty_keys=empty_keys),
-                        content_type='application/json',
+                        content_type="application/json",
                     )
                 elif adfs_version == "azure":
                     if version == "v2.0":
                         rsps.add(
-                            rsps.GET, openid_cfg,
-                            json=load_json("mock_files/azure-openid-configuration-v2.json")
+                            rsps.GET,
+                            openid_cfg,
+                            json=load_json(
+                                "mock_files/azure-openid-configuration-v2.json"
+                            ),
                         )
                     else:
                         rsps.add(
-                            rsps.GET, openid_cfg,
-                            json=load_json("mock_files/azure-openid-configuration.json")
+                            rsps.GET,
+                            openid_cfg,
+                            json=load_json(
+                                "mock_files/azure-openid-configuration.json"
+                            ),
                         )
                     rsps.add_callback(
-                        rsps.GET, openid_keys,
+                        rsps.GET,
+                        openid_keys,
                         callback=partial(build_openid_keys, empty_keys=empty_keys),
-                        content_type='application/json',
+                        content_type="application/json",
                     )
                 else:
-                    rsps.add(
-                        rsps.GET, openid_cfg,
-                        status=404
-                    )
-                    rsps.add(
-                        rsps.GET, openid_keys,
-                        status=404
-                    )
+                    rsps.add(rsps.GET, openid_cfg, status=404)
+                    rsps.add(rsps.GET, openid_keys, status=404)
 
                 rsps.add_callback(
-                    rsps.GET, adfs_meta,
+                    rsps.GET,
+                    adfs_meta,
                     callback=build_adfs_meta,
-                    content_type='application/xml',
+                    content_type="application/xml",
                 )
                 if adfs_version == "azure":
                     if guest:
                         rsps.add_callback(
-                            rsps.POST, token_endpoint,
+                            rsps.POST,
+                            token_endpoint,
                             callback=build_access_token_azure_guest,
-                            content_type='application/json',
+                            content_type="application/json",
                         )
                     rsps.add_callback(
-                        rsps.POST, token_endpoint,
+                        rsps.POST,
+                        token_endpoint,
                         callback=build_access_token_azure,
-                        content_type='application/json',
+                        content_type="application/json",
                     )
                     if requires_obo:
                         if mfa_error:
                             rsps.add_callback(
-                                rsps.GET, token_endpoint,
+                                rsps.GET,
+                                token_endpoint,
                                 callback=do_build_mfa_error,
-                                content_type='application/json',
+                                content_type="application/json",
                             )
                         else:
                             rsps.add_callback(
-                                rsps.GET, token_endpoint,
+                                rsps.GET,
+                                token_endpoint,
                                 callback=do_build_obo_access_token,
-                                content_type='application/json'
+                                content_type="application/json",
                             )
                         if missing_graph_group_perm:
                             rsps.add_callback(
-                                rsps.GET, ms_graph_groups,
+                                rsps.GET,
+                                ms_graph_groups,
                                 callback=do_build_graph_response_no_group_perm,
-                                content_type='application/json',
+                                content_type="application/json",
                             )
                         else:
                             rsps.add_callback(
-                                rsps.GET, ms_graph_groups,
+                                rsps.GET,
+                                ms_graph_groups,
                                 callback=do_build_graph_response,
-                                content_type='application/json',
+                                content_type="application/json",
                             )
                 else:
                     if mfa_error:
                         rsps.add_callback(
-                            rsps.POST, token_endpoint,
+                            rsps.POST,
+                            token_endpoint,
                             callback=do_build_mfa_error,
-                            content_type='application/json',
+                            content_type="application/json",
                         )
                     else:
                         rsps.add_callback(
-                            rsps.POST, token_endpoint,
+                            rsps.POST,
+                            token_endpoint,
                             callback=build_access_token_adfs,
-                            content_type='application/json',
+                            content_type="application/json",
                         )
 
                 test_func(*original_args, **original_kwargs)

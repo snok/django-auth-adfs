@@ -4,7 +4,11 @@ import jwt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
-from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import (
+    ImproperlyConfigured,
+    ObjectDoesNotExist,
+    PermissionDenied,
+)
 
 from django_auth_adfs import signals
 from django_auth_adfs.config import provider_config, settings
@@ -17,22 +21,27 @@ class AdfsBaseBackend(ModelBackend):
     def exchange_auth_code(self, authorization_code, request):
         logger.debug("Received authorization code: %s", authorization_code)
         data = {
-            'grant_type': 'authorization_code',
-            'client_id': settings.CLIENT_ID,
-            'redirect_uri': provider_config.redirect_uri(request),
-            'code': authorization_code,
+            "grant_type": "authorization_code",
+            "client_id": settings.CLIENT_ID,
+            "redirect_uri": provider_config.redirect_uri(request),
+            "code": authorization_code,
         }
         if settings.CLIENT_SECRET:
-            data['client_secret'] = settings.CLIENT_SECRET
+            data["client_secret"] = settings.CLIENT_SECRET
 
         logger.debug("Getting access token at: %s", provider_config.token_endpoint)
-        response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
+        response = provider_config.session.post(
+            provider_config.token_endpoint, data, timeout=settings.TIMEOUT
+        )
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
         if response.status_code == 400:
             if response.json().get("error_description", "").startswith("AADSTS50076"):
                 raise MFARequired
-            logger.error("ADFS server returned an error: %s", response.json()["error_description"])
+            logger.error(
+                "ADFS server returned an error: %s",
+                response.json()["error_description"],
+            )
             raise PermissionDenied
 
         if response.status_code != 200:
@@ -61,15 +70,20 @@ class AdfsBaseBackend(ModelBackend):
             "requested_token_use": "on_behalf_of",
         }
         if provider_config.token_endpoint.endswith("/v2.0/token"):
-            data["scope"] = 'GroupMember.Read.All'
+            data["scope"] = "GroupMember.Read.All"
         else:
-            data["resource"] = 'https://graph.microsoft.com'
+            data["resource"] = "https://graph.microsoft.com"
 
-        response = provider_config.session.get(provider_config.token_endpoint, data=data, timeout=settings.TIMEOUT)
+        response = provider_config.session.get(
+            provider_config.token_endpoint, data=data, timeout=settings.TIMEOUT
+        )
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
         if response.status_code == 400:
-            logger.error("ADFS server returned an error: %s", response.json()["error_description"])
+            logger.error(
+                "ADFS server returned an error: %s",
+                response.json()["error_description"],
+            )
             raise PermissionDenied
 
         if response.status_code != 200:
@@ -90,15 +104,21 @@ class AdfsBaseBackend(ModelBackend):
         Returns:
             claim_groups (list): List of the users group memberships
         """
-        graph_url = "https://{}/v1.0/me/transitiveMemberOf/microsoft.graph.group".format(
-            provider_config.msgraph_endpoint
+        graph_url = (
+            "https://{}/v1.0/me/transitiveMemberOf/microsoft.graph.group".format(
+                provider_config.msgraph_endpoint
+            )
         )
         headers = {"Authorization": "Bearer {}".format(obo_access_token)}
-        response = provider_config.session.get(graph_url, headers=headers, timeout=settings.TIMEOUT)
+        response = provider_config.session.get(
+            graph_url, headers=headers, timeout=settings.TIMEOUT
+        )
         # 200 = valid token received
         # 400 = 'something' is wrong in our request
         if response.status_code in [400, 401]:
-            logger.error("MS Graph server returned an error: %s", response.json()["message"])
+            logger.error(
+                "MS Graph server returned an error: %s", response.json()["message"]
+            )
             raise PermissionDenied
 
         if response.status_code != 200:
@@ -125,25 +145,25 @@ class AdfsBaseBackend(ModelBackend):
                 # Explicit is better then implicit and it protects against
                 # changes in the defaults the jwt module uses.
                 options = {
-                    'verify_signature': True,
-                    'verify_exp': True,
-                    'verify_nbf': True,
-                    'verify_iat': True,
-                    'verify_aud': True,
-                    'verify_iss': True,
-                    'require_exp': False,
-                    'require_iat': False,
-                    'require_nbf': False
+                    "verify_signature": True,
+                    "verify_exp": True,
+                    "verify_nbf": True,
+                    "verify_iat": True,
+                    "verify_aud": True,
+                    "verify_iss": True,
+                    "require_exp": False,
+                    "require_iat": False,
+                    "require_nbf": False,
                 }
                 # Validate token and return claims
                 return jwt.decode(
                     access_token,
                     key=key,
-                    algorithms=['RS256', 'RS384', 'RS512'],
+                    algorithms=["RS256", "RS384", "RS512"],
                     audience=settings.AUDIENCE,
                     issuer=provider_config.issuer,
                     options=options,
-                    leeway=settings.JWT_LEEWAY
+                    leeway=settings.JWT_LEEWAY,
                 )
             except jwt.ExpiredSignatureError as error:
                 logger.info("Signature has expired: %s", error)
@@ -153,7 +173,7 @@ class AdfsBaseBackend(ModelBackend):
                 if idx < len(provider_config.signing_keys) - 1:
                     continue
                 else:
-                    logger.info('Error decoding signature: %s', error)
+                    logger.info("Error decoding signature: %s", error)
                     raise PermissionDenied
             except jwt.InvalidTokenError as error:
                 logger.info(str(error))
@@ -165,12 +185,8 @@ class AdfsBaseBackend(ModelBackend):
 
         logger.debug("Received access token: %s", access_token)
         claims = self.validate_access_token(access_token)
-        if (
-            settings.BLOCK_GUEST_USERS
-            and claims.get('tid')
-            != settings.TENANT_ID
-        ):
-            logger.info('Guest user denied')
+        if settings.BLOCK_GUEST_USERS and claims.get("tid") != settings.TENANT_ID:
+            logger.info("Guest user denied")
             raise PermissionDenied
         if not claims:
             raise PermissionDenied
@@ -182,10 +198,7 @@ class AdfsBaseBackend(ModelBackend):
         self.update_user_flags(user, claims, groups)
 
         signals.post_authenticate.send(
-            sender=self,
-            user=user,
-            claims=claims,
-            adfs_response=adfs_response
+            sender=self, user=user, claims=claims, adfs_response=adfs_response
         )
 
         user.full_clean()
@@ -213,7 +226,9 @@ class AdfsBaseBackend(ModelBackend):
         if settings.GROUPS_CLAIM in claims:
             groups = claims[settings.GROUPS_CLAIM]
             if not isinstance(groups, list):
-                groups = [groups, ]
+                groups = [
+                    groups,
+                ]
         elif (
             settings.TENANT_ID != "adfs"
             and "_claim_names" in claims
@@ -222,8 +237,10 @@ class AdfsBaseBackend(ModelBackend):
             obo_access_token = self.get_obo_access_token(access_token)
             groups = self.get_group_memberships_from_ms_graph(obo_access_token)
         else:
-            logger.debug("The configured groups claim %s was not found in the access token",
-                         settings.GROUPS_CLAIM)
+            logger.debug(
+                "The configured groups claim %s was not found in the access token",
+                settings.GROUPS_CLAIM,
+            )
 
         return groups
 
@@ -242,19 +259,21 @@ class AdfsBaseBackend(ModelBackend):
         guest_username_claim = settings.GUEST_USERNAME_CLAIM
         usermodel = get_user_model()
 
-        iss = claims.get('iss')
-        idp = claims.get('idp', iss)
+        iss = claims.get("iss")
+        idp = claims.get("idp", iss)
         if (
             guest_username_claim
             and not claims.get(username_claim)
             and not settings.BLOCK_GUEST_USERS
-            and (claims.get('tid') != settings.TENANT_ID or iss != idp)
+            and (claims.get("tid") != settings.TENANT_ID or iss != idp)
         ):
             username_claim = guest_username_claim
 
         if not claims.get(username_claim):
-            logger.error("User claim's doesn't have the claim '%s' in his claims: %s" %
-                         (username_claim, claims))
+            logger.error(
+                "User claim's doesn't have the claim '%s' in his claims: %s"
+                % (username_claim, claims)
+            )
             raise PermissionDenied
 
         userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
@@ -266,7 +285,10 @@ class AdfsBaseBackend(ModelBackend):
                 user = usermodel.objects.create(**userdata)
                 logger.debug("User '%s' has been created.", claims[username_claim])
             else:
-                logger.debug("User '%s' doesn't exist and creating users is disabled.", claims[username_claim])
+                logger.debug(
+                    "User '%s' doesn't exist and creating users is disabled.",
+                    claims[username_claim],
+                )
                 raise PermissionDenied
         if not user.password:
             user.set_unusable_password()
@@ -286,27 +308,47 @@ class AdfsBaseBackend(ModelBackend):
         """
         if claim_mapping is None:
             claim_mapping = settings.CLAIM_MAPPING
-        required_fields = [field.name for field in user._meta.get_fields() if getattr(field, 'blank', True) is False]
+        required_fields = [
+            field.name
+            for field in user._meta.get_fields()
+            if getattr(field, "blank", True) is False
+        ]
 
         for field, claim in claim_mapping.items():
             if hasattr(user, field) or user._meta.fields_map.get(field):
                 if not isinstance(claim, dict):
                     if claim in claims:
                         setattr(user, field, claims[claim])
-                        logger.debug("Attribute '%s' for instance '%s' was set to '%s'.", field, user, claims[claim])
+                        logger.debug(
+                            "Attribute '%s' for instance '%s' was set to '%s'.",
+                            field,
+                            user,
+                            claims[claim],
+                        )
                     else:
                         if field in required_fields:
                             msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
                             raise ImproperlyConfigured(msg.format(claim))
                         else:
-                            logger.warning("Claim '%s' for field '%s' was not found in "
-                                           "the access token for instance '%s'. "
-                                           "Field is not required and will be left empty", claim, field, user)
+                            logger.warning(
+                                "Claim '%s' for field '%s' was not found in "
+                                "the access token for instance '%s'. "
+                                "Field is not required and will be left empty",
+                                claim,
+                                field,
+                                user,
+                            )
                 else:
                     try:
-                        self.update_user_attributes(getattr(user, field), claims, claim_mapping=claim)
+                        self.update_user_attributes(
+                            getattr(user, field), claims, claim_mapping=claim
+                        )
                     except ObjectDoesNotExist:
-                        logger.warning("Object for field '{}' does not exist for: '{}'.".format(field, user))
+                        logger.warning(
+                            "Object for field '{}' does not exist for: '{}'.".format(
+                                field, user
+                            )
+                        )
 
             else:
                 msg = "Model '{}' has no field named '{}'. Check ADFS claims mapping."
@@ -325,8 +367,12 @@ class AdfsBaseBackend(ModelBackend):
             django_groups = [group.name for group in user.groups.all()]
 
             if sorted(claim_groups) != sorted(django_groups):
-                existing_groups = list(Group.objects.filter(name__in=claim_groups).iterator())
-                existing_group_names = frozenset(group.name for group in existing_groups)
+                existing_groups = list(
+                    Group.objects.filter(name__in=claim_groups).iterator()
+                )
+                existing_group_names = frozenset(
+                    group.name for group in existing_groups
+                )
                 new_groups = []
                 if settings.MIRROR_GROUPS:
                     new_groups = [
@@ -359,12 +405,19 @@ class AdfsBaseBackend(ModelBackend):
                     if not isinstance(group, list):
                         group = [group]
 
-                    if any(group_list_item in claim_groups for group_list_item in group):
+                    if any(
+                        group_list_item in claim_groups for group_list_item in group
+                    ):
                         value = True
                     else:
                         value = False
                     setattr(user, flag, value)
-                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", flag, user, value)
+                    logger.debug(
+                        "Attribute '%s' for user '%s' was set to '%s'.",
+                        flag,
+                        user,
+                        value,
+                    )
                 else:
                     msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                     raise ImproperlyConfigured(msg.format(flag))
@@ -372,10 +425,22 @@ class AdfsBaseBackend(ModelBackend):
         for field, claim in settings.BOOLEAN_CLAIM_MAPPING.items():
             if hasattr(user, field):
                 bool_val = False
-                if claim in claims and str(claims[claim]).lower() in ['y', 'yes', 't', 'true', 'on', '1']:
+                if claim in claims and str(claims[claim]).lower() in [
+                    "y",
+                    "yes",
+                    "t",
+                    "true",
+                    "on",
+                    "1",
+                ]:
                     bool_val = True
                 setattr(user, field, bool_val)
-                logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, bool_val)
+                logger.debug(
+                    "Attribute '%s' for user '%s' was set to '%s'.",
+                    field,
+                    user,
+                    bool_val,
+                )
             else:
                 msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
@@ -389,8 +454,10 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
 
     def authenticate(self, request=None, authorization_code=None, **kwargs):
         # If there's no token or code, we pass control to the next authentication backend
-        if authorization_code is None or authorization_code == '':
-            logger.debug("Authentication backend was called but no authorization code was received")
+        if authorization_code is None or authorization_code == "":
+            logger.debug(
+                "Authentication backend was called but no authorization code was received"
+            )
             return
 
         # If loaded data is too old, reload it again
@@ -413,8 +480,10 @@ class AdfsAccessTokenBackend(AdfsBaseBackend):
         provider_config.load_config()
 
         # If there's no token or code, we pass control to the next authentication backend
-        if access_token is None or access_token == '':
-            logger.debug("Authentication backend was called but no access token was received")
+        if access_token is None or access_token == "":
+            logger.debug(
+                "Authentication backend was called but no access token was received"
+            )
             return
 
         access_token = access_token.decode()
@@ -423,5 +492,6 @@ class AdfsAccessTokenBackend(AdfsBaseBackend):
 
 
 class AdfsBackend(AdfsAuthCodeBackend):
-    """ Backwards compatible class name """
+    """Backwards compatible class name"""
+
     pass

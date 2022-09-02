@@ -25,7 +25,7 @@ except ImportError:  # Django < 1.10
 logger = logging.getLogger("django_auth_adfs")
 
 AZURE_AD_SERVER = "login.microsoftonline.com"
-DEFAULT_SETTINGS_CLASS = 'django_auth_adfs.config.Settings'
+DEFAULT_SETTINGS_CLASS = "django_auth_adfs.config.Settings"
 
 
 class ConfigLoadError(Exception):
@@ -39,7 +39,7 @@ def _get_settings_class():
     if not hasattr(django_settings, "AUTH_ADFS"):
         msg = "The configuration directive 'AUTH_ADFS' was not found in your Django settings"
         raise ImproperlyConfigured(msg)
-    cls = django_settings.AUTH_ADFS.get('SETTINGS_CLASS', DEFAULT_SETTINGS_CLASS)
+    cls = django_settings.AUTH_ADFS.get("SETTINGS_CLASS", DEFAULT_SETTINGS_CLASS)
     return import_string(cls)
 
 
@@ -72,12 +72,17 @@ class Settings(object):
         self.USERNAME_CLAIM = "winaccountname"
         self.GUEST_USERNAME_CLAIM = None
         self.JWT_LEEWAY = 0
-        self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
-            request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
+        self.CUSTOM_FAILED_RESPONSE_VIEW = (
+            lambda request, error_message, status: render(
+                request,
+                "django_auth_adfs/login_failed.html",
+                {"error_message": error_message},
+                status=status,
+            )
         )
         self.PROXIES = None
 
-        self.VERSION = 'v1.0'
+        self.VERSION = "v1.0"
 
         required_settings = [
             "AUDIENCE",
@@ -106,20 +111,28 @@ class Settings(object):
         # Handle deprecated settings
         for setting, message in deprecated_settings.items():
             if setting in _settings:
-                warnings.warn("Setting {} is deprecated and it's value was ignored. {}".format(setting, message),
-                              DeprecationWarning)
+                warnings.warn(
+                    "Setting {} is deprecated and it's value was ignored. {}".format(
+                        setting, message
+                    ),
+                    DeprecationWarning,
+                )
                 del _settings[setting]
 
         if "CERT_MAX_AGE" in _settings:
             _settings["CONFIG_RELOAD_INTERVAL"] = _settings["CERT_MAX_AGE"]
-            warnings.warn('Setting CERT_MAX_AGE has been renamed to CONFIG_RELOAD_INTERVAL. The value was copied.',
-                          DeprecationWarning)
+            warnings.warn(
+                "Setting CERT_MAX_AGE has been renamed to CONFIG_RELOAD_INTERVAL. The value was copied.",
+                DeprecationWarning,
+            )
             del _settings["CERT_MAX_AGE"]
 
         if "GROUP_CLAIM" in _settings:
             _settings["GROUPS_CLAIM"] = _settings["GROUP_CLAIM"]
-            warnings.warn('Setting GROUP_CLAIM has been renamed to GROUPS_CLAIM. The value was copied.',
-                          DeprecationWarning)
+            warnings.warn(
+                "Setting GROUP_CLAIM has been renamed to GROUPS_CLAIM. The value was copied.",
+                DeprecationWarning,
+            )
             del _settings["GROUP_CLAIM"]
 
         if "RESOURCE" in _settings:
@@ -128,26 +141,36 @@ class Settings(object):
         if "TENANT_ID" in _settings:
             # If a tenant ID was set, switch to Azure AD mode
             if "SERVER" in _settings:
-                raise ImproperlyConfigured("The SERVER cannot be set when TENANT_ID is set.")
+                raise ImproperlyConfigured(
+                    "The SERVER cannot be set when TENANT_ID is set."
+                )
             self.SERVER = AZURE_AD_SERVER
             self.USERNAME_CLAIM = "upn"
             self.GROUPS_CLAIM = "groups"
-            self.CLAIM_MAPPING = {"first_name": "given_name",
-                                  "last_name": "family_name",
-                                  "email": "email"}
+            self.CLAIM_MAPPING = {
+                "first_name": "given_name",
+                "last_name": "family_name",
+                "email": "email",
+            }
         elif "VERSION" in _settings:
-            raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is not set.")
+            raise ImproperlyConfigured(
+                "The VERSION cannot be set when TENANT_ID is not set."
+            )
 
         # Overwrite defaults with user settings
         for setting, value in _settings.items():
             if hasattr(self, setting):
                 setattr(self, setting, value)
             else:
-                msg = "'{0}' is not a valid configuration directive for django_auth_adfs."
+                msg = (
+                    "'{0}' is not a valid configuration directive for django_auth_adfs."
+                )
                 raise ImproperlyConfigured(msg.format(setting))
 
         if self.SERVER != AZURE_AD_SERVER and self.BLOCK_GUEST_USERS:
-            raise ImproperlyConfigured("You can only set BLOCK_GUEST_USERS when self.TENANT_ID is set")
+            raise ImproperlyConfigured(
+                "You can only set BLOCK_GUEST_USERS when self.TENANT_ID is set"
+            )
 
         if self.TENANT_ID is None:
             # For on premises ADFS, the tenant ID is set to adfs
@@ -161,13 +184,17 @@ class Settings(object):
 
         # Setup dynamic settings
         if not callable(self.CUSTOM_FAILED_RESPONSE_VIEW):
-            self.CUSTOM_FAILED_RESPONSE_VIEW = import_string(self.CUSTOM_FAILED_RESPONSE_VIEW)
+            self.CUSTOM_FAILED_RESPONSE_VIEW = import_string(
+                self.CUSTOM_FAILED_RESPONSE_VIEW
+            )
 
         # Validate setting conflicts
         usermodel = get_user_model()
         if usermodel.USERNAME_FIELD in self.CLAIM_MAPPING:
-            raise ImproperlyConfigured("You cannot set the username field of the user model from "
-                                       "the CLAIM_MAPPING setting. Instead use the USERNAME_CLAIM setting.")
+            raise ImproperlyConfigured(
+                "You cannot set the username field of the user model from "
+                "the CLAIM_MAPPING setting. Instead use the USERNAME_CLAIM setting."
+            )
 
 
 class ProviderConfig(object):
@@ -182,20 +209,20 @@ class ProviderConfig(object):
         self.issuer = None
         self.msgraph_endpoint = None
 
-        allowed_methods = frozenset([
-            'HEAD', 'GET', 'PUT', 'DELETE', 'OPTIONS', 'TRACE', 'POST'
-        ])
+        allowed_methods = frozenset(
+            ["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE", "POST"]
+        )
 
         retry = Retry(
             total=settings.RETRIES,
             read=settings.RETRIES,
             connect=settings.RETRIES,
             backoff_factor=0.3,
-            allowed_methods=allowed_methods
+            allowed_methods=allowed_methods,
         )
         self.session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=retry)
-        self.session.mount('https://', adapter)
+        self.session.mount("https://", adapter)
         self.session.verify = settings.CA_BUNDLE
         if hasattr(settings, "PROXIES"):
             self.session.proxies = settings.PROXIES
@@ -214,14 +241,18 @@ class ProviderConfig(object):
 
             if not loaded:
                 if self._config_timestamp is None:
-                    msg = "Could not load any data from ADFS server. " \
-                          "Authentication against ADFS not be possible. " \
-                          "Verify your settings and the connection with the ADFS server."
+                    msg = (
+                        "Could not load any data from ADFS server. "
+                        "Authentication against ADFS not be possible. "
+                        "Verify your settings and the connection with the ADFS server."
+                    )
                     logger.critical(msg)
                     raise RuntimeError(msg)
                 else:
                     # We got data from the previous time. Log a message, but don't abort.
-                    logger.warning("Could not load any data from ADFS server. Keeping previous configurations")
+                    logger.warning(
+                        "Could not load any data from ADFS server. Keeping previous configurations"
+                    )
             self._config_timestamp = datetime.now()
 
             logger.info("Loaded settings from ADFS server.")
@@ -233,13 +264,20 @@ class ProviderConfig(object):
             logger.info("msgraph endpoint:       %s", self.msgraph_endpoint)
 
     def _load_openid_config(self):
-        if settings.VERSION != 'v1.0':
-            config_url = "https://{}/{}/{}/.well-known/openid-configuration?appid={}".format(
-                settings.SERVER, settings.TENANT_ID, settings.VERSION, settings.CLIENT_ID
+        if settings.VERSION != "v1.0":
+            config_url = (
+                "https://{}/{}/{}/.well-known/openid-configuration?appid={}".format(
+                    settings.SERVER,
+                    settings.TENANT_ID,
+                    settings.VERSION,
+                    settings.CLIENT_ID,
+                )
             )
         else:
-            config_url = "https://{}/{}/.well-known/openid-configuration?appid={}".format(
-                settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
+            config_url = (
+                "https://{}/{}/.well-known/openid-configuration?appid={}".format(
+                    settings.SERVER, settings.TENANT_ID, settings.CLIENT_ID
+                )
             )
 
         try:
@@ -248,9 +286,15 @@ class ProviderConfig(object):
             response.raise_for_status()
             openid_cfg = response.json()
 
-            response = self.session.get(openid_cfg["jwks_uri"], timeout=settings.TIMEOUT)
+            response = self.session.get(
+                openid_cfg["jwks_uri"], timeout=settings.TIMEOUT
+            )
             response.raise_for_status()
-            signing_certificates = [x["x5c"][0] for x in response.json()["keys"] if x.get("use", "sig") == "sig"]
+            signing_certificates = [
+                x["x5c"][0]
+                for x in response.json()["keys"]
+                if x.get("use", "sig") == "sig"
+            ]
             #                               ^^^
             # https://tools.ietf.org/html/draft-ietf-jose-json-web-key-41#section-4.7
             # The PKIX certificate containing the key value MUST be the first certificate
@@ -262,7 +306,7 @@ class ProviderConfig(object):
             self.authorization_endpoint = openid_cfg["authorization_endpoint"]
             self.token_endpoint = openid_cfg["token_endpoint"]
             self.end_session_endpoint = openid_cfg["end_session_endpoint"]
-            if settings.TENANT_ID != 'adfs':
+            if settings.TENANT_ID != "adfs":
                 self.issuer = openid_cfg["issuer"]
                 self.msgraph_endpoint = openid_cfg["msgraph_host"]
             else:
@@ -276,9 +320,13 @@ class ProviderConfig(object):
         server_url = "https://{}".format(settings.SERVER)
         base_url = "{}/{}".format(server_url, settings.TENANT_ID)
         if settings.TENANT_ID == "adfs":
-            adfs_config_url = server_url + "/FederationMetadata/2007-06/FederationMetadata.xml"
+            adfs_config_url = (
+                server_url + "/FederationMetadata/2007-06/FederationMetadata.xml"
+            )
         else:
-            adfs_config_url = base_url + "/FederationMetadata/2007-06/FederationMetadata.xml"
+            adfs_config_url = (
+                base_url + "/FederationMetadata/2007-06/FederationMetadata.xml"
+            )
 
         try:
             logger.info("Trying to get ADFS Metadata file %s", adfs_config_url)
@@ -295,7 +343,8 @@ class ProviderConfig(object):
             "/{urn:oasis:names:tc:SAML:2.0:metadata}KeyDescriptor[@use='signing']"
             "/{http://www.w3.org/2000/09/xmldsig#}KeyInfo"
             "/{http://www.w3.org/2000/09/xmldsig#}X509Data"
-            "/{http://www.w3.org/2000/09/xmldsig#}X509Certificate")
+            "/{http://www.w3.org/2000/09/xmldsig#}X509Certificate"
+        )
         signing_certificates = [node.text for node in cert_nodes]
 
         self._load_keys(signing_certificates)
@@ -337,15 +386,17 @@ class ProviderConfig(object):
             redirect_to = django_settings.LOGIN_REDIRECT_URL
         redirect_to = base64.urlsafe_b64encode(redirect_to.encode()).decode()
         query = QueryDict(mutable=True)
-        query.update({
-            "response_type": "code",
-            "client_id": settings.CLIENT_ID,
-            "resource": settings.RELYING_PARTY_ID,
-            "redirect_uri": self.redirect_uri(request),
-            "state": redirect_to,
-        })
+        query.update(
+            {
+                "response_type": "code",
+                "client_id": settings.CLIENT_ID,
+                "resource": settings.RELYING_PARTY_ID,
+                "redirect_uri": self.redirect_uri(request),
+                "state": redirect_to,
+            }
+        )
         if self._mode == "openid_connect":
-            if settings.VERSION == 'v2.0':
+            if settings.VERSION == "v2.0":
                 query["scope"] = f"openid api://{settings.RELYING_PARTY_ID}/.default"
                 query.pop("resource")
             else:

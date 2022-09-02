@@ -5,8 +5,8 @@ from . import views
 
 router = routers.DefaultRouter()
 
-router.register(r'questions', views.QuestionViewSet)
-router.register(r'choices', views.ChoiceViewSet)
+router.register(r"questions", views.QuestionViewSet)
+router.register(r"choices", views.ChoiceViewSet)
 
-app_name = 'polls-api'
+app_name = "polls-api"
 urlpatterns = router.urls

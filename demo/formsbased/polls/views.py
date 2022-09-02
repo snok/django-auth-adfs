@@ -9,22 +9,22 @@ from .models import Choice, Question
 
 
 class IndexView(generic.ListView):
-    template_name = 'polls/index.html'
-    context_object_name = 'latest_question_list'
+    template_name = "polls/index.html"
+    context_object_name = "latest_question_list"
 
     def get_queryset(self):
         """
         Return the last five published questions (not including those set to be
         published in the future).
         """
-        return Question.objects.filter(
-            pub_date__lte=timezone.now()
-        ).order_by('-pub_date')[:5]
+        return Question.objects.filter(pub_date__lte=timezone.now()).order_by(
+            "-pub_date"
+        )[:5]
 
 
 class DetailView(generic.DetailView):
     model = Question
-    template_name = 'polls/detail.html'
+    template_name = "polls/detail.html"
 
     def get_queryset(self):
         """
@@ -35,7 +35,7 @@ class DetailView(generic.DetailView):
 
 class VoteView(LoginRequiredMixin, generic.DetailView):
     model = Question
-    template_name = 'polls/vote.html'
+    template_name = "polls/vote.html"
 
     def get_queryset(self):
         """
@@ -46,16 +46,20 @@ class VoteView(LoginRequiredMixin, generic.DetailView):
     def post(self, request, pk, *args, **kwargs):
         question = get_object_or_404(Question, pk=pk)
         try:
-            selected_choice = question.choice_set.get(pk=request.POST['choice'])
+            selected_choice = question.choice_set.get(pk=request.POST["choice"])
         except (KeyError, Choice.DoesNotExist):
             # Redisplay the question voting form.
-            return render(request, 'polls/vote.html', {
-                'question': question,
-                'error_message': "You didn't select a choice.",
-            })
+            return render(
+                request,
+                "polls/vote.html",
+                {
+                    "question": question,
+                    "error_message": "You didn't select a choice.",
+                },
+            )
         else:
             selected_choice.vote()
             # Always return an HttpResponseRedirect after successfully dealing
             # with POST data. This prevents data from being posted twice if a
             # user hits the Back button.
-            return HttpResponseRedirect(reverse('polls:detail', args=(question.id,)))
+            return HttpResponseRedirect(reverse("polls:detail", args=(question.id,)))

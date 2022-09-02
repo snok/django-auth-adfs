@@ -3,4 +3,4 @@ class Settings(object):
     CA_BUNDLE = False
 
     def __init__(self):
-        self.SERVER = 'custom-server'
+        self.SERVER = "custom-server"

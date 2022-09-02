@@ -22,11 +22,11 @@ from django.views.generic.base import TemplateView
 
 
 urlpatterns = [
-    path('', TemplateView.as_view(template_name='home.html'), name='home'),
-    path('polls/', include('polls.urls')),
-    path('api/', include('polls.api.urls')),
-    path('api-auth/', include('rest_framework.urls')),
-    path('admin/', admin.site.urls, name='admin'),
-    path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path("", TemplateView.as_view(template_name="home.html"), name="home"),
+    path("polls/", include("polls.urls")),
+    path("api/", include("polls.api.urls")),
+    path("api-auth/", include("rest_framework.urls")),
+    path("admin/", admin.site.urls, name="admin"),
+    path("accounts/login/", auth_views.LoginView.as_view(), name="login"),
+    path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

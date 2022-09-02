@@ -10,5 +10,5 @@ from django_auth_adfs import views
 app_name = "rest_framework"
 
 urlpatterns = [
-    re_path(r'^login$', views.OAuth2LoginView.as_view(), name='login'),
+    re_path(r"^login$", views.OAuth2LoginView.as_view(), name="login"),
 ]

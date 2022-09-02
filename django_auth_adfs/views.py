@@ -4,6 +4,7 @@ import logging
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
+
 try:
     from django.utils.http import url_has_allowed_host_and_scheme
 except ImportError:
@@ -30,16 +31,16 @@ class OAuth2CallbackView(View):
         if not code:
             # Return an error message
             return settings.CUSTOM_FAILED_RESPONSE_VIEW(
-                request,
-                error_message="No authorization code was provided.",
-                status=400
+                request, error_message="No authorization code was provided.", status=400
             )
 
         redirect_to = request.GET.get("state")
         try:
             user = authenticate(request=request, authorization_code=code)
         except MFARequired:
-            return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
+            return redirect(
+                provider_config.build_authorization_endpoint(request, force_mfa=True)
+            )
 
         if user:
             if user.is_active:
@@ -48,7 +49,9 @@ class OAuth2CallbackView(View):
                 # Because we got redirected from ADFS, we can't know where the
                 # user came from.
                 if redirect_to:
-                    redirect_to = base64.urlsafe_b64decode(redirect_to.encode()).decode()
+                    redirect_to = base64.urlsafe_b64decode(
+                        redirect_to.encode()
+                    ).decode()
                 else:
                     redirect_to = django_settings.LOGIN_REDIRECT_URL
                 url_is_safe = url_has_allowed_host_and_scheme(
@@ -56,21 +59,17 @@ class OAuth2CallbackView(View):
                     allowed_hosts=[request.get_host()],
                     require_https=request.is_secure(),
                 )
-                redirect_to = redirect_to if url_is_safe else '/'
+                redirect_to = redirect_to if url_is_safe else "/"
                 return redirect(redirect_to)
             else:
                 # Return a 'disabled account' error message
                 return settings.CUSTOM_FAILED_RESPONSE_VIEW(
-                    request,
-                    error_message="Your account is disabled.",
-                    status=403
+                    request, error_message="Your account is disabled.", status=403
                 )
         else:
             # Return an 'invalid login' error message
             return settings.CUSTOM_FAILED_RESPONSE_VIEW(
-                request,
-                error_message="Login failed.",
-                status=401
+                request, error_message="Login failed.", status=401
             )
 
 
@@ -93,7 +92,9 @@ class OAuth2LoginNoSSOView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        return redirect(provider_config.build_authorization_endpoint(request, disable_sso=True))
+        return redirect(
+            provider_config.build_authorization_endpoint(request, disable_sso=True)
+        )
 
 
 class OAuth2LoginForceMFA(View):
@@ -104,7 +105,9 @@ class OAuth2LoginForceMFA(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
+        return redirect(
+            provider_config.build_authorization_endpoint(request, force_mfa=True)
+        )
 
 
 class OAuth2LogoutView(View):

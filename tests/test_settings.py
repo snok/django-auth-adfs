@@ -72,7 +72,9 @@ class SettingsTests(TestCase):
 
     def test_dotted_path_failed_response_setting(self):
         settings = deepcopy(django_settings)
-        settings.AUTH_ADFS["CUSTOM_FAILED_RESPONSE_VIEW"] = 'tests.views.test_failed_response'
+        settings.AUTH_ADFS[
+            "CUSTOM_FAILED_RESPONSE_VIEW"
+        ] = "tests.views.test_failed_response"
         with patch("django_auth_adfs.config.django_settings", settings):
             s = Settings()
             self.assertTrue(callable(s.CUSTOM_FAILED_RESPONSE_VIEW))
@@ -98,10 +100,10 @@ class SettingsTests(TestCase):
 
     def test_configured_proxy(self):
         settings = Settings()
-        settings.PROXIES = {'http': '10.0.0.1'}
+        settings.PROXIES = {"http": "10.0.0.1"}
         with patch("django_auth_adfs.config.settings", settings):
             provider_config = ProviderConfig()
-            self.assertEqual(provider_config.session.proxies, {'http': '10.0.0.1'})
+            self.assertEqual(provider_config.session.proxies, {"http": "10.0.0.1"})
 
     def test_no_configured_proxy(self):
         provider_config = ProviderConfig()
@@ -110,15 +112,16 @@ class SettingsTests(TestCase):
 
 class CustomSettingsTests(SimpleTestCase):
     def setUp(self):
-        sys.modules.pop('django_auth_adfs.config', None)
+        sys.modules.pop("django_auth_adfs.config", None)
 
     def tearDown(self):
-        sys.modules.pop('django_auth_adfs.config', None)
+        sys.modules.pop("django_auth_adfs.config", None)
 
     def test_dotted_path(self):
         auth_adfs = deepcopy(django_settings).AUTH_ADFS
-        auth_adfs['SETTINGS_CLASS'] = 'tests.custom_config.Settings'
+        auth_adfs["SETTINGS_CLASS"] = "tests.custom_config.Settings"
 
         with override_settings(AUTH_ADFS=auth_adfs):
             from django_auth_adfs.config import settings
+
             self.assertIsInstance(settings, CustomSettings)
