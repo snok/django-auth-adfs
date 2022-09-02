@@ -204,7 +204,7 @@ class ProviderConfig(object):
         # If loaded data is too old, reload it again
         refresh_time = datetime.now() - timedelta(hours=settings.CONFIG_RELOAD_INTERVAL)
         if self._config_timestamp is None or self._config_timestamp < refresh_time:
-            logger.debug("Loading django_auth_adfs ID Provider configuration.")
+            logger.debug("Loading ID Provider configuration.")
             try:
                 loaded = self._load_openid_config()
                 self._mode = "openid_connect"
@@ -224,7 +224,7 @@ class ProviderConfig(object):
                     logger.warning("Could not load any data from ADFS server. Keeping previous configurations")
             self._config_timestamp = datetime.now()
 
-            logger.info("django_auth_adfs loaded settings from ADFS server.")
+            logger.info("Loaded settings from ADFS server.")
             logger.info("operating mode:         %s", self._mode)
             logger.info("authorization endpoint: %s", self.authorization_endpoint)
             logger.info("token endpoint:         %s", self.token_endpoint)
