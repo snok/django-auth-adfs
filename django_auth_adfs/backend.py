@@ -4,7 +4,8 @@ import jwt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
-from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import (ImproperlyConfigured, ObjectDoesNotExist,
+                                    PermissionDenied)
 
 from django_auth_adfs import signals
 from django_auth_adfs.config import provider_config, settings
@@ -322,27 +323,24 @@ class AdfsBaseBackend(ModelBackend):
         """
         if settings.GROUPS_CLAIM is not None:
             # Update the user's group memberships
-            django_groups = [group.name for group in user.groups.all()]
+            user_group_names = user.groups.all().values_list("name", flat=True)
 
-            if sorted(claim_groups) != sorted(django_groups):
-                existing_groups = list(Group.objects.filter(name__in=claim_groups).iterator())
-                existing_group_names = frozenset(group.name for group in existing_groups)
-                new_groups = []
+            if sorted(claim_groups) != sorted(user_group_names):
+                # Get the list of already existing groups in one query
+                existing_claimed_groups = Group.objects.filter(name__in=claim_groups)
+                existing_claimed_group_names = (
+                    group.name for group in existing_claimed_groups
+                )
+
+                new_claimed_group_names = (name for name in claim_groups if name not in existing_claimed_group_names)
                 if settings.MIRROR_GROUPS:
-                    new_groups = [
+                    new_claimed_groups = [
                         Group.objects.get_or_create(name=name)[0]
-                        for name in claim_groups
-                        if name not in existing_group_names
+                        for name in new_claimed_group_names
                     ]
                 else:
-                    for name in claim_groups:
-                        if name not in existing_group_names:
-                            try:
-                                group = Group.objects.get(name=name)
-                                new_groups.append(group)
-                            except ObjectDoesNotExist:
-                                pass
-                user.groups.set(existing_groups + new_groups)
+                    new_claimed_groups = Group.objects.filter(name__in=new_claimed_group_names)
+                user.groups.set(tuple(existing_claimed_groups) + tuple(new_claimed_groups))
 
     def update_user_flags(self, user, claims, claim_groups):
         """
