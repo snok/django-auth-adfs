@@ -182,15 +182,31 @@ class AuthenticationTests(TestCase):
         Group.objects.filter(name="group1").delete()
 
         backend = AdfsAuthCodeBackend()
-        with patch("django_auth_adfs.backend.settings.GROUPS_CLAIM", "group"):
-            with patch("django_auth_adfs.backend.settings.MIRROR_GROUPS", True):
-                user = backend.authenticate(self.request, authorization_code="dummycode")
-                self.assertIsInstance(user, User)
-                self.assertEqual(user.first_name, "John")
-                self.assertEqual(user.last_name, "Doe")
-                self.assertEqual(user.email, "john.doe@example.com")
-                # Group restored
-                self.assertEqual(len(user.groups.all()), 2)
+        with patch("django_auth_adfs.backend.settings.MIRROR_GROUPS", True):
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            # group1 is restored
+            group_names = user.groups.order_by("name").values_list("name", flat=True)
+            self.assertSequenceEqual(group_names, ['group1', 'group2'])
+
+    @mock_adfs("2016")
+    def test_group_claim_without_mirror_groups(self):
+        # Remove one group
+        Group.objects.filter(name="group1").delete()
+
+        backend = AdfsAuthCodeBackend()
+        with patch("django_auth_adfs.backend.settings.MIRROR_GROUPS", False):
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            # User is not added to group1 because the group doesn't exist
+            group_names = user.groups.values_list("name", flat=True)
+            self.assertSequenceEqual(group_names, ['group2'])
 
     @mock_adfs("2016", empty_keys=True)
     def test_empty_keys(self):
