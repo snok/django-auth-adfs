@@ -326,21 +326,24 @@ class AdfsBaseBackend(ModelBackend):
             user_group_names = user.groups.all().values_list("name", flat=True)
 
             if sorted(claim_groups) != sorted(user_group_names):
-                # Get the list of already existing groups in one query
+                # Get the list of already existing groups in one SQL query
                 existing_claimed_groups = Group.objects.filter(name__in=claim_groups)
-                existing_claimed_group_names = (
-                    group.name for group in existing_claimed_groups
-                )
 
-                new_claimed_group_names = (name for name in claim_groups if name not in existing_claimed_group_names)
                 if settings.MIRROR_GROUPS:
+                    existing_claimed_group_names = (
+                        group.name for group in existing_claimed_groups
+                    )
+                    # One SQL query by created group.
+                    # bulk_create could have been used here but we want to send signals.
                     new_claimed_groups = [
                         Group.objects.get_or_create(name=name)[0]
-                        for name in new_claimed_group_names
+                        for name in claim_groups if name not in existing_claimed_group_names
                     ]
+                    # Associate the users to all claimed groups
+                    user.groups.set(tuple(existing_claimed_groups) + tuple(new_claimed_groups))
                 else:
-                    new_claimed_groups = Group.objects.filter(name__in=new_claimed_group_names)
-                user.groups.set(tuple(existing_claimed_groups) + tuple(new_claimed_groups))
+                    # Associate the user to only existing claimed groups
+                    user.groups.set(existing_claimed_groups)
 
     def update_user_flags(self, user, claims, claim_groups):
         """
