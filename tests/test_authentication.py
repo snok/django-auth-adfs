@@ -3,21 +3,22 @@ import base64
 from django_auth_adfs.exceptions import MFARequired
 
 try:
-    from urllib.parse import urlparse, parse_qs
+    from urllib.parse import parse_qs, urlparse
 except ImportError:  # Python 2.7
     from urlparse import urlparse, parse_qs
 
 from copy import deepcopy
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models.signals import post_save
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 from mock import Mock, patch
 
 from django_auth_adfs import signals
 from django_auth_adfs.backend import AdfsAuthCodeBackend
 from django_auth_adfs.config import ProviderConfig, Settings
+
 from .models import Profile
 from .utils import mock_adfs
 
@@ -174,6 +175,38 @@ class AuthenticationTests(TestCase):
             self.assertEqual(user.last_name, "Doe")
             self.assertEqual(user.email, "john.doe@example.com")
             self.assertEqual(len(user.groups.all()), 0)
+
+    @mock_adfs("2016")
+    def test_group_claim_with_mirror_groups(self):
+        # Remove one group
+        Group.objects.filter(name="group1").delete()
+
+        backend = AdfsAuthCodeBackend()
+        with patch("django_auth_adfs.backend.settings.MIRROR_GROUPS", True):
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            # group1 is restored
+            group_names = user.groups.order_by("name").values_list("name", flat=True)
+            self.assertSequenceEqual(group_names, ['group1', 'group2'])
+
+    @mock_adfs("2016")
+    def test_group_claim_without_mirror_groups(self):
+        # Remove one group
+        Group.objects.filter(name="group1").delete()
+
+        backend = AdfsAuthCodeBackend()
+        with patch("django_auth_adfs.backend.settings.MIRROR_GROUPS", False):
+            user = backend.authenticate(self.request, authorization_code="dummycode")
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
+            self.assertEqual(user.email, "john.doe@example.com")
+            # User is not added to group1 because the group doesn't exist
+            group_names = user.groups.values_list("name", flat=True)
+            self.assertSequenceEqual(group_names, ['group2'])
 
     @mock_adfs("2016", empty_keys=True)
     def test_empty_keys(self):
