@@ -69,6 +69,7 @@ class Settings(object):
         self.SERVER = None  # Required
         self.TENANT_ID = None  # Required
         self.TIMEOUT = 5
+        self.UPN_CLAIM = None
         self.USERNAME_CLAIM = "winaccountname"
         self.GUEST_USERNAME_CLAIM = None
         self.JWT_LEEWAY = 0
@@ -84,7 +85,14 @@ class Settings(object):
             "CLIENT_ID",
             "RELYING_PARTY_ID",
             "USERNAME_CLAIM",
+            "UPN_CLAIM",
         ]
+
+        # Only one of either UPN_CLAIM or USERNAME_CLAIM is required.
+        if self.UPN_CLAIM:
+            required_settings.remove("USERNAME_CLAIM")
+        else:
+            required_settings.remove("UPN_CLAIM")
 
         deprecated_settings = {
             "AUTHORIZE_PATH": "This setting is automatically loaded from ADFS.",
