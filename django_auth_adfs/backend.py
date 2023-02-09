@@ -96,9 +96,9 @@ class AdfsBaseBackend(ModelBackend):
         )
         headers = {"Authorization": "Bearer {}".format(obo_access_token)}
         claim_groups = []
-        batch = 0
-        while batcn < 100:  # hard limit
-            batch += 1
+        batch_no = 0
+        while batch_no < 100:  # hard limit
+            batch_no += 1
             # we have a batched result so make sure we get all groups
             response = provider_config.session.get(graph_url, headers=headers, timeout=settings.TIMEOUT)
             # 200 = valid token received
@@ -111,8 +111,8 @@ class AdfsBaseBackend(ModelBackend):
                 logger.error("Unexpected MS Graph response: %s", response.content.decode())
                 raise PermissionDenied
 
-            group_items = response.json()["value"]
-            for group_data in group_items:
+            result = response.json()
+            for group_data in result["value"]:
                 if group_data["displayName"] is None:
                     logger.error(
                         "The application does not have the required permission to read user groups from "
@@ -122,12 +122,12 @@ class AdfsBaseBackend(ModelBackend):
 
                 claim_groups.append(group_data["displayName"])
 
-            if '@odata.nextLink' not in group_items:
+            if '@odata.nextLink' not in result:
                 break
 
             # have more items, so continue with next batch
-            logger.debug("have more items, continue with batch # %s" % (batch))
-            graph_url = group_items['@odata.nextLink']
+            logger.debug("have more items, continue with batch #%s" % (batch_no))
+            graph_url = result['@odata.nextLink']
 
         return claim_groups
 
