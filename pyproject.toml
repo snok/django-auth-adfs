@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'django-auth-adfs'
-version = "1.11.3"  # Remember to also change __init__.py version
+version = "1.11.4"  # Remember to also change __init__.py version
 description = 'A Django authentication backend for Microsoft ADFS and AzureAD'
 authors = ['Joris Beckers <joris.beckers@gmail.com>']
 maintainers = ['Jonas Krüger Svensson <jonas-ks@hotmail.com>', 'Sondre Lillebø Gundersen <sondrelg@live.no>']
