@@ -4,9 +4,11 @@ Based on https://djangosnippets.org/snippets/1179/
 from re import compile
 
 from django.conf import settings as django_settings
+from django.contrib import auth
 from django.contrib.auth.views import redirect_to_login
 from django.urls import reverse
 
+from django_auth_adfs.backend import AdfsAuthCodeBackend
 from django_auth_adfs.exceptions import MFARequired
 from django_auth_adfs.config import settings
 
@@ -49,3 +51,17 @@ class LoginRequiredMiddleware:
                     return redirect_to_login('django_auth_adfs:login-force-mfa')
 
         return self.get_response(request)
+
+
+def adfs_refresh_middleware(get_response):
+    def middleware(request):
+        try:
+            backend_str = request.session[auth.BACKEND_SESSION_KEY]
+        except KeyError:
+            pass
+        else:
+            backend = auth.load_backend(backend_str)
+            if isinstance(backend, AdfsAuthCodeBackend):
+                backend.process_request(request)
+        return get_response()
+    return middleware

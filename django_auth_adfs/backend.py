@@ -1,11 +1,13 @@
 import logging
+from datetime import datetime, timedelta
 
 import jwt
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
 from django.core.exceptions import (ImproperlyConfigured, ObjectDoesNotExist,
                                     PermissionDenied)
+from requests import HTTPError
 
 from django_auth_adfs import signals
 from django_auth_adfs.config import provider_config, settings
@@ -398,9 +400,37 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
         provider_config.load_config()
 
         adfs_response = self.exchange_auth_code(authorization_code, request)
-        access_token = adfs_response["access_token"]
-        user = self.process_access_token(access_token, adfs_response)
+        user = self._process_adfs_response(request, adfs_response)
         return user
+
+    def _process_adfs_response(self, request, adfs_response):
+        user = self.process_access_token(adfs_response['access_token'], adfs_response)
+        request.session['adfs_access_token'] = adfs_response['access_token']
+        expiry = datetime.now() + timedelta(seconds=adfs_response['expires_in'])
+        request.session['adfs_token_expiry'] = expiry.isoformat()
+        if 'refresh_token' in adfs_response:
+            request.session['adfs_refresh_token'] = adfs_response['refresh_token']
+        request.session.save()
+        return user
+
+    def process_request(self, request):
+        now = datetime.now() + settings.REFRESH_THRESHOLD
+        expiry = datetime.fromisoformat(request.session['adfs_token_expiry'])
+        if now > expiry:
+            try:
+                self._refresh_access_token(request, request.session['adfs_refresh_token'])
+            except (PermissionDenied, HTTPError):
+                logout(request)
+
+    def _refresh_access_token(self, request, refresh_token):
+        provider_config.load_config()
+        response = provider_config.session.post(
+            provider_config.token_endpoint,
+            data=f'grant_type=refresh_token&refresh_token={refresh_token}'
+        )
+        response.raise_for_status()
+        adfs_response = response.json()
+        self._process_adfs_response(request, adfs_response)
 
 
 class AdfsAccessTokenBackend(AdfsBaseBackend):
