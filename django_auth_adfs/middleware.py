@@ -63,5 +63,5 @@ def adfs_refresh_middleware(get_response):
             backend = auth.load_backend(backend_str)
             if isinstance(backend, AdfsAuthCodeBackend):
                 backend.process_request(request)
-        return get_response()
+        return get_response(request)
     return middleware

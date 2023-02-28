@@ -396,6 +396,11 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
             logger.debug("Authentication backend was called but no authorization code was received")
             return
 
+        # If there's no request object, we pass control to the next authentication backend
+        if request is None:
+            logger.debug("Authentication backend was called without request")
+            return
+
         # If loaded data is too old, reload it again
         provider_config.load_config()
 
@@ -405,20 +410,20 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
 
     def _process_adfs_response(self, request, adfs_response):
         user = self.process_access_token(adfs_response['access_token'], adfs_response)
-        request.session['adfs_access_token'] = adfs_response['access_token']
+        request.session['_adfs_access_token'] = adfs_response['access_token']
         expiry = datetime.now() + timedelta(seconds=adfs_response['expires_in'])
-        request.session['adfs_token_expiry'] = expiry.isoformat()
+        request.session['_adfs_token_expiry'] = expiry.isoformat()
         if 'refresh_token' in adfs_response:
-            request.session['adfs_refresh_token'] = adfs_response['refresh_token']
+            request.session['_adfs_refresh_token'] = adfs_response['refresh_token']
         request.session.save()
         return user
 
     def process_request(self, request):
         now = datetime.now() + settings.REFRESH_THRESHOLD
-        expiry = datetime.fromisoformat(request.session['adfs_token_expiry'])
+        expiry = datetime.fromisoformat(request.session['_adfs_token_expiry'])
         if now > expiry:
             try:
-                self._refresh_access_token(request, request.session['adfs_refresh_token'])
+                self._refresh_access_token(request, request.session['_adfs_refresh_token'])
             except (PermissionDenied, HTTPError):
                 logout(request)
 

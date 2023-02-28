@@ -1,5 +1,7 @@
 import base64
 
+from datetime import datetime, timedelta
+
 from django.urls import reverse
 
 from django_auth_adfs.exceptions import MFARequired
@@ -12,9 +14,9 @@ except ImportError:  # Python 2.7
 from copy import deepcopy
 
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 from mock import Mock, patch
 
 from django_auth_adfs import signals
@@ -29,13 +31,12 @@ class AuthenticationTests(TestCase):
         Group.objects.create(name='group1')
         Group.objects.create(name='group2')
         Group.objects.create(name='group3')
-        self.request = RequestFactory().get('/oauth2/callback')
         self.signal_handler = Mock()
         signals.post_authenticate.connect(self.signal_handler)
 
     @mock_adfs("2012")
     def test_post_authenticate_signal_send(self):
-        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+        self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
         self.assertEqual(self.signal_handler.call_count, 1)
 
     @mock_adfs("2012")
@@ -495,3 +496,34 @@ class AuthenticationTests(TestCase):
                 patch("django_auth_adfs.backend.settings", Settings()):
             response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
             self.assertEqual(response.status_code, 401)
+
+    @mock_adfs("2016")
+    def test_access_token_unexpired(self):
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+        self.assertFalse(response.wsgi_request.user.is_anonymous)
+        response = self.client.get(reverse('test'))
+        self.assertEqual(response.status_code, 200)
+
+    @mock_adfs("2016")
+    def test_access_token_expired(self):
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+        self.assertFalse(response.wsgi_request.user.is_anonymous)
+        fromisoformat = datetime.fromisoformat
+        with patch('django_auth_adfs.backend.datetime') as dt:
+            dt.fromisoformat = fromisoformat
+            dt.now.return_value = datetime.now() + timedelta(hours=1)
+            response = self.client.get(reverse('test'))
+        self.assertEqual(response.status_code, 200)
+
+    @mock_adfs("2016", refresh_token_expired=True)
+    def test_refresh_token_expired(self):
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+        self.assertFalse(response.wsgi_request.user.is_anonymous)
+        fromisoformat = datetime.fromisoformat
+        with patch('django_auth_adfs.backend.datetime') as dt:
+            dt.fromisoformat = fromisoformat
+            dt.now.return_value = datetime.now() + timedelta(hours=1)
+            response = self.client.get(reverse('test'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], f"{reverse('django_auth_adfs:login')}?next=/")
+        self.assertTrue(response.wsgi_request.user.is_anonymous)
