@@ -483,7 +483,7 @@ class AuthenticationTests(TestCase):
         del settings.AUTH_ADFS["SERVER"]
         settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
         settings.AUTH_ADFS["VERSION"] = 'v2.0'
-        settings.AUTH_ADFS["SCOPES"] = ['openid api://your-configured-client-id/user_impersonation']
+        settings.AUTH_ADFS["SCOPES"] = ['openid', 'api://your-configured-client-id/user_impersonation']
         with patch("django_auth_adfs.config.django_settings", settings), \
                 patch("django_auth_adfs.config.settings", Settings()), \
                 patch("django_auth_adfs.views.provider_config", ProviderConfig()):
