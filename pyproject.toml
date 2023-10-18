@@ -22,7 +22,6 @@ classifiers = [
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
@@ -36,9 +35,9 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = '^3.7'
+python = '^3.8'
 django = [
-    { version = '^3', python = '<=3.7' },
+    { version = '^3', python = '<=3.8' },
     { version = '^3 || ^4', python = '>=3.8' },
 ]
 requests = '^1 || ^2'
