@@ -53,17 +53,17 @@ jobs:
       #   with:
       #     path: .venv
       #     key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
-      - uses: actions/cache/save@v3
-        id: cache
-        with:
-          path: .venv
-          key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
       - run: poetry env use ${{ matrix.python-version }} && poetry install --no-root
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       - run: |
           source .venv/bin/activate
           pip install "Django==${{ matrix.django-version }}"
           pip install "djangorestframework==${{ matrix.drf-version }}"
+      - uses: actions/cache/save@v3
+        id: cache
+        with:
+          path: .venv
+          key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
       - name: Run tests
         run: |
           source .venv/bin/activate
