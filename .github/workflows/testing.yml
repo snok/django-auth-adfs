@@ -47,9 +47,14 @@ jobs:
       - uses: snok/install-poetry@v1
         with:
           virtualenvs-in-project: true
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
+      # - name: Load cached venv
+      #   id: cached-poetry-dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: .venv
+      #     key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
+      - uses: actions/cache/save@v3
+        id: cache
         with:
           path: .venv
           key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
