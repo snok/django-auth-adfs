@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11.6" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
         django-version: [ "3.2", "4.0", "4.1", "4.2"]
         drf-version: [ "3.11", "3.12", "3.13" ]
         exclude:
@@ -47,12 +47,12 @@ jobs:
       - uses: snok/install-poetry@v1
         with:
           virtualenvs-in-project: true
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
+      # - name: Load cached venv
+      #   id: cached-poetry-dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: .venv
+      #     key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
       - run: poetry env use ${{ matrix.python-version }} && poetry install --no-root
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       - run: |
