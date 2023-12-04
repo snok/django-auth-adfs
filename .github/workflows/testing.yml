@@ -30,17 +30,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
-        django-version: [ "3.2", "4.0", "4.1", "4.2"]
+        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
+        django-version: [ "3.2", "4.0", "4.1", "4.2", "5.0"]
         drf-version: [ "3.11", "3.12", "3.13" ]
         exclude:
-          # Python 3.7 is incompatible with Django v4+
-          - django-version: 4.0
-            python-version: 3.7
-          - django-version: 4.1
-            python-version: 3.7
-          - django-version: 4.2
-            python-version: 3.7
+          # Python 3.8 is incompatible with Django v5+
+          - django-version: 5.0
+            python-version: 3.8
+          # Python 3.9 is incompatible with Django v5+
+          - django-version: 5.0
+            python-version: 3.9
           # Python 3.11 is incompatible with Django <v4.1
           - django-version: 3.2
             python-version: 3.11
