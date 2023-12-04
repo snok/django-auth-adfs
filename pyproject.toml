@@ -16,6 +16,7 @@ classifiers = [
     'Framework :: Django :: 4.0',
     'Framework :: Django :: 4.1',
     'Framework :: Django :: 4.2',
+    'Framework :: Django :: 5.0',
     'Intended Audience :: Developers',
     'Intended Audience :: End Users/Desktop',
     'Operating System :: OS Independent',
@@ -39,7 +40,8 @@ classifiers = [
 python = '^3.7'
 django = [
     { version = '^3', python = '<=3.7' },
-    { version = '^3 || ^4', python = '>=3.8' },
+    { version = '^3 || ^4', python = '>=3.8 <3.10' },
+    { version = '^4 || ^5', python = '>=3.10' },
 ]
 requests = '^1 || ^2'
 urllib3 = '^1.26.0'
