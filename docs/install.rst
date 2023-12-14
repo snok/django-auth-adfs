@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Python 3.8 and above
-* Django 3.2 and above
+* Django 4.2 and above
 
 You will also need the following:
 
