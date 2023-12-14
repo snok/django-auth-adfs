@@ -42,17 +42,17 @@ django = [
     { version = '^3 || ^4', python = '>=3.8 <3.10' },
     { version = '^4 || ^5', python = '>=3.10' },
 ]
-requests = '^1 || ^2'
-urllib3 = '^1.26.0'
-cryptography = '>=1.7,<42.0'
-PyJWT = "^2.4.0"
+requests = '*'
+urllib3 = '*'
+cryptography = '*'
+PyJWT = "*"
 
 [tool.poetry.dev-dependencies]
 responses = '*'
 mock = '*'
 coverage = '*'
 djangorestframework = '*'
-django-filter = "^2.4.0"
+django-filter = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
