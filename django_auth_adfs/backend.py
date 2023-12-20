@@ -253,17 +253,22 @@ class AdfsBaseBackend(ModelBackend):
         ):
             username_claim = guest_username_claim
 
-        if not claims.get(username_claim):
-            logger.error("User claim's doesn't have the claim '%s' in his claims: %s" %
+        if not claims.get(username_claim) and not settings.UPN_CLAIM:
+            logger.error("User claim's doesn't have the claim '%s' in his claims and UPN_CLAIM is not set: %s" %
                          (username_claim, claims))
             raise PermissionDenied
 
-        userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
+        if settings.UPN_CLAIM:
+            userdata = {settings.UPN_CLAIM: claims['upn']}
+        else:
+            userdata = {usermodel.USERNAME_FIELD: claims[username_claim]}
 
         try:
             user = usermodel.objects.get(**userdata)
         except usermodel.DoesNotExist:
             if settings.CREATE_NEW_USERS:
+                if usermodel.USERNAME_FIELD not in userdata:
+                    userdata.update({usermodel.USERNAME_FIELD: claims['upn']})
                 user = usermodel.objects.create(**userdata)
                 logger.debug("User '%s' has been created.", claims[username_claim])
             else:
