@@ -95,27 +95,40 @@ class AdfsBaseBackend(ModelBackend):
             provider_config.msgraph_endpoint
         )
         headers = {"Authorization": "Bearer {}".format(obo_access_token)}
-        response = provider_config.session.get(graph_url, headers=headers, timeout=settings.TIMEOUT)
-        # 200 = valid token received
-        # 400 = 'something' is wrong in our request
-        if response.status_code in [400, 401]:
-            logger.error("MS Graph server returned an error: %s", response.json()["message"])
-            raise PermissionDenied
-
-        if response.status_code != 200:
-            logger.error("Unexpected MS Graph response: %s", response.content.decode())
-            raise PermissionDenied
-
         claim_groups = []
-        for group_data in response.json()["value"]:
-            if group_data["displayName"] is None:
-                logger.error(
-                    "The application does not have the required permission to read user groups from "
-                    "MS Graph (GroupMember.Read.All)"
-                )
+        batch_no = 0
+        while batch_no < 100:  # hard limit
+            batch_no += 1
+            # we have a batched result so make sure we get all groups
+            response = provider_config.session.get(graph_url, headers=headers, timeout=settings.TIMEOUT)
+            # 200 = valid token received
+            # 400 = 'something' is wrong in our request
+            if response.status_code in [400, 401]:
+                logger.error("MS Graph server returned an error: %s", response.json()["message"])
                 raise PermissionDenied
 
-            claim_groups.append(group_data["displayName"])
+            if response.status_code != 200:
+                logger.error("Unexpected MS Graph response: %s", response.content.decode())
+                raise PermissionDenied
+
+            result = response.json()
+            for group_data in result["value"]:
+                if group_data["displayName"] is None:
+                    logger.error(
+                        "The application does not have the required permission to read user groups from "
+                        "MS Graph (GroupMember.Read.All)"
+                    )
+                    raise PermissionDenied
+
+                claim_groups.append(group_data["displayName"])
+
+            if '@odata.nextLink' not in result:
+                break
+
+            # have more items, so continue with next batch
+            logger.debug("have more items, continue with batch #%s" % (batch_no))
+            graph_url = result['@odata.nextLink']
+
         return claim_groups
 
     def validate_access_token(self, access_token):
