@@ -340,6 +340,18 @@ This parameter will create groups from ADFS in the Django database if they do no
 .. IMPORTANT::
     This parameter only has effect if GROUP_CLAIM is set to something other then ``None``.
 
+.. _redir_uri_setting:
+
+REDIR_URI
+----------------
+* **Default**:
+* **Type**: ``string``
+
+Set this if you want to force a redirect_uri, instead of building it automatically.
+
+This can be useful if you rely on a proxy that can't be altered to allow http/https identification, or
+if your application operates behind a gateway that changes the netloc of your uri, which creates an undesired redirect_uri.
+
 .. _relying_party_id_setting:
 
 RELYING_PARTY_ID
