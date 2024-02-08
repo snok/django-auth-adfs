@@ -64,6 +64,7 @@ class Settings(object):
         self.GROUPS_CLAIM = "group"
         self.LOGIN_EXEMPT_URLS = []
         self.MIRROR_GROUPS = False
+        self.REDIR_URI = None
         self.RELYING_PARTY_ID = None  # Required
         self.RETRIES = 3
         self.SERVER = None  # Required
@@ -91,7 +92,6 @@ class Settings(object):
             "AUTHORIZE_PATH": "This setting is automatically loaded from ADFS.",
             "ISSUER": "This setting is automatically loaded from ADFS.",
             "LOGIN_REDIRECT_URL": "Instead use the standard Django settings with the same name.",
-            "REDIR_URI": "This setting is automatically determined based on the URL configuration of Django.",
             "SIGNING_CERT": "The token signing certificates are automatically loaded from ADFS.",
             "TOKEN_PATH": "This setting is automatically loaded from ADFS.",
         }
@@ -321,7 +321,12 @@ class ProviderConfig(object):
 
     def redirect_uri(self, request):
         self.load_config()
-        return request.build_absolute_uri(reverse("django_auth_adfs:callback"))
+        uri_to_redirect = ""
+        if settings.REDIR_URI:
+            uri_to_redirect = settings.REDIR_URI
+        else:
+            uri_to_redirect = request.build_absolute_uri(reverse("django_auth_adfs:callback"))
+        return uri_to_redirect
 
     def build_authorization_endpoint(self, request, disable_sso=None, force_mfa=False):
         """
