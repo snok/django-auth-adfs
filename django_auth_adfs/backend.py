@@ -2,12 +2,11 @@ import logging
 from datetime import datetime, timedelta
 
 import jwt
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
 from django.core.exceptions import (ImproperlyConfigured, ObjectDoesNotExist,
                                     PermissionDenied)
-from requests import HTTPError
 
 from django_auth_adfs import signals
 from django_auth_adfs.config import provider_config, settings
@@ -418,16 +417,7 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
         request.session.save()
         return user
 
-    def process_request(self, request):
-        now = datetime.now() + settings.REFRESH_THRESHOLD
-        expiry = datetime.fromisoformat(request.session['_adfs_token_expiry'])
-        if now > expiry:
-            try:
-                self._refresh_access_token(request, request.session['_adfs_refresh_token'])
-            except (PermissionDenied, HTTPError):
-                logout(request)
-
-    def _refresh_access_token(self, request, refresh_token):
+    def refresh_access_token(self, request, refresh_token):
         provider_config.load_config()
         response = provider_config.session.post(
             provider_config.token_endpoint,

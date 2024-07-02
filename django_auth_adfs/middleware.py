@@ -1,12 +1,17 @@
 """
 Based on https://djangosnippets.org/snippets/1179/
 """
+import logging
+from datetime import datetime
 from re import compile
 
 from django.conf import settings as django_settings
 from django.contrib import auth
+from django.contrib.auth import logout
 from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse
+from requests import HTTPError
 
 from django_auth_adfs.backend import AdfsAuthCodeBackend
 from django_auth_adfs.exceptions import MFARequired
@@ -20,6 +25,8 @@ LOGIN_EXEMPT_URLS = [
 ]
 if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
     LOGIN_EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
+
+logger = logging.getLogger("django_auth_adfs")
 
 
 class LoginRequiredMiddleware:
@@ -62,6 +69,13 @@ def adfs_refresh_middleware(get_response):
         else:
             backend = auth.load_backend(backend_str)
             if isinstance(backend, AdfsAuthCodeBackend):
-                backend.process_request(request)
+                now = datetime.now() + settings.REFRESH_THRESHOLD
+                expiry = datetime.fromisoformat(request.session['_adfs_token_expiry'])
+                if now > expiry:
+                    try:
+                        backend.refresh_access_token(request, request.session['_adfs_refresh_token'])
+                    except (PermissionDenied, HTTPError) as error:
+                        logger.debug("Error refreshing access token: %s", error)
+                        logout(request)
         return get_response(request)
     return middleware
