@@ -477,6 +477,33 @@ class AuthenticationTests(TestCase):
             self.assertEqual(redir.path.rstrip("/"), '/01234567-89ab-cdef-0123-456789abcdef/oauth2/authorize')
             self.assertEqual(qs, sq_expected)
 
+    @mock_adfs("azure")
+    def test_scopes_generated_correctly(self):
+        from django_auth_adfs.config import django_settings
+        settings = deepcopy(django_settings)
+        del settings.AUTH_ADFS["SERVER"]
+        settings.AUTH_ADFS["TENANT_ID"] = "dummy_tenant_id"
+        settings.AUTH_ADFS["VERSION"] = 'v2.0'
+        settings.AUTH_ADFS["SCOPES"] = ['openid', 'api://your-configured-client-id/user_impersonation']
+        with patch("django_auth_adfs.config.django_settings", settings), \
+                patch("django_auth_adfs.config.settings", Settings()), \
+                patch("django_auth_adfs.views.provider_config", ProviderConfig()):
+            response = self.client.get("/oauth2/login?next=/test/")
+            self.assertEqual(response.status_code, 302)
+            redir = urlparse(response["Location"])
+            qs = parse_qs(redir.query)
+            sq_expected = {
+                'scope': ['openid api://your-configured-client-id/user_impersonation'],
+                'client_id': ['your-configured-client-id'],
+                'state': ['L3Rlc3Qv'],
+                'response_type': ['code'],
+                'redirect_uri': ['http://testserver/oauth2/callback']
+            }
+            self.assertEqual(redir.scheme, 'https')
+            self.assertEqual(redir.hostname, 'login.microsoftonline.com')
+            self.assertEqual(redir.path.rstrip("/"), '/01234567-89ab-cdef-0123-456789abcdef/oauth2/authorize')
+            self.assertEqual(qs, sq_expected)
+
     @mock_adfs("2016")
     def test_inactive_user(self):
         user = User.objects.create(**{
@@ -492,7 +519,7 @@ class AuthenticationTests(TestCase):
         from django_auth_adfs.config import django_settings
         settings = deepcopy(django_settings)
         settings.AUTH_ADFS["CREATE_NEW_USERS"] = False
-        with patch("django_auth_adfs.config.django_settings", settings),\
+        with patch("django_auth_adfs.config.django_settings", settings), \
                 patch("django_auth_adfs.backend.settings", Settings()):
             response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
             self.assertEqual(response.status_code, 401)

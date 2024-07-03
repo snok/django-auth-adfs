@@ -79,6 +79,7 @@ class Settings(object):
         self.PROXIES = None
 
         self.VERSION = 'v1.0'
+        self.SCOPES = []
 
         required_settings = [
             "AUDIENCE",
@@ -139,6 +140,10 @@ class Settings(object):
         elif "VERSION" in _settings:
             raise ImproperlyConfigured("The VERSION cannot be set when TENANT_ID is not set.")
 
+        if self.VERSION == "v2.0" and not self.SCOPES and self.RELYING_PARTY_ID:
+            warnings.warn('Use `SCOPES` for AzureAD instead of RELYING_PARTY_ID', DeprecationWarning)
+        if not isinstance(self.SCOPES, list):
+            raise ImproperlyConfigured("Scopes must be a list")
         # Overwrite defaults with user settings
         for setting, value in _settings.items():
             if hasattr(self, setting):
@@ -347,7 +352,10 @@ class ProviderConfig(object):
         })
         if self._mode == "openid_connect":
             if settings.VERSION == 'v2.0':
-                query["scope"] = f"openid api://{settings.RELYING_PARTY_ID}/.default"
+                if settings.SCOPES:
+                    query['scope'] = " ".join(settings.SCOPES)
+                else:
+                    query["scope"] = f"openid api://{settings.RELYING_PARTY_ID}/.default"
                 query.pop("resource")
             else:
                 query["scope"] = "openid"

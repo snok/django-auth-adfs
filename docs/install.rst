@@ -6,8 +6,8 @@ Installation
 Requirements
 ------------
 
-* Python 3.5 and above
-* Django 1.11 and above
+* Python 3.8 and above
+* Django 4.2 and above
 
 You will also need the following:
 
