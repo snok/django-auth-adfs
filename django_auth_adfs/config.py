@@ -341,7 +341,8 @@ class ProviderConfig(object):
             redirect_to = request.POST.get(REDIRECT_FIELD_NAME, None)
         else:
             redirect_to = request.GET.get(REDIRECT_FIELD_NAME, None)
-            warnings.warn('GET is deprecated and will be removed in future versions. Please switch to POST for secure data transmission.', DeprecationWarning)
+            warnings.warn('GET is deprecated and will be removed in future versions. '
+                          'Please switch to POST for secure data transmission.', DeprecationWarning)
         if not redirect_to:
             redirect_to = django_settings.LOGIN_REDIRECT_URL
         redirect_to = base64.urlsafe_b64encode(redirect_to.encode()).decode()

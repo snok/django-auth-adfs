@@ -83,7 +83,8 @@ class OAuth2LoginView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. Please switch to POST for secure data transmission.', DeprecationWarning)
+        warnings.warn('GET is deprecated and will be removed in future versions. '
+                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         return redirect(provider_config.build_authorization_endpoint(request))
 
     def post(self, request):
@@ -104,7 +105,8 @@ class OAuth2LoginNoSSOView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. Please switch to POST for secure data transmission.', DeprecationWarning)
+        warnings.warn('GET is deprecated and will be removed in future versions. '
+                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         return redirect(provider_config.build_authorization_endpoint(request, disable_sso=True))
 
     def post(self, request):
@@ -125,7 +127,8 @@ class OAuth2LoginForceMFA(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. Please switch to POST for secure data transmission.', DeprecationWarning)
+        warnings.warn('GET is deprecated and will be removed in future versions. '
+                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
 
     def post(self, request):
@@ -146,7 +149,8 @@ class OAuth2LogoutView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. Please switch to POST for secure data transmission.', DeprecationWarning)
+        warnings.warn('GET is deprecated and will be removed in future versions. '
+                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         logout(request)
         return redirect(provider_config.build_end_session_endpoint())
 
