@@ -110,7 +110,7 @@ You can use them like this in your django templates:
 
 - POST (recommended):
 
-.. code-block:: html
+.. code-block:: html+django
 
     <form method="post" action="{% url 'django_auth_adfs:logout' %}">{% csrf_token %}
         <button type="submit">Logout</button>
