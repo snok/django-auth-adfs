@@ -100,7 +100,7 @@ This will add these paths to Django:
 
 You can use them like this in your django templates:
 
-- GET (deprecated):
+- GET:
 
 .. code-block:: html
 
@@ -108,7 +108,7 @@ You can use them like this in your django templates:
     <a href="{% url 'django_auth_adfs:login' %}">Login</a>
     <a href="{% url 'django_auth_adfs:login-no-sso' %}">Login (no SSO)</a>
 
-- POST (recommended):
+- POST:
 
 .. code-block:: html+django
 

@@ -1,6 +1,5 @@
 import base64
 import logging
-import warnings
 
 from django.conf import settings as django_settings
 from django.contrib.auth import authenticate, login, logout
@@ -83,8 +82,6 @@ class OAuth2LoginView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. '
-                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         return redirect(provider_config.build_authorization_endpoint(request))
 
     def post(self, request):
@@ -105,8 +102,6 @@ class OAuth2LoginNoSSOView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. '
-                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         return redirect(provider_config.build_authorization_endpoint(request, disable_sso=True))
 
     def post(self, request):
@@ -127,8 +122,6 @@ class OAuth2LoginForceMFA(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. '
-                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
 
     def post(self, request):
@@ -149,8 +142,6 @@ class OAuth2LogoutView(View):
         Args:
             request (django.http.request.HttpRequest): A Django Request object
         """
-        warnings.warn('GET is deprecated and will be removed in future versions. '
-                      'Please switch to POST for secure data transmission.', DeprecationWarning)
         logout(request)
         return redirect(provider_config.build_end_session_endpoint())
 
