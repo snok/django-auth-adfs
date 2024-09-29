@@ -102,7 +102,9 @@ This will add these paths to Django:
 * ``/oauth2/callback`` where ADFS redirects back to after login. So make sure you set the redirect URI on ADFS to this.
 * ``/oauth2/logout`` which logs out the user from both Django and ADFS.
 
-You can use them like this in your django templates:
+Below is sample Django template code to use these paths depending if
+you'd like to use GET or POST requests. Logging out was deprecated in
+`Django 4.1 <https://docs.djangoproject.com/en/5.1/releases/4.1/#features-deprecated-in-4-1>`_.
 
 - GET:
 
