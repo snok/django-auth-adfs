@@ -114,7 +114,7 @@ you'd like to use GET or POST requests. Logging out was deprecated in
     <a href="{% url 'django_auth_adfs:login' %}">Login</a>
     <a href="{% url 'django_auth_adfs:login-no-sso' %}">Login (no SSO)</a>
 
-- POST:
+- Using POST requests:
 
 .. code-block:: html+django
 
