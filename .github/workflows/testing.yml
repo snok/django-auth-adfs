@@ -37,7 +37,7 @@ jobs:
           # It's not worth it to run the full test suite
           # with the bleeding-edge versions. When we drop 3.8
           # we can move this up into the matrix.
-          - python-version: "3.13.0rc2"
+          - python-version: "3.13"
             django-version: 5.1
             drf-version: "3.13"
         exclude:
