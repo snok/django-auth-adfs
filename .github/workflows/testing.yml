@@ -38,7 +38,7 @@ jobs:
           # with the bleeding-edge versions. When we drop 3.8
           # we can move this up into the matrix.
           - django-version: 5.1
-            python-version: "3.13"
+            python-version: "3.13.0rc2"
             drf-version: "3.13"
         exclude:
           # Python 3.8 is incompatible with Django v5+
