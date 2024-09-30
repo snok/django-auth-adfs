@@ -31,14 +31,27 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12"]
-        django-version: [ "4.2", "5.0"]
+        django-version: [ "4.2", "5.0", "5.1"]
         drf-version: [ "3.11", "3.12", "3.13" ]
+        include:
+          # It's not worth it to run the full test suite
+          # with the bleeding-edge versions. When we drop 3.8
+          # we can move this up into the matrix.
+          - django-version: 5.1
+            python-version: "3.13"
+            drf-version: "3.13"
         exclude:
           # Python 3.8 is incompatible with Django v5+
           - django-version: 5.0
             python-version: 3.8
           # Python 3.9 is incompatible with Django v5+
           - django-version: 5.0
+            python-version: 3.9
+          # Python 3.8 is incompatible with Django v5+
+          - django-version: 5.1
+            python-version: 3.8
+          # Python 3.9 is incompatible with Django v5+
+          - django-version: 5.1
             python-version: 3.9
     steps:
       - uses: actions/checkout@v3
