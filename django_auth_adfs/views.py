@@ -84,9 +84,27 @@ class OAuth2LoginView(View):
         """
         return redirect(provider_config.build_authorization_endpoint(request))
 
+    def post(self, request):
+        """
+        Initiates the OAuth2 flow and redirect the user agent to ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        return redirect(provider_config.build_authorization_endpoint(request))
+
 
 class OAuth2LoginNoSSOView(View):
     def get(self, request):
+        """
+        Initiates the OAuth2 flow and redirect the user agent to ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        return redirect(provider_config.build_authorization_endpoint(request, disable_sso=True))
+
+    def post(self, request):
         """
         Initiates the OAuth2 flow and redirect the user agent to ADFS
 
@@ -106,9 +124,28 @@ class OAuth2LoginForceMFA(View):
         """
         return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
 
+    def post(self, request):
+        """
+        Initiates the OAuth2 flow and redirect the user agent to ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        return redirect(provider_config.build_authorization_endpoint(request, force_mfa=True))
+
 
 class OAuth2LogoutView(View):
     def get(self, request):
+        """
+        Logs out the user from both Django and ADFS
+
+        Args:
+            request (django.http.request.HttpRequest): A Django Request object
+        """
+        logout(request)
+        return redirect(provider_config.build_end_session_endpoint())
+
+    def post(self, request):
         """
         Logs out the user from both Django and ADFS
 
