@@ -108,24 +108,27 @@ you'd like to use GET or POST requests. Logging out was deprecated in
 
 - Using GET requests:
 
-.. code-block:: html
+    .. code-block:: html
 
-    <a href="{% url 'django_auth_adfs:logout' %}">Logout</a>
-    <a href="{% url 'django_auth_adfs:login' %}">Login</a>
-    <a href="{% url 'django_auth_adfs:login-no-sso' %}">Login (no SSO)</a>
+        <a href="{% url 'django_auth_adfs:logout' %}">Logout</a>
+        <a href="{% url 'django_auth_adfs:login' %}">Login</a>
+        <a href="{% url 'django_auth_adfs:login-no-sso' %}">Login (no SSO)</a>
 
 - Using POST requests:
 
-.. code-block:: html+django
+    .. code-block:: html+django
 
-    <form method="post" action="{% url 'django_auth_adfs:logout' %}">{% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-    <form method="post" action="{% url 'django_auth_adfs:login' %}">{% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
-        <button type="submit">Login</button>
-    </form>
-    <form method="post" action="{% url 'django_auth_adfs:login-no-sso' %}">{% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
-        <button type="submit">Login (no SSO)</button>
-    </form>
+        <form method="post" action="{% url 'django_auth_adfs:logout' %}">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+        <form method="post" action="{% url 'django_auth_adfs:login' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit">Login</button>
+        </form>
+        <form method="post" action="{% url 'django_auth_adfs:login-no-sso' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit">Login (no SSO)</button>
+        </form>
