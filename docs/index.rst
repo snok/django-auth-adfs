@@ -38,6 +38,7 @@ Contents
     settings_ref
     config_guides
     middleware
+    signals
     rest_framework
     demo
     troubleshooting
