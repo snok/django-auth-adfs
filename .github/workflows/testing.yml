@@ -40,6 +40,9 @@ jobs:
           # Python 3.9 is incompatible with Django v5+
           - django-version: 5.1
             python-version: 3.9
+          # Django 4.2 is incompatible with Python 3.13+
+          - django-version: 4.2
+            python-version: 3.13
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v5
