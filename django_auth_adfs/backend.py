@@ -88,6 +88,25 @@ class AdfsBaseBackend(ModelBackend):
         logger.debug("Received OBO access token: %s", obo_access_token)
         return obo_access_token
 
+    def get_group_memberships_from_ms_graph_params(self):
+        """
+        Return the parameters to be used in the querystring
+        when fetching the user's group memberships.
+
+        Possible keys to be used:
+            - $count
+            - $expand
+            - $filter
+            - $orderby
+            - $search
+            - $select
+            - $top
+
+        Docs:
+            https://learn.microsoft.com/en-us/graph/api/group-list-transitivememberof?view=graph-rest-1.0&tabs=python#http-request
+        """
+        return {}
+
     def get_group_memberships_from_ms_graph(self, obo_access_token):
         """
         Looks up a users group membership from the MS Graph API
@@ -105,6 +124,7 @@ class AdfsBaseBackend(ModelBackend):
         response = self._ms_request(
             action=provider_config.session.get,
             url=graph_url,
+            data=self.get_group_memberships_from_ms_graph_params(),
             headers=headers,
         )
         claim_groups = []
