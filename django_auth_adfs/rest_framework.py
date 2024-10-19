@@ -6,6 +6,8 @@ from rest_framework.authentication import (
     BaseAuthentication, get_authorization_header
 )
 
+from django_auth_adfs.exceptions import MFARequired
+
 
 class AdfsAccessTokenAuthentication(BaseAuthentication):
     """
@@ -33,7 +35,10 @@ class AdfsAccessTokenAuthentication(BaseAuthentication):
         # Authenticate the user
         # The AdfsAuthCodeBackend authentication backend will notice the "access_token" parameter
         # and skip the request for an access token using the authorization code
-        user = authenticate(access_token=auth[1])
+        try:
+            user = authenticate(access_token=auth[1])
+        except MFARequired as e:
+            raise exceptions.AuthenticationFailed('MFA auth is required.') from e
 
         if user is None:
             raise exceptions.AuthenticationFailed('Invalid access token.')
