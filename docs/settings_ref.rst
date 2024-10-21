@@ -173,6 +173,8 @@ ADFS server. Based on this information, certain configuration for this module is
 This setting determines the interval after which the configuration is reloaded. This allows to automatically follow the
 token signing certificate rollover on ADFS.
 
+.. _create_new_users_setting:
+
 CREATE_NEW_USERS
 ----------------
 * **Default**: ``True``
