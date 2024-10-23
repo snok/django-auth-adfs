@@ -15,6 +15,35 @@ logger = logging.getLogger("django_auth_adfs")
 
 
 class AdfsBaseBackend(ModelBackend):
+
+    def _ms_request(self, action, url, data=None, **kwargs):
+        """
+        Make a Microsoft Entra/GraphQL request
+
+
+        Args:
+            action (callable): The callable for making a request.
+            url (str): The URL the request should be sent to.
+            data (dict): Optional dictionary of data to be sent in the request.
+
+        Returns:
+            response: The response from the server. If it's not a 200, a
+                      PermissionDenied is raised.
+        """
+        response = action(url, data=data, timeout=settings.TIMEOUT, **kwargs)
+        # 200 = valid token received
+        # 400 = 'something' is wrong in our request
+        if response.status_code == 400:
+            if response.json().get("error_description", "").startswith("AADSTS50076"):
+                raise MFARequired
+            logger.error("ADFS server returned an error: %s", response.json()["error_description"])
+            raise PermissionDenied
+
+        if response.status_code != 200:
+            logger.error("Unexpected ADFS response: %s", response.content.decode())
+            raise PermissionDenied
+        return response
+
     def exchange_auth_code(self, authorization_code, request):
         logger.debug("Received authorization code: %s", authorization_code)
         data = {
@@ -27,19 +56,7 @@ class AdfsBaseBackend(ModelBackend):
             data['client_secret'] = settings.CLIENT_SECRET
 
         logger.debug("Getting access token at: %s", provider_config.token_endpoint)
-        response = provider_config.session.post(provider_config.token_endpoint, data, timeout=settings.TIMEOUT)
-        # 200 = valid token received
-        # 400 = 'something' is wrong in our request
-        if response.status_code == 400:
-            if response.json().get("error_description", "").startswith("AADSTS50076"):
-                raise MFARequired
-            logger.error("ADFS server returned an error: %s", response.json()["error_description"])
-            raise PermissionDenied
-
-        if response.status_code != 200:
-            logger.error("Unexpected ADFS response: %s", response.content.decode())
-            raise PermissionDenied
-
+        response = self._ms_request(provider_config.session.post, provider_config.token_endpoint, data)
         adfs_response = response.json()
         return adfs_response
 
@@ -66,20 +83,29 @@ class AdfsBaseBackend(ModelBackend):
         else:
             data["resource"] = 'https://graph.microsoft.com'
 
-        response = provider_config.session.get(provider_config.token_endpoint, data=data, timeout=settings.TIMEOUT)
-        # 200 = valid token received
-        # 400 = 'something' is wrong in our request
-        if response.status_code == 400:
-            logger.error("ADFS server returned an error: %s", response.json()["error_description"])
-            raise PermissionDenied
-
-        if response.status_code != 200:
-            logger.error("Unexpected ADFS response: %s", response.content.decode())
-            raise PermissionDenied
-
+        response = self._ms_request(provider_config.session.get, provider_config.token_endpoint, data)
         obo_access_token = response.json()["access_token"]
         logger.debug("Received OBO access token: %s", obo_access_token)
         return obo_access_token
+
+    def get_group_memberships_from_ms_graph_params(self):
+        """
+        Return the parameters to be used in the querystring
+        when fetching the user's group memberships.
+
+        Possible keys to be used:
+            - $count
+            - $expand
+            - $filter
+            - $orderby
+            - $search
+            - $select
+            - $top
+
+        Docs:
+            https://learn.microsoft.com/en-us/graph/api/group-list-transitivememberof?view=graph-rest-1.0&tabs=python#http-request
+        """
+        return {}
 
     def get_group_memberships_from_ms_graph(self, obo_access_token):
         """
@@ -95,17 +121,12 @@ class AdfsBaseBackend(ModelBackend):
             provider_config.msgraph_endpoint
         )
         headers = {"Authorization": "Bearer {}".format(obo_access_token)}
-        response = provider_config.session.get(graph_url, headers=headers, timeout=settings.TIMEOUT)
-        # 200 = valid token received
-        # 400 = 'something' is wrong in our request
-        if response.status_code in [400, 401]:
-            logger.error("MS Graph server returned an error: %s", response.json()["message"])
-            raise PermissionDenied
-
-        if response.status_code != 200:
-            logger.error("Unexpected MS Graph response: %s", response.content.decode())
-            raise PermissionDenied
-
+        response = self._ms_request(
+            action=provider_config.session.get,
+            url=graph_url,
+            data=self.get_group_memberships_from_ms_graph_params(),
+            headers=headers,
+        )
         claim_groups = []
         for group_data in response.json()["value"]:
             if group_data["displayName"] is None:
