@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   linting:
@@ -31,14 +31,15 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13"]
-        django-version: [ "4.2", "5.0", "5.1"]
+        django-version: [ "4.2", "5.0", "5.1", "5.2"]
         drf-version: ["3.14", "3.15"]
         exclude:
           # Python 3.9 is incompatible with Django v5+
           - django-version: 5.0
             python-version: 3.9
-          # Python 3.9 is incompatible with Django v5+
           - django-version: 5.1
+            python-version: 3.9
+          - django-version: 5.2
             python-version: 3.9
           # Django 4.2 is incompatible with Python 3.13+
           - django-version: 4.2
@@ -62,7 +63,7 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       - run: |
           source .venv/bin/activate
-          pip install "Django~=${{ matrix.django-version }}.0"
+          pip install "Django~=${{ matrix.django-version }}.0a1"
           pip install "djangorestframework~=${{ matrix.drf-version }}.0"
       - name: Run tests
         run: |
