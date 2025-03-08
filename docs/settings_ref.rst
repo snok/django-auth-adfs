@@ -497,3 +497,110 @@ PROXIES
 
 An optional proxy for all communication with the server. Example: ``{'http': '10.0.0.1', 'https': '10.0.0.2'}``
 See the `requests documentation <https://requests.readthedocs.io/en/v3.0.0/api/#requests.Session.proxies>`__ for more information.
+
+TOKEN_REFRESH_THRESHOLD
+---------------------------
+* **Default**: ``300`` (5 minutes)
+* **Type**: ``integer``
+* **Unit**: seconds
+
+Used by the ``TokenLifecycleMiddleware`` to determine how long before token expiration to attempt a refresh.
+This setting controls how proactively the middleware will refresh tokens before they expire.
+
+For example, with the default value of 300 seconds (5 minutes), if a token is set to expire in 4 minutes,
+the middleware will attempt to refresh it during the next request. This helps ensure that users don't
+experience disruptions due to token expiration during active sessions.
+
+.. code-block:: python
+
+    # In your Django settings.py
+    # Refresh tokens 10 minutes before they expire
+    AUTH_ADFS = {
+        # other settings
+        "TOKEN_REFRESH_THRESHOLD": 600
+    }
+
+STORE_OBO_TOKEN
+------------------
+* **Default**: ``True``
+* **Type**: ``boolean``
+
+Used by the ``TokenLifecycleMiddleware`` to enable or disable the storage of On-Behalf-Of (OBO) tokens
+for Microsoft Graph API. Set to ``False`` if you don't need to access Microsoft Graph API.
+
+.. note::
+   When using the ``TokenLifecycleMiddleware`` with Django's ``signed_cookies`` session backend, token storage
+   is always disabled for security reasons. This behavior cannot be overridden. If you need token storage,
+   you must use a different session backend like database or cache-based sessions.
+
+.. code-block:: python
+
+    # In your Django settings.py
+    AUTH_ADFS = {
+        # other settings
+        "STORE_OBO_TOKEN": False
+    }
+
+TOKEN_ENCRYPTION_SALT
+--------------------------
+* **Default**: ``b"django_auth_adfs_token_encryption"``
+* **Type**: ``string``
+
+Used by the ``TokenLifecycleMiddleware`` to derive an encryption key for token encryption.
+The salt is combined with Django's ``SECRET_KEY`` to create a unique encryption key.
+
+You can customize this value to use a different salt for token encryption:
+
+.. code-block:: python
+
+    # In your Django settings.py
+    AUTH_ADFS = {
+        # other settings
+        "TOKEN_ENCRYPTION_SALT": "your-custom-salt-string"
+    }
+
+While the default value is defined as a bytes literal (with the ``b`` prefix) in the code,
+you should simply provide a regular string in your settings. The middleware automatically
+handles the conversion to bytes as needed.
+
+.. warning::
+   If you change this setting after tokens have been stored in sessions, those tokens will no longer be decryptable.
+   This effectively invalidates all existing tokens, requiring users to re-authenticate.
+   Consider this when deploying changes to the salt in production environments.
+
+LOGOUT_ON_TOKEN_REFRESH_FAILURE
+-------------------------------
+* **Default**: ``False``
+* **Type**: ``boolean``
+
+Used by the ``TokenLifecycleMiddleware`` to control whether users should be automatically logged out when token refresh fails.
+
+When set to ``True``, if a token refresh attempt fails (either due to an error response from the server or an exception),
+the middleware will automatically log the user out of the Django application.
+
+When set to ``False`` (the default), the middleware will log the error but allow the user to continue using the application
+until their session expires naturally, even though their tokens are no longer valid.
+
+This setting is particularly important for security considerations, as it determines how your application responds when a user's account
+has been disabled in Azure AD/ADFS. When enabled, it can help ensure that users who have had their accounts disabled in the
+identity provider are promptly logged out of your Django application, closing a potential security gap.
+
+This feature is disabled by default to prioritize user experience, but can be enabled for applications where security requirements
+outweigh the potential disruption of unexpected logouts.
+
+.. code-block:: python
+
+    # In your Django settings.py
+    AUTH_ADFS = {
+        # other settings
+        "LOGOUT_ON_TOKEN_REFRESH_FAILURE": True
+    }
+
+.. note::
+   This setting only affects what happens when token refresh fails. It does not affect the initial authentication process
+   or what happens when tokens expire without a refresh attempt.
+
+.. important::
+   Even for applications that don't make additional API calls after authentication, enabling this setting provides
+   an optional security mechanism that can help ensure that access revocation in Azure AD/ADFS is reflected in your
+   Django application.

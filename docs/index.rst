@@ -38,6 +38,7 @@ Contents
     settings_ref
     config_guides
     middleware
+    token_lifecycle
     signals
     rest_framework
     demo

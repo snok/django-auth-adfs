@@ -77,6 +77,12 @@ class Settings(object):
         )
         self.PROXIES = None
 
+        # Token Lifecycle Middleware settings
+        self.TOKEN_REFRESH_THRESHOLD = 300  # 5 minutes
+        self.STORE_OBO_TOKEN = True
+        self.TOKEN_ENCRYPTION_SALT = b"django_auth_adfs_token_encryption"
+        self.LOGOUT_ON_TOKEN_REFRESH_FAILURE = False
+
         self.VERSION = 'v1.0'
         self.SCOPES = []
 
