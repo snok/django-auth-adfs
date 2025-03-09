@@ -61,11 +61,9 @@ class TokenManager:
     
     def is_middleware_enabled(self):
         """Check if the TokenLifecycleMiddleware is enabled."""
+        EXPECTED_MIDDLEWARE = 'django_auth_adfs.middleware.TokenLifecycleMiddleware'
         try:
-            for middleware in django_settings.MIDDLEWARE:
-                if middleware.endswith('TokenLifecycleMiddleware'):
-                    return True
-            return False
+            return EXPECTED_MIDDLEWARE in django_settings.MIDDLEWARE
         except Exception as e:
             logger.warning(f"Error checking if middleware is enabled: {e}")
             return False
@@ -208,37 +206,78 @@ class TokenManager:
         encrypted_token = request.session.get(self.OBO_ACCESS_TOKEN_KEY)
         return self.decrypt_token(encrypted_token)
     
+    def validate_token_format(self, token):
+        """
+        Basic validation of token format before storage.
+        
+        Args:
+            token (str): Token to validate
+            
+        Returns:
+            bool: True if token appears valid, False otherwise
+        """
+        if not isinstance(token, str):
+            return False
+            
+        try:
+            # Check if it's a valid JWT format
+            parts = token.split('.')
+            if len(parts) != 3:
+                return False
+                
+            # Check if each part is valid base64
+            for part in parts:
+                base64.urlsafe_b64decode(part + '=' * (-len(part) % 4))
+                
+            return True
+        except Exception:
+            return False
+
     def store_tokens(self, request, access_token, adfs_response=None):
         """
         Store tokens in the session.
         
         Args:
             request: The current request object
-            access_token (str): The access token to store
+            access_token (str): The access token to store (must be a JWT)
             adfs_response (dict, optional): The full response from ADFS containing refresh token and expiration
             
         Returns:
             bool: True if tokens were stored, False otherwise
         """
         if not self.should_store_tokens(request):
+            logger.debug("Token storage is disabled")
+            return False
+            
+        if not self.validate_token_format(access_token):
+            logger.warning("Invalid access token format, refusing to store")
             return False
             
         try:
             session_modified = False
             
-            # Store access token
+            # Store access token (JWT)
             encrypted_token = self.encrypt_token(access_token)
             if encrypted_token:
                 request.session[self.ACCESS_TOKEN_KEY] = encrypted_token
                 session_modified = True
+                logger.debug("Stored access token")
             
-            # Store refresh token
+            # Store refresh token (can be any string)
             if adfs_response and "refresh_token" in adfs_response:
                 refresh_token = adfs_response["refresh_token"]
-                encrypted_token = self.encrypt_token(refresh_token)
-                if encrypted_token:
-                    request.session[self.REFRESH_TOKEN_KEY] = encrypted_token
-                    session_modified = True
+                if refresh_token:  # Just check it's not empty
+                    encrypted_token = self.encrypt_token(refresh_token)
+                    if encrypted_token:
+                        request.session[self.REFRESH_TOKEN_KEY] = encrypted_token
+                        session_modified = True
+                        logger.debug("Stored refresh token")
+                    else:
+                        logger.warning("Failed to encrypt refresh token")
+                else:
+                    logger.warning("Empty refresh token received from ADFS")
+            else:
+                logger.debug("No refresh token in ADFS response")
             
             # Store token expiration
             if adfs_response and "expires_in" in adfs_response:
@@ -247,8 +286,9 @@ class TokenManager:
                 )
                 request.session[self.TOKEN_EXPIRES_AT_KEY] = expires_at.isoformat()
                 session_modified = True
+                logger.debug("Stored token expiration")
             
-            # Store OBO token if enabled
+            # Store OBO token if enabled (must be JWT)
             if self.store_obo_token:
                 try:
                     # Import here to avoid circular imports
@@ -256,21 +296,23 @@ class TokenManager:
                     
                     backend = AdfsBaseBackend()
                     obo_token = backend.get_obo_access_token(access_token)
-                    if obo_token:
+                    if obo_token and self.validate_token_format(obo_token):
                         encrypted_token = self.encrypt_token(obo_token)
                         if encrypted_token:
                             request.session[self.OBO_ACCESS_TOKEN_KEY] = encrypted_token
                             obo_expires_at = datetime.datetime.now() + datetime.timedelta(hours=1)
                             request.session[self.OBO_TOKEN_EXPIRES_AT_KEY] = obo_expires_at.isoformat()
                             session_modified = True
+                            logger.debug("Stored OBO token")
                 except Exception as e:
                     logger.warning(f"Error getting OBO token: {e}")
             
             if session_modified:
                 request.session.modified = True
-                logger.debug("Stored tokens in session")
+                logger.debug("All tokens stored successfully")
                 return True
                 
+            logger.warning("No tokens were stored")
             return False
                 
         except Exception as e:
@@ -323,6 +365,7 @@ class TokenManager:
     def refresh_tokens(self, request):
         """
         Refresh the access token using the refresh token.
+    
         
         Args:
             request: The current request object
@@ -353,7 +396,6 @@ class TokenManager:
             if settings.CLIENT_SECRET:
                 data["client_secret"] = settings.CLIENT_SECRET
                 
-            # Ensure token_endpoint is a string
             token_endpoint = provider_config.token_endpoint
             if token_endpoint is None:
                 logger.error("Token endpoint is None, cannot refresh tokens")
@@ -365,6 +407,9 @@ class TokenManager:
             
             if response.status_code == 200:
                 token_data = response.json()
+                
+                # Store new tokens - if another refresh happened, these will just overwrite
+                # with fresher tokens, which is fine
                 request.session[self.ACCESS_TOKEN_KEY] = self.encrypt_token(
                     token_data["access_token"]
                 )
