@@ -63,11 +63,18 @@ class TokenLifecycleMiddleware:
     Middleware that handles the complete lifecycle of ADFS access and refresh tokens.
 
     This middleware will:
-    1. Store tokens in the session after successful authentication
+    1. Store tokens in the session after successful authentication via signal handler
     2. Check if the access token is about to expire
     3. Use the refresh token to get a new access token if needed
     4. Update the tokens in the session
     5. Handle OBO (On-Behalf-Of) tokens for Microsoft Graph API
+
+    Token Flow:
+    - During authentication, tokens are received from ADFS
+    - The middleware stores these tokens directly in the session via signal handler
+    - Tokens are managed entirely in the session
+    - Token refresh operations work directly with the session
+    - The utility functions get_access_token() and get_obo_access_token() retrieve tokens from the session
 
     To enable this middleware, add it to your MIDDLEWARE setting:
     'django_auth_adfs.middleware.TokenLifecycleMiddleware'
@@ -100,92 +107,12 @@ class TokenLifecycleMiddleware:
         post_authenticate.connect(self._capture_tokens_from_auth)
 
     def __call__(self, request):
-        if hasattr(request, "user"):
-            # Store tokens if they're available on the user object but not in the session
-            self._store_tokens_from_user(request)
-            if request.user.is_authenticated:
-                self._handle_token_refresh(request)
+        if hasattr(request, "user") and request.user.is_authenticated:
+            # Only handle token refresh
+            self._handle_token_refresh(request)
+            
         response = self.get_response(request)
-
-        # This handles the case where authentication happens during the request
-        if hasattr(request, "user"):
-            self._store_tokens_from_user(request)
-
         return response
-
-    def _store_tokens_from_user(self, request):
-        """
-        Store tokens from the user object in the session if they exist
-        """
-        if self.using_signed_cookies:
-            return
-
-        if not hasattr(request, "user") or not request.user.is_authenticated:
-            return
-
-        user = request.user
-        session_modified = False
-
-        # Check if user has tokens that aren't in the session
-        if hasattr(user, "access_token") and user.access_token:
-            encrypted_token = _encrypt_token(user.access_token)
-            if encrypted_token and (
-                not request.session.get("ADFS_ACCESS_TOKEN")
-                or request.session.get("ADFS_ACCESS_TOKEN") != encrypted_token
-            ):
-                request.session["ADFS_ACCESS_TOKEN"] = encrypted_token
-                session_modified = True
-
-        if hasattr(user, "refresh_token") and user.refresh_token:
-            encrypted_token = _encrypt_token(user.refresh_token)
-            if encrypted_token and (
-                not request.session.get("ADFS_REFRESH_TOKEN")
-                or request.session.get("ADFS_REFRESH_TOKEN") != encrypted_token
-            ):
-                request.session["ADFS_REFRESH_TOKEN"] = encrypted_token
-                session_modified = True
-
-        if hasattr(user, "token_expires_at") and user.token_expires_at:
-            expires_at_str = user.token_expires_at.isoformat()
-            if (
-                not request.session.get("ADFS_TOKEN_EXPIRES_AT")
-                or request.session.get("ADFS_TOKEN_EXPIRES_AT") != expires_at_str
-            ):
-                request.session["ADFS_TOKEN_EXPIRES_AT"] = expires_at_str
-                session_modified = True
-
-        # Store OBO token if available and enabled
-        if (
-            self.store_obo_token
-            and hasattr(user, "obo_access_token")
-            and user.obo_access_token
-        ):
-            encrypted_token = _encrypt_token(user.obo_access_token)
-            if encrypted_token and (
-                not request.session.get("ADFS_OBO_ACCESS_TOKEN")
-                or request.session.get("ADFS_OBO_ACCESS_TOKEN") != encrypted_token
-            ):
-                request.session["ADFS_OBO_ACCESS_TOKEN"] = encrypted_token
-                session_modified = True
-
-        # Store OBO token expiration if available
-        if (
-            self.store_obo_token
-            and hasattr(user, "obo_token_expires_at")
-            and user.obo_token_expires_at
-        ):
-            obo_expires_at_str = user.obo_token_expires_at.isoformat()
-            if (
-                not request.session.get("ADFS_OBO_TOKEN_EXPIRES_AT")
-                or request.session.get("ADFS_OBO_TOKEN_EXPIRES_AT")
-                != obo_expires_at_str
-            ):
-                request.session["ADFS_OBO_TOKEN_EXPIRES_AT"] = obo_expires_at_str
-                session_modified = True
-
-        if session_modified:
-            request.session.modified = True
-            logger.debug("Stored tokens from user object in session")
 
     def _handle_token_refresh(self, request):
         """
@@ -225,6 +152,80 @@ class TokenLifecycleMiddleware:
 
         except Exception as e:
             logger.warning(f"Error checking token expiration: {e}")
+
+    def _capture_tokens_from_auth(
+        self, sender, user, claims, adfs_response=None, request=None, **kwargs
+    ):
+        """
+        Signal handler to capture tokens during authentication and store them directly in the session.
+        
+        The request can be provided directly or obtained from the kwargs.
+        """
+        if not user:
+            return
+            
+        # Try to get the request from kwargs if not explicitly provided
+        if not request and 'request' in kwargs:
+            request = kwargs['request']
+            
+        # If we still don't have a request, we can't store tokens
+        if not request:
+            return
+
+        if not hasattr(request, "session"):
+            return
+
+        if self.using_signed_cookies:
+            return
+
+        session_modified = False
+
+        # Store access token
+        access_token = None
+        if hasattr(sender, "access_token"):
+            access_token = sender.access_token
+        elif adfs_response and "access_token" in adfs_response:
+            access_token = adfs_response["access_token"]
+
+        if access_token:
+            encrypted_token = _encrypt_token(access_token)
+            if encrypted_token:
+                request.session["ADFS_ACCESS_TOKEN"] = encrypted_token
+                session_modified = True
+
+        # Store refresh token
+        if adfs_response and "refresh_token" in adfs_response:
+            refresh_token = adfs_response["refresh_token"]
+            encrypted_token = _encrypt_token(refresh_token)
+            if encrypted_token:
+                request.session["ADFS_REFRESH_TOKEN"] = encrypted_token
+                session_modified = True
+
+        # Store token expiration
+        if adfs_response and "expires_in" in adfs_response:
+            expires_at = datetime.datetime.now() + datetime.timedelta(
+                seconds=int(adfs_response["expires_in"])
+            )
+            request.session["ADFS_TOKEN_EXPIRES_AT"] = expires_at.isoformat()
+            session_modified = True
+
+        # Store OBO token if enabled
+        if self.store_obo_token and access_token:
+            try:
+                obo_token = sender.get_obo_access_token(access_token)
+                if obo_token:
+                    encrypted_token = _encrypt_token(obo_token)
+                    if encrypted_token:
+                        request.session["ADFS_OBO_ACCESS_TOKEN"] = encrypted_token
+                        obo_expires_at = datetime.datetime.now() + datetime.timedelta(hours=1)
+                        request.session["ADFS_OBO_TOKEN_EXPIRES_AT"] = obo_expires_at.isoformat()
+                        session_modified = True
+            except Exception as e:
+                logger.warning(f"Error getting OBO token: {e}")
+
+        if session_modified:
+            request.session.modified = True
+            logger.debug("Stored tokens directly in session during authentication")
 
     def _refresh_tokens(self, request):
         """
@@ -312,6 +313,9 @@ class TokenLifecycleMiddleware:
             return
 
         try:
+
+            provider_config.load_config()
+
             from django_auth_adfs.utils import _decrypt_token, _encrypt_token
 
             access_token = _decrypt_token(request.session["ADFS_ACCESS_TOKEN"])
@@ -337,37 +341,3 @@ class TokenLifecycleMiddleware:
 
         except Exception as e:
             logger.exception(f"Error refreshing OBO token: {e}")
-
-    def _capture_tokens_from_auth(
-        self, sender, user, claims, adfs_response=None, **kwargs
-    ):
-        """
-        Signal handler to capture tokens during authentication and store them on the user object.
-        This ensures the tokens are available for the middleware to store in the session.
-        """
-        if not user:
-            return
-
-        if hasattr(sender, "access_token"):
-            user.access_token = sender.access_token
-        elif adfs_response and "access_token" in adfs_response:
-            user.access_token = adfs_response["access_token"]
-
-        if adfs_response and "refresh_token" in adfs_response:
-            user.refresh_token = adfs_response["refresh_token"]
-
-        if adfs_response and "expires_in" in adfs_response:
-            user.token_expires_at = datetime.datetime.now() + datetime.timedelta(
-                seconds=int(adfs_response["expires_in"])
-            )
-
-        if self.store_obo_token and hasattr(user, "access_token") and user.access_token:
-            try:
-                obo_token = sender.get_obo_access_token(user.access_token)
-                if obo_token:
-                    user.obo_access_token = obo_token
-                    user.obo_token_expires_at = (
-                        datetime.datetime.now() + datetime.timedelta(hours=1)
-                    )
-            except Exception as e:
-                logger.warning(f"Error getting OBO token during authentication: {e}")

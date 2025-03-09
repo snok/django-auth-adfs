@@ -8,7 +8,7 @@ The Token Lifecycle Middleware extends django-auth-adfs beyond pure authenticati
 after the authentication process. This creates a more integrated approach where:
 
 * The same application registration handles both authentication and resource access
-* Tokens obtained during authentication are managed and refreshed automatically
+* Tokens obtained during authentication are stored and refreshed automatically in the session
 * The application can make delegated API calls on behalf of the user
 * The middleware can optionally log out users when token refresh fails
 
@@ -18,7 +18,7 @@ How it works
 The ``TokenLifecycleMiddleware`` handles the entire token lifecycle:
 
 1. **Initial Token Capture**: Uses the ``post_authenticate`` signal to capture tokens during authentication
-2. **Token Storage**: Automatically stores tokens in the users session after successful authentication
+2. **Token Storage**: Automatically stores tokens in the session after successful authentication
 3. **Token Refresh**: Checks if the access token is about to expire and refreshes it if needed
 4. **Optional Security Enforcement**: Can be configured to log out users when token refresh fails
 5. **Session Management**: Keeps the session updated with the latest tokens
@@ -94,9 +94,9 @@ You can configure the token lifecycle behavior with these settings in your Djang
 Considerations
 --------------
 
-- The middleware will automatically capture and store tokens during authentication using signals.
+- The middleware will automatically capture and store tokens in the session during authentication using signals.
 - You don't need to modify your views or authentication backends to store tokens.
-- Token refresh only works for authenticated users.
+- Token refresh only works for authenticated users with valid sessions.
 - If the refresh token is invalid or expired, the middleware will not be able to refresh the access token.
 - By default, the middleware will not log the user out if token refresh fails, but this behavior can be changed with the ``LOGOUT_ON_TOKEN_REFRESH_FAILURE`` setting.
 - The middleware will not store tokens in the session when using the ``signed_cookies`` session backend by default.
@@ -136,7 +136,7 @@ API permissions needed for delegated access.
 .. important::
     Your Django application's session cookie age must be set to a value that is less than that of your ADFS/Azure AD application's refresh token lifetime.
 
-    If a users refresh token has expired, the user will be required to re-authenticate to continue making delegated requests.
+    If a user's refresh token has expired, the user will be required to re-authenticate to continue making delegated requests.
 
 Security Overview
 -----------------------
