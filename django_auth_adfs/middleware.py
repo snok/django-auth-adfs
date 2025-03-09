@@ -2,17 +2,15 @@
 Based on https://djangosnippets.org/snippets/1179/
 """
 
-import datetime
 import logging
 from re import compile
 
 from django.conf import settings as django_settings
-from django.contrib.auth import logout
 from django.contrib.auth.views import redirect_to_login
 from django.urls import reverse
 
 from django_auth_adfs.exceptions import MFARequired
-from django_auth_adfs.config import provider_config, settings
+from django_auth_adfs.config import settings
 from django_auth_adfs.token_manager import token_manager
 
 LOGIN_EXEMPT_URLS = [
