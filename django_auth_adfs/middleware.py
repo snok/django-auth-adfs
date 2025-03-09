@@ -35,6 +35,7 @@ class LoginRequiredMiddleware:
     Requires authentication middleware and template context processors to be
     loaded. You'll get an error if they aren't.
     """
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -59,20 +60,20 @@ class LoginRequiredMiddleware:
 class TokenLifecycleMiddleware:
     """
     Middleware that handles the lifecycle of ADFS access and refresh tokens.
-    
+
     This middleware will:
     1. Check if the access token is about to expire
     2. Use the refresh token to get a new access token if needed
     3. Update the tokens in the session
     4. Handle OBO (On-Behalf-Of) tokens for Microsoft Graph API
-    
+
     Token storage during authentication is handled by the backend when this middleware is enabled.
-    
+
     To enable this middleware, add it to your MIDDLEWARE setting:
     'django_auth_adfs.middleware.TokenLifecycleMiddleware'
-    
+
     You can configure the token refresh behavior with these settings:
-    
+
     TOKEN_REFRESH_THRESHOLD: Number of seconds before expiration to refresh (default: 300)
     STORE_OBO_TOKEN: Boolean to enable/disable OBO token storage (default: True)
     LOGOUT_ON_TOKEN_REFRESH_FAILURE: Whether to log out the user if token refresh fails (default: False)
@@ -93,7 +94,6 @@ class TokenLifecycleMiddleware:
         if hasattr(request, "user") and request.user.is_authenticated:
             # Check if tokens need to be refreshed
             token_manager.check_token_expiration(request)
-            
+
         response = self.get_response(request)
         return response
-

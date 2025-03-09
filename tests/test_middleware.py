@@ -24,18 +24,19 @@ MIDDLEWARE_WITH_TOKEN_LIFECYCLE = MIDDLEWARE + (
     "django_auth_adfs.middleware.TokenLifecycleMiddleware",
 )
 
+
 def create_test_token(claims=None, exp_delta=3600):
     """Create a test JWT token with the given claims and expiration delta."""
     if claims is None:
         claims = {}
-    
+
     # Create a basic JWT token with ADFS-like structure
     header = {
         "typ": "JWT",
         "alg": "RS256",
         "x5t": "example-thumbprint"
     }
-    
+
     # Add standard ADFS claims if not present
     now = int(time.time())
     if "iat" not in claims:
@@ -48,12 +49,12 @@ def create_test_token(claims=None, exp_delta=3600):
         claims["iss"] = "https://sts.windows.net/01234567-89ab-cdef-0123-456789abcdef/"
     if "sub" not in claims:
         claims["sub"] = "john.doe@example.com"
-    
+
     # Encode each part
     header_part = base64.urlsafe_b64encode(json.dumps(header).encode()).rstrip(b"=").decode()
     claims_part = base64.urlsafe_b64encode(json.dumps(claims).encode()).rstrip(b"=").decode()
     signature_part = base64.urlsafe_b64encode(b"test_signature").rstrip(b"=").decode()
-    
+
     # Combine parts
     return f"{header_part}.{claims_part}.{signature_part}"
 
@@ -75,9 +76,9 @@ class TokenLifecycleTests(TestCase):
     def test_settings_configuration(self):
         """Test settings are properly loaded from Django settings"""
         with patch.object(adfs_settings, 'TOKEN_REFRESH_THRESHOLD', 600), \
-             patch.object(adfs_settings, 'STORE_OBO_TOKEN', False), \
-             patch.object(adfs_settings, 'LOGOUT_ON_TOKEN_REFRESH_FAILURE', True):
-            
+                patch.object(adfs_settings, 'STORE_OBO_TOKEN', False), \
+                patch.object(adfs_settings, 'LOGOUT_ON_TOKEN_REFRESH_FAILURE', True):
+
             manager = TokenManager()
             self.assertEqual(manager.refresh_threshold, 600)
             self.assertFalse(manager.store_obo_token)
@@ -87,7 +88,7 @@ class TokenLifecycleTests(TestCase):
         """Test the complete token storage and retrieval flow"""
         access_token = create_test_token({"type": "access"})
         refresh_token = create_test_token({"type": "refresh"})
-        
+
         # Store tokens
         token_manager.store_tokens(
             self.request,
@@ -114,7 +115,7 @@ class TokenLifecycleTests(TestCase):
         old_refresh_token = create_test_token({"type": "refresh"})
         new_access_token = create_test_token({"type": "access"})
         new_refresh_token = create_test_token({"type": "refresh"})
-        
+
         # Setup expired token
         token_manager.store_tokens(
             self.request,
@@ -150,7 +151,7 @@ class TokenLifecycleTests(TestCase):
         """Test OBO token functionality when enabled"""
         access_token = create_test_token({"type": "access"})
         obo_token = create_test_token({"type": "obo"})
-        
+
         # Store regular token
         token_manager.store_tokens(
             self.request,
@@ -161,7 +162,7 @@ class TokenLifecycleTests(TestCase):
         # Mock OBO flow
         with patch("django_auth_adfs.backend.AdfsBaseBackend") as mock_backend:
             mock_backend.return_value.get_obo_access_token.return_value = obo_token
-            
+
             # Verify OBO token storage and retrieval
             self.request.session[token_manager.OBO_ACCESS_TOKEN_KEY] = \
                 token_manager.encrypt_token(obo_token)
@@ -179,7 +180,7 @@ class TokenLifecycleTests(TestCase):
         # Test refresh failure
         access_token = create_test_token({"type": "access"}, exp_delta=-60)
         refresh_token = create_test_token({"type": "refresh"})
-        
+
         with patch("django_auth_adfs.token_manager.provider_config") as mock_config:
             # Setup expired tokens first
             token_manager.store_tokens(
@@ -191,7 +192,7 @@ class TokenLifecycleTests(TestCase):
                     "expires_in": -60  # Already expired
                 }
             )
-            
+
             mock_config.session.post.return_value = Mock(status_code=400, text="Error")
             mock_config.token_endpoint = "https://example.com/token"
 
@@ -207,7 +208,7 @@ class TokenLifecycleTests(TestCase):
         """Test behavior with signed cookies session backend"""
         test_token = create_test_token({"type": "access"})
         refresh_token = create_test_token({"type": "refresh"})
-        
+
         token_manager.using_signed_cookies = True
         try:
             success = token_manager.store_tokens(
@@ -255,7 +256,7 @@ class TokenLifecycleTests(TestCase):
         """Test clearing tokens from session"""
         access_token = create_test_token({"type": "access"})
         refresh_token = create_test_token({"type": "refresh"})
-        
+
         # Store some tokens first
         token_manager.store_tokens(
             self.request,
@@ -286,7 +287,7 @@ class TokenLifecycleTests(TestCase):
         """Test direct OBO token refresh"""
         access_token = create_test_token({"type": "access"})
         new_obo_token = create_test_token({"type": "obo"})
-        
+
         # Store access token first
         token_manager.store_tokens(
             self.request,
@@ -296,13 +297,13 @@ class TokenLifecycleTests(TestCase):
 
         # Mock OBO token acquisition and provider config
         with patch("django_auth_adfs.backend.AdfsBaseBackend") as mock_backend, \
-             patch("django_auth_adfs.token_manager.provider_config") as mock_provider:
-            
+                patch("django_auth_adfs.token_manager.provider_config") as mock_provider:
+
             mock_backend.return_value.get_obo_access_token.return_value = new_obo_token
             mock_provider.load_config.return_value = None
             mock_provider.token_endpoint = "https://example.com/token"
             mock_provider.session.verify = False  # Disable cert validation
-            
+
             # Refresh OBO token
             success = token_manager.refresh_obo_token(self.request)
             self.assertTrue(success)
