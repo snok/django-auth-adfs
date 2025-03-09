@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 import jwt
 from django.contrib.auth import get_user_model
@@ -10,6 +11,7 @@ from django.core.exceptions import (ImproperlyConfigured, ObjectDoesNotExist,
 from django_auth_adfs import signals
 from django_auth_adfs.config import provider_config, settings
 from django_auth_adfs.exceptions import MFARequired
+from django_auth_adfs.token_manager import token_manager
 
 logger = logging.getLogger("django_auth_adfs")
 
@@ -181,7 +183,7 @@ class AdfsBaseBackend(ModelBackend):
                 logger.info(str(error))
                 raise PermissionDenied
 
-    def process_access_token(self, access_token, adfs_response=None):
+    def process_access_token(self, access_token, adfs_response=None, request=None):
         if not access_token:
             raise PermissionDenied
 
@@ -196,6 +198,10 @@ class AdfsBaseBackend(ModelBackend):
             raise PermissionDenied
         if not claims:
             raise PermissionDenied
+
+        # Store tokens in session if middleware is enabled
+        if request and adfs_response:
+            token_manager.store_tokens(request, access_token, adfs_response)
 
         groups = self.process_user_groups(claims, access_token)
         user = self.create_user(claims)
@@ -420,7 +426,7 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
 
         adfs_response = self.exchange_auth_code(authorization_code, request)
         access_token = adfs_response["access_token"]
-        user = self.process_access_token(access_token, adfs_response)
+        user = self.process_access_token(access_token, adfs_response, request)
         return user
 
 
@@ -440,7 +446,7 @@ class AdfsAccessTokenBackend(AdfsBaseBackend):
             return
 
         access_token = access_token.decode()
-        user = self.process_access_token(access_token)
+        user = self.process_access_token(access_token, request=request)
         return user
 
 
