@@ -46,11 +46,14 @@ class TokenManager:
         # Load settings
         self.refresh_threshold = getattr(settings, "TOKEN_REFRESH_THRESHOLD", 300)
         self.store_obo_token = getattr(settings, "STORE_OBO_TOKEN", True)
-        self.logout_on_refresh_failure = getattr(settings, "LOGOUT_ON_TOKEN_REFRESH_FAILURE", False)
+        self.logout_on_refresh_failure = getattr(
+            settings, "LOGOUT_ON_TOKEN_REFRESH_FAILURE", False
+        )
 
         # Check if using signed cookies
         self.using_signed_cookies = (
-            django_settings.SESSION_ENGINE == "django.contrib.sessions.backends.signed_cookies"
+            django_settings.SESSION_ENGINE
+            == "django.contrib.sessions.backends.signed_cookies"
         )
 
         if self.using_signed_cookies:
@@ -61,7 +64,7 @@ class TokenManager:
 
     def is_middleware_enabled(self):
         """Check if the TokenLifecycleMiddleware is enabled."""
-        EXPECTED_MIDDLEWARE = 'django_auth_adfs.middleware.TokenLifecycleMiddleware'
+        EXPECTED_MIDDLEWARE = "django_auth_adfs.middleware.TokenLifecycleMiddleware"
         try:
             return EXPECTED_MIDDLEWARE in django_settings.MIDDLEWARE
         except Exception as e:
@@ -206,33 +209,6 @@ class TokenManager:
         encrypted_token = request.session.get(self.OBO_ACCESS_TOKEN_KEY)
         return self.decrypt_token(encrypted_token)
 
-    def validate_token_format(self, token):
-        """
-        Basic validation of token format before storage.
-
-        Args:
-            token (str): Token to validate
-
-        Returns:
-            bool: True if token appears valid, False otherwise
-        """
-        if not isinstance(token, str):
-            return False
-
-        try:
-            # Check if it's a valid JWT format
-            parts = token.split('.')
-            if len(parts) != 3:
-                return False
-
-            # Check if each part is valid base64
-            for part in parts:
-                base64.urlsafe_b64decode(part + '=' * (-len(part) % 4))
-
-            return True
-        except Exception:
-            return False
-
     def store_tokens(self, request, access_token, adfs_response=None):
         """
         Store tokens in the session.
@@ -247,10 +223,6 @@ class TokenManager:
         """
         if not self.should_store_tokens(request):
             logger.debug("Token storage is disabled")
-            return False
-
-        if not self.validate_token_format(access_token):
-            logger.warning("Invalid access token format, refusing to store")
             return False
 
         try:
@@ -296,14 +268,27 @@ class TokenManager:
 
                     backend = AdfsBaseBackend()
                     obo_token = backend.get_obo_access_token(access_token)
-                    if obo_token and self.validate_token_format(obo_token):
+                    if obo_token:
                         encrypted_token = self.encrypt_token(obo_token)
                         if encrypted_token:
                             request.session[self.OBO_ACCESS_TOKEN_KEY] = encrypted_token
-                            obo_expires_at = datetime.datetime.now() + datetime.timedelta(hours=1)
-                            request.session[self.OBO_TOKEN_EXPIRES_AT_KEY] = obo_expires_at.isoformat()
-                            session_modified = True
-                            logger.debug("Stored OBO token")
+                            # Decode the OBO token to get its actual expiration time
+                            import jwt
+
+                            decoded_token = jwt.decode(
+                                obo_token, options={"verify_signature": False}
+                            )
+                            if "exp" in decoded_token:
+                                obo_expires_at = datetime.datetime.fromtimestamp(
+                                    decoded_token["exp"]
+                                )
+                                request.session[self.OBO_TOKEN_EXPIRES_AT_KEY] = (
+                                    obo_expires_at.isoformat()
+                                )
+                                session_modified = True
+                                logger.debug(
+                                    "Stored OBO token with expiration from token claims"
+                                )
                 except Exception as e:
                     logger.warning(f"Error getting OBO token: {e}")
 
@@ -340,7 +325,9 @@ class TokenManager:
                 return False
 
             # Check if token is about to expire
-            expires_at = datetime.datetime.fromisoformat(request.session[self.TOKEN_EXPIRES_AT_KEY])
+            expires_at = datetime.datetime.fromisoformat(
+                request.session[self.TOKEN_EXPIRES_AT_KEY]
+            )
             remaining = expires_at - datetime.datetime.now()
 
             if remaining.total_seconds() < self.refresh_threshold:
@@ -348,8 +335,13 @@ class TokenManager:
                 self.refresh_tokens(request)
 
             # Check if OBO token is about to expire
-            if self.store_obo_token and self.OBO_TOKEN_EXPIRES_AT_KEY in request.session:
-                obo_expires_at = datetime.datetime.fromisoformat(request.session[self.OBO_TOKEN_EXPIRES_AT_KEY])
+            if (
+                self.store_obo_token
+                and self.OBO_TOKEN_EXPIRES_AT_KEY in request.session
+            ):
+                obo_expires_at = datetime.datetime.fromisoformat(
+                    request.session[self.OBO_TOKEN_EXPIRES_AT_KEY]
+                )
                 obo_remaining = obo_expires_at - datetime.datetime.now()
 
                 if obo_remaining.total_seconds() < self.refresh_threshold:
@@ -478,11 +470,26 @@ class TokenManager:
             obo_token = backend.get_obo_access_token(access_token)
 
             if obo_token:
-                request.session[self.OBO_ACCESS_TOKEN_KEY] = self.encrypt_token(obo_token)
-                obo_expires_at = datetime.datetime.now() + datetime.timedelta(hours=1)
-                request.session[self.OBO_TOKEN_EXPIRES_AT_KEY] = obo_expires_at.isoformat()
-                request.session.modified = True
-                logger.debug("Refreshed OBO token successfully")
+                request.session[self.OBO_ACCESS_TOKEN_KEY] = self.encrypt_token(
+                    obo_token
+                )
+                # Decode the OBO token to get its actual expiration time
+                import jwt
+
+                decoded_token = jwt.decode(
+                    obo_token, options={"verify_signature": False}
+                )
+                if "exp" in decoded_token:
+                    obo_expires_at = datetime.datetime.fromtimestamp(
+                        decoded_token["exp"]
+                    )
+                    request.session[self.OBO_TOKEN_EXPIRES_AT_KEY] = (
+                        obo_expires_at.isoformat()
+                    )
+                    request.session.modified = True
+                    logger.debug(
+                        "Refreshed OBO token with expiration from token claims"
+                    )
                 return True
 
             return False
@@ -512,7 +519,7 @@ class TokenManager:
                 self.REFRESH_TOKEN_KEY,
                 self.TOKEN_EXPIRES_AT_KEY,
                 self.OBO_ACCESS_TOKEN_KEY,
-                self.OBO_TOKEN_EXPIRES_AT_KEY
+                self.OBO_TOKEN_EXPIRES_AT_KEY,
             ]:
                 if key in request.session:
                     del request.session[key]
