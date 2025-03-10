@@ -81,6 +81,7 @@ class TokenLifecycleMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
+        self.token_manager = token_manager
         # Log warning if using signed cookies
         if token_manager.using_signed_cookies:
             logger.warning(
@@ -91,9 +92,10 @@ class TokenLifecycleMiddleware:
             )
 
     def __call__(self, request):
-        if hasattr(request, "user") and request.user.is_authenticated:
-            # Check if tokens need to be refreshed
-            token_manager.check_token_expiration(request)
+        if hasattr(request, "session") and not self.token_manager.using_signed_cookies:
+            request.token_storage = self.token_manager
 
-        response = self.get_response(request)
-        return response
+        if hasattr(request, "user") and request.user.is_authenticated:
+            self.token_manager.check_token_expiration(request)
+
+        return self.get_response(request)
