@@ -15,17 +15,12 @@ after the authentication process. This creates a more integrated approach where:
 How it works
 ------------
 
-The token lifecycle system consists of two main components:
-
-1. **TokenManager**: A centralized singleton that handles all token operations including storage, retrieval, encryption, refresh, and OBO token management
-2. **TokenLifecycleMiddleware**: A middleware that monitors token expiration and triggers refresh when needed
-
-Together, they handle the entire token lifecycle:
+The token lifecycle system performs the following:
 
 1. **Token Storage**: The django-auth-adfs backend automatically stores and encrypts tokens during authentication when the ``TokenLifecycleMiddleware`` is enabled
 2. **Token Monitoring**: The middleware checks token expiration on each request
 3. **Token Refresh**: When a token is about to expire, it is automatically refreshed
-4. **OBO Token Management**: When enabled (by default), OBO tokens are automatically acquired and refreshed for Microsoft Graph API access
+4. **OBO Token Management**: When enabled (by default), OBO tokens are automatically acquired and refreshed
 5. **Security Controls**: Optional automatic logout on token refresh failures
 
 Read more about the OBO flow: https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow#protocol-diagram
@@ -72,7 +67,7 @@ You can configure the token lifecycle behavior with these settings in your Djang
         # Number of seconds before expiration to refresh (default: 300, i.e., 5 minutes)
         "TOKEN_REFRESH_THRESHOLD": 300,
 
-        # Enable or disable OBO token storage for Microsoft Graph API (default: True)
+        # Enable or disable OBO token functionality (default: True)
         "STORE_OBO_TOKEN": True,
 
         # Custom salt for token encryption (optional)
@@ -89,16 +84,10 @@ You can configure the token lifecycle behavior with these settings in your Djang
 
     Consider this when deploying changes to the salt in production environments.
 
-.. note::
-    By default (``STORE_OBO_TOKEN = True``), the system will automatically request and store OBO tokens
-    for Microsoft Graph API access. If your application doesn't need to access Microsoft Graph API,
-    you can set ``STORE_OBO_TOKEN = False`` to disable this functionality completely.
-    See `the OBO token configuration section <#disabling-obo-token-functionality>`_ for more details.
-
 Considerations
 --------------
 
-- Token storage and encryption are handled automatically by the django-auth-adfs backend during authentication
+- Token storage and encryption are handled automatically by the middleware during authentication
 - Token refresh only works for authenticated users with valid sessions
 - If the refresh token is invalid or expired, the system will not be able to refresh the access token
 - By default, the system will not log the user out if token refresh fails, but this behavior can be changed with the ``LOGOUT_ON_TOKEN_REFRESH_FAILURE`` setting
@@ -112,10 +101,6 @@ By default, when token refresh fails, the system logs the error but allows the u
 
 - When set to ``False`` (default), users remain logged in even if their tokens can't be refreshed
 - When set to ``True``, users are automatically logged out when token refresh fails
-
-When a user's account is disabled in Azure AD/ADFS, their existing Django sessions will remain active by default until they expire naturally. This can create a security gap where revoked users maintain access to your application.
-
-The ``LOGOUT_ON_TOKEN_REFRESH_FAILURE`` setting provides an option which helps address this concern by allowing you to automatically log out users when their token refresh fails, which will happen some time after their account has been disabled in the identity provider.
 
 **Existing Sessions**
 
@@ -147,29 +132,9 @@ Security Overview
 **Token Encryption**
 
 Tokens are automatically encrypted before being stored in the session and decrypted when they are retrieved.
-The encryption is handled transparently by the TokenManager and utility functions. This provides an additional layer of security:
-
-- **Always Enabled**: Token encryption is always enabled and cannot be disabled
-- **Encryption Method**: Tokens are encrypted using the Fernet symmetric encryption algorithm
-- **Encryption Key**: The key is derived from Django's ``SECRET_KEY`` using PBKDF2
-- **Customizable Salt**: You can customize the encryption salt using the ``TOKEN_ENCRYPTION_SALT`` setting
-- **Transparent Operation**: Encryption and decryption happen automatically when tokens are stored or retrieved
-
+The encryption is handled transparently by the TokenManager and utility functions.
 
 **Signed Cookies Session Backend Restriction**
-
-The system will not store tokens in the session when using Django's ``signed_cookies`` session backend:
-
-.. code-block:: python
-
-    # This will not work with the token lifecycle system
-    SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
-
-This is for a few reasons:
-
-1. **Size Limitations**: Cookies have size limitations (typically 4KB), which may be exceeded by tokens
-2. **Security Risks**: Storing sensitive tokens in cookies increases the risk of token theft
-3. **Performance**: Large cookies are sent with every request, increasing bandwidth usage
 
 If you're using the ``signed_cookies`` session backend and need token storage, you won't be able to use the token lifecycle system.
 
@@ -184,7 +149,9 @@ By default, the system automatically requests OBO tokens when storing tokens. If
 Disabling OBO Token Functionality
 ---------------------------------
 
-By default, the Token Lifecycle system automatically requests and stores OBO tokens for Microsoft Graph API access. If you don't need this functionality (for example, if your application doesn't interact with Microsoft Graph API), you can disable it completely:
+By default, the Token Lifecycle system automatically requests and stores OBO (On-Behalf-Of) tokens.
+
+If you don't need this functionality, you can disable it completely:
 
 .. code-block:: python
 
@@ -192,13 +159,6 @@ By default, the Token Lifecycle system automatically requests and stores OBO tok
     AUTH_ADFS = {
         "STORE_OBO_TOKEN": False,
     }
-
-When this setting is ``False``:
-
-1. The system will not request OBO tokens during token storage
-2. The system will not store OBO tokens in the session
-3. The system will not refresh OBO tokens
-4. The ``get_obo_access_token`` utility function will always return ``None``
 
 Note that disabling OBO tokens doesn't affect the regular access token functionality. Your application will still be able to use the access token obtained during authentication for its own resources and APIs that directly trust your application.
 
@@ -233,9 +193,7 @@ Here are practical examples of using the TokenManager in your views:
 Using with Microsoft Graph API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In this flow, we will use the OBO token to access Microsoft Graph API.
-
-This is the recommended flow for delegated access to Microsoft Graph API.
+This example demonstrates using the OBO token to access Microsoft Graph API
 
 .. code-block:: python
 
@@ -267,12 +225,48 @@ This is the recommended flow for delegated access to Microsoft Graph API.
                 status=500
             )
 
-Using with other resources
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using with Custom ADFS-Protected API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The key difference here is to use the ``get_access_token`` method to get the token for the resource you are accessing.
+This example shows how to use the OBO token to access a custom API protected by ADFS that supports the OBO flow.
 
-This is different than the ``get_obo_access_token`` method, which is used for Microsoft Graph API delegated access in the previous example.
+.. code-block:: python
+
+    from django.contrib.auth.decorators import login_required
+    from django.http import JsonResponse
+    from django_auth_adfs.token_manager import token_manager
+    import requests
+
+    @login_required
+    def custom_api_view(request):
+        """Access a custom API using OBO token"""
+        obo_token = token_manager.get_obo_access_token(request)
+
+        if not obo_token:
+            return JsonResponse({"error": "No OBO token available"}, status=401)
+
+        headers = {
+            "Authorization": f"Bearer {obo_token}",
+            "Content-Type": "application/json",
+        }
+
+        try:
+            response = requests.get(
+                "https://your-custom-api.example.com/data",
+                headers=headers
+            )
+            response.raise_for_status()
+            return JsonResponse(response.json())
+        except requests.exceptions.RequestException as e:
+            return JsonResponse(
+                {"error": "Failed to fetch data", "details": str(e)},
+                status=500
+            )
+
+Using with Direct Resource Access
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For APIs that directly trust your application (no OBO flow needed), use the regular access token:
 
 .. code-block:: python
 
@@ -430,21 +424,7 @@ The following example code demonstrates a debug view to check the values of the 
 Understanding Access Tokens vs. OBO Tokens
 ------------------------------------------
 
-It's important to understand the difference between regular access tokens and OBO (On-Behalf-Of) tokens, especially in the context of delegated access versus application access:
+For more information on the different types of permissions and flows, see:
 
-**Delegated Access vs. Application Access**:
-    There are two primary ways an application can access resources in Azure AD/ADFS:
-
-    * **Application Access**: The application accesses resources directly with its own identity, not on behalf of a user.
-
-    * **Delegated Access**: The application accesses resources on behalf of a signed-in user.
-
-**Regular Access Token**:
-    The token obtained during authentication with ADFS.
-
-**OBO (On-Behalf-Of) Token**:
-    The OBO flow is specifically designed for delegated access scenarios where your application needs to access resources (like Microsoft Graph) on behalf of the authenticated user.
-
-    The TokenManager handles this exchange automatically when OBO token storage is enabled.
-
-For more information on the different types of permissions, see `the Microsoft documentation <https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview>`_.
+* `OAuth 2.0 On-Behalf-Of flow <https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow>`_
+* `Permission types <https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview>`_
