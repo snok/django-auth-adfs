@@ -428,7 +428,7 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
         if request and hasattr(request, "session"):
             username_claim = settings.USERNAME_CLAIM
             request.session["username_claim"] = claims[username_claim]
-    
+
         user = self.process_access_token(access_token, adfs_response)
         return user
 
