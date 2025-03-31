@@ -420,6 +420,15 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
 
         adfs_response = self.exchange_auth_code(authorization_code, request)
         access_token = adfs_response["access_token"]
+
+         # Extract claims before user lookup
+        claims = self.validate_access_token(access_token)
+
+        # Store claims in session so it's available in login_failed()
+        if request and hasattr(request, "session"):
+            username_claim = settings.USERNAME_CLAIM
+            request.session["username_claim"] = claims[username_claim]
+            
         user = self.process_access_token(access_token, adfs_response)
         return user
 
