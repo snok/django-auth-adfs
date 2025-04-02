@@ -118,7 +118,19 @@ Replace your AUTH_ADFS with this.
         'RELYING_PARTY_ID': client_id
     }
 
-    
+
+
+Add this to your INSTALLED_APPS.
+
+.. code-block:: python
+
+    INSTALLED_APPS = [
+        ...
+        'django_auth_adfs',
+        ...
+    ]
+
+
 
 Add this to your AUTHENTICATION_BACKENDS.
 
