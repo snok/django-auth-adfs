@@ -103,18 +103,21 @@ Replace your AUTH_ADFS with this.
     
 
     AUTH_ADFS = {
-        'AUDIENCE': client_id,
+        'AUDIENCE': [f'api://{client_id}', client_id],
         'CLIENT_ID': client_id,
         'CLIENT_SECRET': client_secret,
-        'CLAIM_MAPPING': {'first_name': 'given_name',
-                          'last_name': 'family_name',
-                          'email': 'upn'},
+        'CLAIM_MAPPING': {
+            'first_name': 'given_name',
+            'last_name': 'family_name',
+            'email': 'email'
+        },
         'GROUPS_CLAIM': 'roles',
         'MIRROR_GROUPS': True,
         'USERNAME_CLAIM': 'upn',
         'TENANT_ID': tenant_id,
-        'RELYING_PARTY_ID': client_id,
+        'RELYING_PARTY_ID': client_id
     }
+
     
 
 Add this to your AUTHENTICATION_BACKENDS.
@@ -124,6 +127,7 @@ Add this to your AUTHENTICATION_BACKENDS.
     AUTHENTICATION_BACKENDS = [
         ...
         'django_auth_adfs.backend.AdfsAccessTokenBackend',
+        'django_auth_adfs.backend.AdfsAuthCodeBackend'
         ...
     ]
 
