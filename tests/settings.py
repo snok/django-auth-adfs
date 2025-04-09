@@ -73,6 +73,7 @@ AUTH_ADFS = {
     "BOOLEAN_CLAIM_MAPPING": {"is_staff": "user_is_staff",
                               "is_superuser": "user_is_superuser"},
     "CONFIG_RELOAD_INTERVAL": 0,  # Always reload settings
+    "LOGIN_EXEMPT_URLS": ["^api", "nested/path/"],
 }
 
 LOGIN_URL = "django_auth_adfs:login"
