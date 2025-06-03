@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'django-auth-adfs'
-version = "1.14.0"  # Remember to also change __init__.py version
+version = "1.15.0"  # Remember to also change __init__.py version
 description = 'A Django authentication backend for Microsoft ADFS and AzureAD'
 authors = ['Joris Beckers <joris.beckers@gmail.com>']
 maintainers = ['Jonas Krüger Svensson <jonas-ks@hotmail.com>', 'Sondre Lillebø Gundersen <sondrelg@live.no>']
@@ -14,17 +14,18 @@ classifiers = [
     'Environment :: Web Environment',
     'Framework :: Django :: 4.2',
     'Framework :: Django :: 5.0',
+    'Framework :: Django :: 5.1',
     'Intended Audience :: Developers',
     'Intended Audience :: End Users/Desktop',
     'Operating System :: OS Independent',
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
     'Topic :: Internet :: WWW/HTTP',
     'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     'Topic :: Internet :: WWW/HTTP :: WSGI',
@@ -34,9 +35,9 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = '^3.8'
+python = '^3.9'
 django = [
-    { version = '^4.2', python = '>=3.8 <3.10' },
+    { version = '^4.2', python = '>=3.9 <3.10' },
     { version = '^4.2 || ^5', python = '>=3.10' },
 ]
 requests = '*'

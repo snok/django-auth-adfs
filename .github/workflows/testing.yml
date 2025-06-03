@@ -4,14 +4,14 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3"
       - uses: actions/cache@v3
@@ -30,21 +30,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12"]
-        django-version: [ "4.2", "5.0"]
-        drf-version: [ "3.11", "3.12", "3.13" ]
+        python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13"]
+        django-version: [ "4.2", "5.0", "5.1", "5.2"]
+        drf-version: ["3.14", "3.15", "3.16"]
         exclude:
-          # Python 3.8 is incompatible with Django v5+
-          - django-version: 5.0
-            python-version: 3.8
           # Python 3.9 is incompatible with Django v5+
           - django-version: 5.0
             python-version: 3.9
+          - django-version: 5.1
+            python-version: 3.9
+          - django-version: 5.2
+            python-version: 3.9
+          # Django 4.2 is incompatible with Python 3.13+
+          - django-version: 4.2
+            python-version: 3.13
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       - uses: snok/install-poetry@v1
         with:
           virtualenvs-in-project: true
@@ -58,8 +63,8 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       - run: |
           source .venv/bin/activate
-          pip install "Django==${{ matrix.django-version }}"
-          pip install "djangorestframework==${{ matrix.drf-version }}"
+          pip install "Django~=${{ matrix.django-version }}.0a1"
+          pip install "djangorestframework~=${{ matrix.drf-version }}.0"
       - name: Run tests
         run: |
           source .venv/bin/activate

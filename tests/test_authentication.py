@@ -349,6 +349,7 @@ class AuthenticationTests(TestCase):
             self.assertEqual(user.last_name, "Doe")
             self.assertEqual(user.email, "john.doe@example.com")
             self.assertEqual(user.profile.employee_id, 182)
+        post_save.disconnect(create_profile, sender=User)
 
     @mock_adfs("2016")
     def test_authentication(self):

@@ -173,6 +173,8 @@ ADFS server. Based on this information, certain configuration for this module is
 This setting determines the interval after which the configuration is reloaded. This allows to automatically follow the
 token signing certificate rollover on ADFS.
 
+.. _create_new_users_setting:
+
 CREATE_NEW_USERS
 ----------------
 * **Default**: ``True``
@@ -243,6 +245,12 @@ GROUPS_CLAIM
 
 Name of the claim in the JWT access token from ADFS that contains the groups the user is member of.
 If an entry in this claim matches a group configured in Django, the user will join it automatically.
+
+If using Azure AD and there are too many groups to fit in the JWT access token, the application will
+make a request to the Microsoft GraphQL API to find the groups. If you have many groups but only
+need a specific few, you can customize the request by overriding
+``AdfsBaseBackend.get_group_memberships_from_ms_graph_params`` and specifying the
+`OData query parameters <https://learn.microsoft.com/en-us/graph/api/group-list-transitivememberof?view=graph-rest-1.0&tabs=python#http-request>`_.
 
 Set this setting to ``None`` to disable automatic group handling. The group memberships of the user
 will not be touched.
