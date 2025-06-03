@@ -60,8 +60,28 @@ class LoginRequiredMiddleware:
         return self.get_response(request)
 
 
-def adfs_refresh_middleware(get_response):
-    def middleware(request):
+class AdfsRefreshMiddleware:
+    """
+    Middleware that refreshes the access token for the user if it is close to
+    expiring. This is done by checking the session for the '_adfs_token_expiry'
+    key and comparing it with the current time plus a threshold defined in
+    settings.REFRESH_THRESHOLD.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if hasattr(django_settings, "SESSION_ENGINE"):
+            assert (
+                django_settings.SESSION_ENGINE
+                != "django.contrib.sessions.backends.signed_cookies"
+            ), (
+                "You are trying to use ADFS Refresh middleware with signed cookie-based sessions. "
+                "For security reasons, we do not recommend this configuration. "
+                "Please change SESSION_ENGINE to a different backend, such as 'django.contrib.sessions.backends.db' "
+            )
+
         try:
             backend_str = request.session[auth.BACKEND_SESSION_KEY]
         except KeyError:
@@ -70,12 +90,13 @@ def adfs_refresh_middleware(get_response):
             backend = auth.load_backend(backend_str)
             if isinstance(backend, AdfsAuthCodeBackend):
                 now = datetime.now() + settings.REFRESH_THRESHOLD
-                expiry = datetime.fromisoformat(request.session['_adfs_token_expiry'])
+                expiry = datetime.fromisoformat(request.session["_adfs_token_expiry"])
                 if now > expiry:
                     try:
-                        backend.refresh_access_token(request, request.session['_adfs_refresh_token'])
+                        backend.refresh_access_token(
+                            request, request.session["_adfs_refresh_token"]
+                        )
                     except (PermissionDenied, HTTPError) as error:
                         logger.debug("Error refreshing access token: %s", error)
                         logout(request)
-        return get_response(request)
-    return middleware
+        return self.get_response(request)

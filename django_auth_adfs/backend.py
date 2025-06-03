@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timedelta
 
 import jwt
+from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
@@ -425,18 +426,22 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
         provider_config.load_config()
 
         adfs_response = self.exchange_auth_code(authorization_code, request)
-        user = self._process_adfs_response(request, adfs_response)
+        access_token = adfs_response["access_token"]
+        user = self.process_access_token(access_token, adfs_response)
+        if ("django_auth_adfs.middleware.AdfsRefreshMiddleware" in django_settings.MIDDLEWARE):
+            self._store_adfs_tokens_in_session(request, adfs_response)
         return user
 
-    def _process_adfs_response(self, request, adfs_response):
-        user = self.process_access_token(adfs_response['access_token'], adfs_response)
-        request.session['_adfs_access_token'] = adfs_response['access_token']
-        expiry = datetime.now() + timedelta(seconds=adfs_response['expires_in'])
-        request.session['_adfs_token_expiry'] = expiry.isoformat()
-        if 'refresh_token' in adfs_response:
-            request.session['_adfs_refresh_token'] = adfs_response['refresh_token']
+    def _store_adfs_tokens_in_session(self, request, adfs_response):
+        assert "refresh_token" in adfs_response, (
+            "AdfsRefreshMiddleware requires a refresh token to function correctly. "
+            "Make sure your ADFS server is configured to return a refresh token."
+        )
+        request.session["_adfs_access_token"] = adfs_response["access_token"]
+        expiry = datetime.now() + timedelta(seconds=int(adfs_response["expires_in"]))
+        request.session["_adfs_token_expiry"] = expiry.isoformat()
+        request.session["_adfs_refresh_token"] = adfs_response["refresh_token"]
         request.session.save()
-        return user
 
     def refresh_access_token(self, request, refresh_token):
         provider_config.load_config()
