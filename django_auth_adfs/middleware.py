@@ -3,13 +3,17 @@ Based on https://djangosnippets.org/snippets/1179/
 """
 import logging
 from re import compile
+from requests import HTTPError
 
 from django.conf import settings as django_settings
 from django.contrib import auth
 from django.contrib.auth.views import redirect_to_login
+from django.contrib.auth import logout
+from django.core.exceptions import (PermissionDenied)
+
 from django.urls import reverse
 
-from django_auth_adfs.backend import AdfsAccessTokenRefreshBackend
+from django_auth_adfs.backend import AdfsAuthCodeRefreshBackend
 from django_auth_adfs.exceptions import MFARequired
 from django_auth_adfs.config import settings
 
@@ -84,6 +88,11 @@ class AdfsRefreshMiddleware:
             pass
         else:
             backend = auth.load_backend(backend_str)
-            if isinstance(backend, AdfsAccessTokenRefreshBackend):
-                backend.ensure_valid_access_token(request)
+            if isinstance(backend, AdfsAuthCodeRefreshBackend):
+                try:
+                    backend.ensure_valid_access_token(request)
+                except (PermissionDenied, HTTPError) as error:
+                    logger.debug("Error refreshing access token: %s", error)
+                    logout(request)
+
         return self.get_response(request)

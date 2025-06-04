@@ -16,7 +16,7 @@ from copy import deepcopy
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from mock import Mock, patch
 
 from django_auth_adfs import signals
@@ -543,6 +543,19 @@ class AuthenticationTests(TestCase):
             response = self.client.get(reverse('test'))
         self.assertEqual(response.status_code, 200)
 
+    @override_settings(AUTHENTICATION_BACKENDS=['django_auth_adfs.backend.AdfsAuthCodeRefreshBackend'])
+    @override_settings(
+        MIDDLEWARE=[
+            'django.contrib.sessions.middleware.SessionMiddleware',
+            'django.middleware.common.CommonMiddleware',
+            'django.middleware.csrf.CsrfViewMiddleware',
+            'django.contrib.auth.middleware.AuthenticationMiddleware',
+            'django.contrib.messages.middleware.MessageMiddleware',
+            'django.middleware.clickjacking.XFrameOptionsMiddleware',
+            "django_auth_adfs.middleware.AdfsRefreshMiddleware",
+            "django_auth_adfs.middleware.LoginRequiredMiddleware",
+        ]
+    )
     @mock_adfs("2016", refresh_token_expired=True)
     def test_refresh_token_expired(self):
         response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
@@ -550,7 +563,7 @@ class AuthenticationTests(TestCase):
         fromisoformat = datetime.fromisoformat
         with patch('django_auth_adfs.backend.datetime') as dt:
             dt.fromisoformat = fromisoformat
-            dt.now.return_value = datetime.now() + timedelta(hours=1)
+            dt.now.return_value = datetime.now() + timedelta(hours=2)
             response = self.client.get(reverse('test'))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'], f"{reverse('django_auth_adfs:login')}?next=/")

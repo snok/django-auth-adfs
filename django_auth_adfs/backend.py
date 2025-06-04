@@ -2,12 +2,11 @@ import logging
 from datetime import datetime, timedelta
 
 import jwt
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
 from django.core.exceptions import (ImproperlyConfigured, ObjectDoesNotExist,
                                     PermissionDenied)
-from requests import HTTPError
 
 from django_auth_adfs import signals
 from django_auth_adfs.config import provider_config, settings
@@ -426,7 +425,7 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
         return user
 
 
-class AdfsAccessTokenRefreshBackend(AdfsBaseBackend):
+class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
     """
     Authentication backend that supports storing and refreshing ADFS tokens in the session.
     Use this backend in conjunction with AdfsRefreshMiddleware.
@@ -455,14 +454,10 @@ class AdfsAccessTokenRefreshBackend(AdfsBaseBackend):
         now = datetime.now() + settings.REFRESH_THRESHOLD
         expiry = datetime.fromisoformat(request.session["_adfs_token_expiry"])
         if now > expiry:
-            try:
-                adfs_refresh_response = self._refresh_access_token(
-                    request.session["_adfs_refresh_token"]
-                )
-                self._store_adfs_tokens_in_session(request, adfs_refresh_response)
-            except (PermissionDenied, HTTPError) as error:
-                logger.debug("Error refreshing access token: %s", error)
-                logout(request)
+            adfs_refresh_response = self._refresh_access_token(
+                request.session["_adfs_refresh_token"]
+            )
+            self._store_adfs_tokens_in_session(request, adfs_refresh_response)
 
     def _refresh_access_token(self, refresh_token):
         provider_config.load_config()
@@ -477,7 +472,7 @@ class AdfsAccessTokenRefreshBackend(AdfsBaseBackend):
 
     def _store_adfs_tokens_in_session(self, request, adfs_response):
         assert "refresh_token" in adfs_response, (
-            "AdfsAccessTokenRefreshBackend requires a refresh token to function correctly. "
+            "AdfsAuthCodeRefreshBackend requires a refresh token to function correctly. "
             "Make sure your ADFS server is configured to return a refresh token."
         )
         request.session["_adfs_access_token"] = adfs_response["access_token"]
