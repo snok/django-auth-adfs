@@ -2,16 +2,12 @@
 Based on https://djangosnippets.org/snippets/1179/
 """
 import logging
-from datetime import datetime
 from re import compile
 
 from django.conf import settings as django_settings
 from django.contrib import auth
-from django.contrib.auth import logout
 from django.contrib.auth.views import redirect_to_login
-from django.core.exceptions import PermissionDenied
 from django.urls import reverse
-from requests import HTTPError
 
 from django_auth_adfs.backend import AdfsAuthCodeRefreshBackend
 from django_auth_adfs.exceptions import MFARequired
@@ -90,9 +86,6 @@ class AdfsRefreshMiddleware:
             backend = auth.load_backend(backend_str)
             if isinstance(backend, AdfsAuthCodeRefreshBackend):
                 backend.check_and_refresh_access_token(request)
-            else: 
-                assert (
-                    "ADFS Refresh middleware is only applicable to AdfsAuthCodeRefreshBackend, "
-                    "but found %s", backend_str
-                )
+            else:
+                assert "ADFS Refresh middleware is only applicable to AdfsAuthCodeRefreshBackend"
         return self.get_response(request)

@@ -2,7 +2,6 @@ import logging
 from datetime import datetime, timedelta
 
 import jwt
-from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
@@ -451,8 +450,7 @@ class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
         user = self.process_access_token(access_token, adfs_response)
         self._store_adfs_tokens_in_session(request, adfs_response)
         return user
-
-        
+      
     def ensure_valid_access_token(self, request):
         now = datetime.now() + settings.REFRESH_THRESHOLD
         expiry = datetime.fromisoformat(request.session["_adfs_token_expiry"])
@@ -486,6 +484,7 @@ class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
         request.session["_adfs_token_expiry"] = expiry.isoformat()
         request.session["_adfs_refresh_token"] = adfs_response["refresh_token"]
         request.session.save()
+
 
 class AdfsAccessTokenBackend(AdfsBaseBackend):
     """
