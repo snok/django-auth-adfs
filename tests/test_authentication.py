@@ -548,7 +548,7 @@ class AuthenticationTests(TestCase):
         response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
         self.assertFalse(response.wsgi_request.user.is_anonymous)
         fromisoformat = datetime.fromisoformat
-        with patch('django_auth_adfs.middleware.datetime') as dt:
+        with patch('django_auth_adfs.backend.datetime') as dt:
             dt.fromisoformat = fromisoformat
             dt.now.return_value = datetime.now() + timedelta(hours=1)
             response = self.client.get(reverse('test'))

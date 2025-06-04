@@ -9,7 +9,7 @@ from django.contrib import auth
 from django.contrib.auth.views import redirect_to_login
 from django.urls import reverse
 
-from django_auth_adfs.backend import AdfsAuthCodeRefreshBackend
+from django_auth_adfs.backend import AdfsAccessTokenRefreshBackend
 from django_auth_adfs.exceptions import MFARequired
 from django_auth_adfs.config import settings
 
@@ -84,8 +84,6 @@ class AdfsRefreshMiddleware:
             pass
         else:
             backend = auth.load_backend(backend_str)
-            if isinstance(backend, AdfsAuthCodeRefreshBackend):
-                backend.check_and_refresh_access_token(request)
-            else:
-                assert "ADFS Refresh middleware is only applicable to AdfsAuthCodeRefreshBackend"
+            if isinstance(backend, AdfsAccessTokenRefreshBackend):
+                backend.ensure_valid_access_token(request)
         return self.get_response(request)

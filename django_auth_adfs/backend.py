@@ -426,7 +426,7 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
         return user
 
 
-class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
+class AdfsAccessTokenRefreshBackend(AdfsBaseBackend):
     """
     Authentication backend that supports storing and refreshing ADFS tokens in the session.
     Use this backend in conjunction with AdfsRefreshMiddleware.
@@ -450,7 +450,7 @@ class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
         user = self.process_access_token(access_token, adfs_response)
         self._store_adfs_tokens_in_session(request, adfs_response)
         return user
-      
+
     def ensure_valid_access_token(self, request):
         now = datetime.now() + settings.REFRESH_THRESHOLD
         expiry = datetime.fromisoformat(request.session["_adfs_token_expiry"])
@@ -468,7 +468,8 @@ class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
         provider_config.load_config()
         response = provider_config.session.post(
             provider_config.token_endpoint,
-            data=f'grant_type=refresh_token&refresh_token={refresh_token}'
+            data=f'client_id={settings.CLIENT_ID}&client_secret={settings.CLIENT_SECRET}&grant_type=refresh_token' +
+                 f'&refresh_token={refresh_token}'
         )
         response.raise_for_status()
         adfs_response = response.json()
@@ -476,7 +477,7 @@ class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
 
     def _store_adfs_tokens_in_session(self, request, adfs_response):
         assert "refresh_token" in adfs_response, (
-            "AdfsAuthCodeRefreshBackend requires a refresh token to function correctly. "
+            "AdfsAccessTokenRefreshBackend requires a refresh token to function correctly. "
             "Make sure your ADFS server is configured to return a refresh token."
         )
         request.session["_adfs_access_token"] = adfs_response["access_token"]
