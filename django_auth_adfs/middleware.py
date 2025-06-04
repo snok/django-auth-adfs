@@ -13,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from requests import HTTPError
 
-from django_auth_adfs.backend import AdfsAuthCodeBackend
+from django_auth_adfs.backend import AdfsAuthCodeRefreshBackend
 from django_auth_adfs.exceptions import MFARequired
 from django_auth_adfs.config import settings
 
@@ -88,15 +88,11 @@ class AdfsRefreshMiddleware:
             pass
         else:
             backend = auth.load_backend(backend_str)
-            if isinstance(backend, AdfsAuthCodeBackend):
-                now = datetime.now() + settings.REFRESH_THRESHOLD
-                expiry = datetime.fromisoformat(request.session["_adfs_token_expiry"])
-                if now > expiry:
-                    try:
-                        backend.refresh_access_token(
-                            request, request.session["_adfs_refresh_token"]
-                        )
-                    except (PermissionDenied, HTTPError) as error:
-                        logger.debug("Error refreshing access token: %s", error)
-                        logout(request)
+            if isinstance(backend, AdfsAuthCodeRefreshBackend):
+                backend.check_and_refresh_access_token(request)
+            else: 
+                assert (
+                    "ADFS Refresh middleware is only applicable to AdfsAuthCodeRefreshBackend, "
+                    "but found %s", backend_str
+                )
         return self.get_response(request)
