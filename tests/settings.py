@@ -35,7 +35,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'django_auth_adfs.middleware.adfs_refresh_middleware',
+    'django_auth_adfs.middleware.AdfsRefreshMiddleware',
     'django_auth_adfs.middleware.LoginRequiredMiddleware',
 )
 
