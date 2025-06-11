@@ -401,10 +401,9 @@ class AdfsBaseBackend(ModelBackend):
                         for name in claim_groups
                         if name not in existing_claimed_group_names
                     ]
-                    # Associate the users to all claimed groups
-                    user.groups.set(
-                        tuple(existing_claimed_groups) + tuple(new_claimed_groups)
-                    )
+                    # Set user's groups to all claimed groups (both existing and
+                    # newly created) and remove any that are not in the claim.
+                    user.groups.set(new_claimed_groups)
                 else:
                     # Associate the user to only existing claimed groups
                     user.groups.set(existing_claimed_groups)
