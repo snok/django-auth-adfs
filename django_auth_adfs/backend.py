@@ -382,6 +382,13 @@ class AdfsBaseBackend(ModelBackend):
             if sorted(claim_groups) != sorted(user_group_names):
                 # Get the list of already existing groups in one SQL query
                 existing_claimed_groups = Group.objects.filter(name__in=claim_groups)
+                existing_claimed_group_names = (
+                    group.name for group in existing_claimed_groups
+                )
+
+                if sorted(existing_claimed_group_names) == sorted(user_group_names):
+                    # If the groups are already set, we don't need to do anything
+                    return
 
                 if settings.MIRROR_GROUPS:
                     existing_claimed_group_names = (
