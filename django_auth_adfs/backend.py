@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 
 import jwt
 from django.contrib.auth import get_user_model
@@ -422,6 +423,63 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
         access_token = adfs_response["access_token"]
         user = self.process_access_token(access_token, adfs_response)
         return user
+
+
+class AdfsAuthCodeRefreshBackend(AdfsBaseBackend):
+    """
+    Authentication backend that supports storing and refreshing ADFS tokens in the session.
+    Use this backend in conjunction with AdfsRefreshMiddleware.
+    """
+    def authenticate(self, request=None, authorization_code=None, **kwargs):
+        # If there's no token or code, we pass control to the next authentication backend
+        if authorization_code is None or authorization_code == '':
+            logger.debug("Authentication backend was called but no authorization code was received")
+            return
+
+        # If there's no request object, we pass control to the next authentication backend
+        if request is None:
+            logger.debug("Authentication backend was called without request")
+            return
+
+        # If loaded data is too old, reload it again
+        provider_config.load_config()
+
+        adfs_response = self.exchange_auth_code(authorization_code, request)
+        access_token = adfs_response["access_token"]
+        user = self.process_access_token(access_token, adfs_response)
+        self._store_adfs_tokens_in_session(request, adfs_response)
+        return user
+
+    def ensure_valid_access_token(self, request):
+        now = datetime.now() + settings.REFRESH_THRESHOLD
+        expiry = datetime.fromisoformat(request.session["_adfs_token_expiry"])
+        if now > expiry:
+            adfs_refresh_response = self._refresh_access_token(
+                request.session["_adfs_refresh_token"]
+            )
+            self._store_adfs_tokens_in_session(request, adfs_refresh_response)
+
+    def _refresh_access_token(self, refresh_token):
+        provider_config.load_config()
+        response = provider_config.session.post(
+            provider_config.token_endpoint,
+            data=f'client_id={settings.CLIENT_ID}&client_secret={settings.CLIENT_SECRET}&grant_type=refresh_token' +
+                 f'&refresh_token={refresh_token}'
+        )
+        response.raise_for_status()
+        adfs_response = response.json()
+        return adfs_response
+
+    def _store_adfs_tokens_in_session(self, request, adfs_response):
+        assert "refresh_token" in adfs_response, (
+            "AdfsAuthCodeRefreshBackend requires a refresh token to function correctly. "
+            "Make sure your ADFS server is configured to return a refresh token."
+        )
+        request.session["_adfs_access_token"] = adfs_response["access_token"]
+        expiry = datetime.now() + timedelta(seconds=int(adfs_response["expires_in"]))
+        request.session["_adfs_token_expiry"] = expiry.isoformat()
+        request.session["_adfs_refresh_token"] = adfs_response["refresh_token"]
+        request.session.save()
 
 
 class AdfsAccessTokenBackend(AdfsBaseBackend):
