@@ -72,6 +72,7 @@ class Settings(object):
         self.USERNAME_CLAIM = "winaccountname"
         self.GUEST_USERNAME_CLAIM = None
         self.JWT_LEEWAY = 0
+        self.REFRESH_THRESHOLD = timedelta(minutes=5)
         self.CUSTOM_FAILED_RESPONSE_VIEW = lambda request, error_message, status: render(
             request, 'django_auth_adfs/login_failed.html', {'error_message': error_message}, status=status
         )
