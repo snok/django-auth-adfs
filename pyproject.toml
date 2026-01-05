@@ -16,6 +16,7 @@ classifiers = [
     'Framework :: Django :: 5.0',
     'Framework :: Django :: 5.1',
     'Framework :: Django :: 5.2',
+    'Framework :: Django :: 6.0',
     'Intended Audience :: Developers',
     'Intended Audience :: End Users/Desktop',
     'Operating System :: OS Independent',
@@ -39,14 +40,14 @@ classifiers = [
 python = '^3.9'
 django = [
     { version = '^4.2', python = '>=3.9 <3.10' },
-    { version = '^4.2 || ^5', python = '>=3.10' },
+    { version = '^4.2 || ^5 || ^6', python = '>=3.10' },
 ]
 requests = '*'
 urllib3 = '*'
 cryptography = '*'
 PyJWT = "*"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 responses = '*'
 mock = '*'
 coverage = '*'

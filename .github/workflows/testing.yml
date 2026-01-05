@@ -44,6 +44,14 @@ jobs:
           # Django 4.2 is incompatible with Python 3.13+
           - django-version: 4.2
             python-version: 3.13
+          #Django 6 is incompatible with < Pyhton 3.12
+          -   django-version: 6.0
+              python-version: 3.9
+          -   django-version: 6.0
+              python-version: 3.10
+          -   django-version: 6.0
+              python-version: 3.11
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v5
@@ -59,7 +67,7 @@ jobs:
         with:
           path: .venv
           key: ${{ hashFiles('**/poetry.lock') }}-${{ matrix.python-version }}-0
-      - run: poetry env use ${{ matrix.python-version }} && poetry install --no-root
+      - run: poetry env use ${{ matrix.python-version }} && poetry lock  && poetry install --no-root
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       - run: |
           source .venv/bin/activate
