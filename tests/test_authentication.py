@@ -1,5 +1,9 @@
 import base64
 
+from datetime import datetime, timedelta
+
+from django.urls import reverse
+
 from django_auth_adfs.exceptions import MFARequired
 
 try:
@@ -10,13 +14,12 @@ except ImportError:  # Python 2.7
 from copy import deepcopy
 
 from django.contrib.auth.models import Group, User
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
-from django.test import RequestFactory, TestCase
+from django.test import TestCase, override_settings
 from mock import Mock, patch
 
 from django_auth_adfs import signals
-from django_auth_adfs.backend import AdfsAuthCodeBackend
 from django_auth_adfs.config import ProviderConfig, Settings
 
 from .models import Profile
@@ -28,20 +31,18 @@ class AuthenticationTests(TestCase):
         Group.objects.create(name='group1')
         Group.objects.create(name='group2')
         Group.objects.create(name='group3')
-        self.request = RequestFactory().get('/oauth2/callback')
         self.signal_handler = Mock()
         signals.post_authenticate.connect(self.signal_handler)
 
     @mock_adfs("2012")
     def test_post_authenticate_signal_send(self):
-        backend = AdfsAuthCodeBackend()
-        backend.authenticate(self.request, authorization_code="dummycode")
+        self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
         self.assertEqual(self.signal_handler.call_count, 1)
 
     @mock_adfs("2012")
     def test_with_auth_code_2012(self):
-        backend = AdfsAuthCodeBackend()
-        user = backend.authenticate(self.request, authorization_code="dummycode")
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+        user = response.wsgi_request.user
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
         self.assertEqual(user.last_name, "Doe")
@@ -52,8 +53,8 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016")
     def test_with_auth_code_2016(self):
-        backend = AdfsAuthCodeBackend()
-        user = backend.authenticate(self.request, authorization_code="dummycode")
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+        user = response.wsgi_request.user
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
         self.assertEqual(user.last_name, "Doe")
@@ -64,9 +65,15 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016", mfa_error=True)
     def test_mfa_error_backends(self):
-        with self.assertRaises(MFARequired):
-            backend = AdfsAuthCodeBackend()
-            backend.authenticate(self.request, authorization_code="dummycode")
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response['Location'],
+            "https://adfs.example.com/adfs/oauth2/authorize/?response_type=code&"
+            "client_id=your-configured-client-id&resource=your-adfs-RPT-name&"
+            "redirect_uri=http%3A%2F%2Ftestserver%2Foauth2%2Fcallback&state=Lw%3D%3D&scope=openid&"
+            "amr_values=ngcmfa"
+        )
 
     @mock_adfs("azure")
     def test_with_auth_code_azure(self):
@@ -77,8 +84,8 @@ class AuthenticationTests(TestCase):
         with patch("django_auth_adfs.config.django_settings", settings):
             with patch("django_auth_adfs.config.settings", Settings()):
                 with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                    backend = AdfsAuthCodeBackend()
-                    user = backend.authenticate(self.request, authorization_code="dummycode")
+                    response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+                    user = response.wsgi_request.user
                     self.assertIsInstance(user, User)
                     self.assertEqual(user.first_name, "John")
                     self.assertEqual(user.last_name, "Doe")
@@ -100,9 +107,8 @@ class AuthenticationTests(TestCase):
             with patch('django_auth_adfs.backend.settings', Settings()):
                 with patch("django_auth_adfs.config.settings", Settings()):
                     with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                        with self.assertRaises(PermissionDenied, msg=''):
-                            backend = AdfsAuthCodeBackend()
-                            _ = backend.authenticate(self.request, authorization_code="dummycode")
+                        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+                        self.assertEqual(response.status_code, 401)
 
     @mock_adfs("azure", guest=True)
     def test_with_auth_code_azure_guest_no_block(self):
@@ -117,8 +123,8 @@ class AuthenticationTests(TestCase):
             with patch('django_auth_adfs.backend.settings', Settings()):
                 with patch("django_auth_adfs.config.settings", Settings()):
                     with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                        backend = AdfsAuthCodeBackend()
-                        user = backend.authenticate(self.request, authorization_code="dummycode")
+                        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+                        user = response.wsgi_request.user
                         self.assertIsInstance(user, User)
                         self.assertEqual(user.first_name, "John")
                         self.assertEqual(user.last_name, "Doe")
@@ -139,8 +145,8 @@ class AuthenticationTests(TestCase):
             with patch('django_auth_adfs.backend.settings', Settings()):
                 with patch("django_auth_adfs.config.settings", Settings()):
                     with patch("django_auth_adfs.backend.provider_config", ProviderConfig()):
-                        backend = AdfsAuthCodeBackend()
-                        user = backend.authenticate(self.request, authorization_code="dummycode")
+                        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+                        user = response.wsgi_request.user
                         self.assertIsInstance(user, User)
                         self.assertEqual(user.first_name, "John")
                         self.assertEqual(user.last_name, "Doe")
@@ -151,14 +157,15 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016")
     def test_empty(self):
-        backend = AdfsAuthCodeBackend()
-        self.assertIsNone(backend.authenticate(self.request))
+        response = self.client.get(reverse('django_auth_adfs:callback'))
+        user = response.wsgi_request.user
+        self.assertTrue(user.is_anonymous)
 
     @mock_adfs("2016")
     def test_group_claim(self):
-        backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.backend.settings.GROUPS_CLAIM", "nonexisting"):
-            user = backend.authenticate(self.request, authorization_code="dummycode")
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+            user = response.wsgi_request.user
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
@@ -167,9 +174,9 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016")
     def test_no_group_claim(self):
-        backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.backend.settings.GROUPS_CLAIM", None):
-            user = backend.authenticate(self.request, authorization_code="dummycode")
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+            user = response.wsgi_request.user
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
@@ -181,9 +188,9 @@ class AuthenticationTests(TestCase):
         # Remove one group
         Group.objects.filter(name="group1").delete()
 
-        backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.backend.settings.MIRROR_GROUPS", True):
-            user = backend.authenticate(self.request, authorization_code="dummycode")
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+            user = response.wsgi_request.user
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
@@ -197,9 +204,9 @@ class AuthenticationTests(TestCase):
         # Remove one group
         Group.objects.filter(name="group1").delete()
 
-        backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.backend.settings.MIRROR_GROUPS", False):
-            user = backend.authenticate(self.request, authorization_code="dummycode")
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+            user = response.wsgi_request.user
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
@@ -210,9 +217,9 @@ class AuthenticationTests(TestCase):
 
     @mock_adfs("2016", empty_keys=True)
     def test_empty_keys(self):
-        backend = AdfsAuthCodeBackend()
         with patch("django_auth_adfs.config.provider_config.signing_keys", []):
-            self.assertRaises(PermissionDenied, backend.authenticate, self.request, authorization_code='testcode')
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+            self.assertEqual(response.status_code, 401)
 
     @mock_adfs("2016")
     def test_group_removal(self):
@@ -227,9 +234,8 @@ class AuthenticationTests(TestCase):
         self.assertEqual(user.groups.all()[0].name, "group3")
         self.assertEqual(len(user.groups.all()), 1)
 
-        backend = AdfsAuthCodeBackend()
-
-        user = backend.authenticate(self.request, authorization_code="dummycode")
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+        user = response.wsgi_request.user
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
         self.assertEqual(user.last_name, "Doe")
@@ -253,9 +259,8 @@ class AuthenticationTests(TestCase):
         self.assertEqual(user.groups.all()[1].name, "group3")
         self.assertEqual(len(user.groups.all()), 2)
 
-        backend = AdfsAuthCodeBackend()
-
-        user = backend.authenticate(self.request, authorization_code="dummycode")
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+        user = response.wsgi_request.user
         self.assertIsInstance(user, User)
         self.assertEqual(user.first_name, "John")
         self.assertEqual(user.last_name, "Doe")
@@ -272,9 +277,8 @@ class AuthenticationTests(TestCase):
         }
         with patch("django_auth_adfs.backend.settings.GROUP_TO_FLAG_MAPPING", group_to_flag_mapping):
             with patch("django_auth_adfs.backend.settings.BOOLEAN_CLAIM_MAPPING", {}):
-                backend = AdfsAuthCodeBackend()
-
-                user = backend.authenticate(self.request, authorization_code="dummycode")
+                response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+                user = response.wsgi_request.user
                 self.assertIsInstance(user, User)
                 self.assertEqual(user.first_name, "John")
                 self.assertEqual(user.last_name, "Doe")
@@ -289,9 +293,8 @@ class AuthenticationTests(TestCase):
             "is_superuser": "user_is_superuser",
         }
         with patch("django_auth_adfs.backend.settings.BOOLEAN_CLAIM_MAPPING", boolean_claim_mapping):
-            backend = AdfsAuthCodeBackend()
-
-            user = backend.authenticate(self.request, authorization_code="dummycode")
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+            user = response.wsgi_request.user
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
@@ -312,9 +315,8 @@ class AuthenticationTests(TestCase):
             },
         }
         with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", claim_mapping):
-            backend = AdfsAuthCodeBackend()
-
-            user = backend.authenticate(self.request, authorization_code="dummycode")
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+            user = response.wsgi_request.user
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
@@ -340,9 +342,8 @@ class AuthenticationTests(TestCase):
             },
         }
         with patch("django_auth_adfs.backend.settings.CLAIM_MAPPING", claim_mapping):
-            backend = AdfsAuthCodeBackend()
-
-            user = backend.authenticate(self.request, authorization_code="dummycode")
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "dummycode"})
+            user = response.wsgi_request.user
             self.assertIsInstance(user, User)
             self.assertEqual(user.first_name, "John")
             self.assertEqual(user.last_name, "Doe")
@@ -521,5 +522,49 @@ class AuthenticationTests(TestCase):
         settings.AUTH_ADFS["CREATE_NEW_USERS"] = False
         with patch("django_auth_adfs.config.django_settings", settings), \
                 patch("django_auth_adfs.backend.settings", Settings()):
-            backend = AdfsAuthCodeBackend()
-            self.assertRaises(PermissionDenied, backend.authenticate, self.request, authorization_code='testcode')
+            response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+            self.assertEqual(response.status_code, 401)
+
+    @mock_adfs("2016")
+    def test_access_token_unexpired(self):
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+        self.assertFalse(response.wsgi_request.user.is_anonymous)
+        response = self.client.get(reverse('test'))
+        self.assertEqual(response.status_code, 200)
+
+    @mock_adfs("2016")
+    def test_access_token_expired(self):
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+        self.assertFalse(response.wsgi_request.user.is_anonymous)
+        fromisoformat = datetime.fromisoformat
+        with patch('django_auth_adfs.backend.datetime') as dt:
+            dt.fromisoformat = fromisoformat
+            dt.now.return_value = datetime.now() + timedelta(hours=1)
+            response = self.client.get(reverse('test'))
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(AUTHENTICATION_BACKENDS=['django_auth_adfs.backend.AdfsAuthCodeRefreshBackend'])
+    @override_settings(
+        MIDDLEWARE=[
+            'django.contrib.sessions.middleware.SessionMiddleware',
+            'django.middleware.common.CommonMiddleware',
+            'django.middleware.csrf.CsrfViewMiddleware',
+            'django.contrib.auth.middleware.AuthenticationMiddleware',
+            'django.contrib.messages.middleware.MessageMiddleware',
+            'django.middleware.clickjacking.XFrameOptionsMiddleware',
+            "django_auth_adfs.middleware.AdfsRefreshMiddleware",
+            "django_auth_adfs.middleware.LoginRequiredMiddleware",
+        ]
+    )
+    @mock_adfs("2016", refresh_token_expired=True)
+    def test_refresh_token_expired(self):
+        response = self.client.get(reverse('django_auth_adfs:callback'), data={'code': "testcode"})
+        self.assertFalse(response.wsgi_request.user.is_anonymous)
+        fromisoformat = datetime.fromisoformat
+        with patch('django_auth_adfs.backend.datetime') as dt:
+            dt.fromisoformat = fromisoformat
+            dt.now.return_value = datetime.now() + timedelta(hours=2)
+            response = self.client.get(reverse('test'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], f"{reverse('django_auth_adfs:login')}?next=/")
+        self.assertTrue(response.wsgi_request.user.is_anonymous)
