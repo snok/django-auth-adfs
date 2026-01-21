@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 
 import jwt
 from django.contrib.auth import get_user_model
@@ -415,13 +416,37 @@ class AdfsAuthCodeBackend(AdfsBaseBackend):
             logger.debug("Authentication backend was called but no authorization code was received")
             return
 
+        # If there's no request object, we pass control to the next authentication backend
+        if request is None:
+            logger.debug("Authentication backend was called without request")
+            return
+
         # If loaded data is too old, reload it again
         provider_config.load_config()
 
         adfs_response = self.exchange_auth_code(authorization_code, request)
-        access_token = adfs_response["access_token"]
-        user = self.process_access_token(access_token, adfs_response)
+        user = self._process_adfs_response(request, adfs_response)
         return user
+
+    def _process_adfs_response(self, request, adfs_response):
+        user = self.process_access_token(adfs_response['access_token'], adfs_response)
+        request.session['_adfs_access_token'] = adfs_response['access_token']
+        expiry = datetime.now() + timedelta(seconds=adfs_response['expires_in'])
+        request.session['_adfs_token_expiry'] = expiry.isoformat()
+        if 'refresh_token' in adfs_response:
+            request.session['_adfs_refresh_token'] = adfs_response['refresh_token']
+        request.session.save()
+        return user
+
+    def refresh_access_token(self, request, refresh_token):
+        provider_config.load_config()
+        response = provider_config.session.post(
+            provider_config.token_endpoint,
+            data=f'grant_type=refresh_token&refresh_token={refresh_token}'
+        )
+        response.raise_for_status()
+        adfs_response = response.json()
+        self._process_adfs_response(request, adfs_response)
 
 
 class AdfsAccessTokenBackend(AdfsBaseBackend):

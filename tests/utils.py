@@ -5,6 +5,7 @@ import re
 import time
 from datetime import datetime, tzinfo, timedelta
 from functools import partial
+from urllib.parse import parse_qs
 
 import jwt
 import responses
@@ -98,9 +99,14 @@ def build_access_token_azure_groups_in_claim_source(request):
     return do_build_access_token(request, issuer, groups_in_claim_names=True)
 
 
+def build_access_token_adfs_expired(request):
+    issuer = "http://adfs.example.com/adfs/services/trust"
+    return do_build_access_token(request, issuer, refresh_token_expired=True)
+
+
 def do_build_mfa_error(request):
     response = {'error_description': 'AADSTS50076'}
-    return 400, [], json.dumps(response)
+    return 400, {}, json.dumps(response)
 
 
 def do_build_graph_response(request):
@@ -111,7 +117,11 @@ def do_build_graph_response_no_group_perm(request):
     return do_build_ms_graph_groups(request, missing_group_names=True)
 
 
-def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, groups_in_claim_names=False):
+def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, groups_in_claim_names=False,
+                          refresh_token_expired=False):
+    data = parse_qs(request.body)
+    if data.get('grant_type') == ['refresh_token'] and data.get('refresh_token') == ['expired_refresh_token']:
+        return 401, {}, None
     issued_at = int(time.time())
     expires = issued_at + 3600
     auth_time = datetime.utcnow()
@@ -159,16 +169,20 @@ def do_build_access_token(request, issuer, schema=None, no_upn=False, idp=None, 
             }
         }
     token = jwt.encode(claims, signing_key_b, algorithm="RS256")
+    if refresh_token_expired:
+        refresh_token = 'expired_refresh_token'
+    else:
+        refresh_token = 'random_refresh_token'
     response = {
         'resource': 'django_website.adfs.relying_party_id',
         'token_type': 'bearer',
         'refresh_token_expires_in': 28799,
-        'refresh_token': 'random_refresh_token',
+        'refresh_token': refresh_token,
         'expires_in': 3600,
         'id_token': 'not_used',
         'access_token': token.decode() if isinstance(token, bytes) else token  # PyJWT>=2 returns a str instead of bytes
     }
-    return 200, [], json.dumps(response)
+    return 200, {}, json.dumps(response)
 
 
 def do_build_obo_access_token(request):
@@ -228,7 +242,7 @@ def do_build_obo_access_token(request):
         'refresh_token': 'not_used',
         'access_token': token.decode() if isinstance(token, bytes) else token  # PyJWT>=2 returns a str instead of bytes
     }
-    return 200, [], json.dumps(response)
+    return 200, {}, json.dumps(response)
 
 
 def do_build_ms_graph_groups(request, missing_group_names=False):
@@ -308,7 +322,7 @@ def do_build_ms_graph_groups(request, missing_group_names=False):
     if missing_group_names:
         for group in response["value"]:
             group["displayName"] = None
-    return 200, [], json.dumps(response)
+    return 200, {}, json.dumps(response)
 
 
 def build_openid_keys(request, empty_keys=False):
@@ -337,7 +351,7 @@ def build_openid_keys(request, empty_keys=False):
                 },
             ]
         }
-    return 200, [], json.dumps(keys)
+    return 200, {}, json.dumps(keys)
 
 
 def build_adfs_meta(request):
@@ -345,7 +359,7 @@ def build_adfs_meta(request):
         data = "".join(f.readlines())
     data = data.replace("REPLACE_WITH_CERT_A", base64.b64encode(signing_cert_a).decode())
     data = data.replace("REPLACE_WITH_CERT_B", base64.b64encode(signing_cert_b).decode())
-    return 200, [], data
+    return 200, {}, data
 
 
 def mock_adfs(
@@ -356,6 +370,7 @@ def mock_adfs(
     version=None,
     requires_obo=False,
     missing_graph_group_perm=False,
+    refresh_token_expired=False,
 ):
     if adfs_version not in ["2012", "2016", "azure"]:
         raise NotImplementedError("This version of ADFS is not implemented")
@@ -463,6 +478,12 @@ def mock_adfs(
                         rsps.add_callback(
                             rsps.POST, token_endpoint,
                             callback=do_build_mfa_error,
+                            content_type='application/json',
+                        )
+                    elif refresh_token_expired:
+                        rsps.add_callback(
+                            rsps.POST, token_endpoint,
+                            callback=build_access_token_adfs_expired,
                             content_type='application/json',
                         )
                     else:
