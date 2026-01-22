@@ -168,17 +168,17 @@ class AdfsBaseBackend(ModelBackend):
                     leeway=settings.JWT_LEEWAY
                 )
             except jwt.ExpiredSignatureError as error:
-                logger.info("Signature has expired: %s", error)
+                logger.error("Signature has expired: %s", error)
                 raise PermissionDenied
             except jwt.DecodeError as error:
                 # If it's not the last certificate in the list, skip to the next one
                 if idx < len(provider_config.signing_keys) - 1:
                     continue
                 else:
-                    logger.info('Error decoding signature: %s', error)
+                    logger.error('Error decoding signature: %s', error)
                     raise PermissionDenied
             except jwt.InvalidTokenError as error:
-                logger.info(str(error))
+                logger.error(str(error))
                 raise PermissionDenied
 
     def process_access_token(self, access_token, adfs_response=None):
@@ -244,7 +244,7 @@ class AdfsBaseBackend(ModelBackend):
             obo_access_token = self.get_obo_access_token(access_token)
             groups = self.get_group_memberships_from_ms_graph(obo_access_token)
         else:
-            logger.debug("The configured groups claim %s was not found in the access token",
+            logger.error("The configured groups claim %s was not found in the access token",
                          settings.GROUPS_CLAIM)
 
         return groups
@@ -286,7 +286,7 @@ class AdfsBaseBackend(ModelBackend):
         except usermodel.DoesNotExist:
             if settings.CREATE_NEW_USERS:
                 user = usermodel.objects.create(**userdata)
-                logger.debug("User '%s' has been created.", claims[username_claim])
+                logger.info("User '%s' has been created.", claims[username_claim])
             else:
                 logger.debug("User '%s' doesn't exist and creating users is disabled.", claims[username_claim])
                 raise PermissionDenied
@@ -315,7 +315,7 @@ class AdfsBaseBackend(ModelBackend):
                 if not isinstance(claim, dict):
                     if claim in claims:
                         setattr(user, field, claims[claim])
-                        logger.debug("Attribute '%s' for instance '%s' was set to '%s'.", field, user, claims[claim])
+                        logger.info("Attribute '%s' for instance '%s' was set to '%s'.", field, user, claims[claim])
                     else:
                         if field in required_fields:
                             msg = "Claim not found in access token: '{}'. Check ADFS claims mapping."
@@ -386,7 +386,7 @@ class AdfsBaseBackend(ModelBackend):
                     else:
                         value = False
                     setattr(user, flag, value)
-                    logger.debug("Attribute '%s' for user '%s' was set to '%s'.", flag, user, value)
+                    logger.info("Attribute '%s' for user '%s' was set to '%s'.", flag, user, value)
                 else:
                     msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                     raise ImproperlyConfigured(msg.format(flag))
@@ -397,7 +397,7 @@ class AdfsBaseBackend(ModelBackend):
                 if claim in claims and str(claims[claim]).lower() in ['y', 'yes', 't', 'true', 'on', '1']:
                     bool_val = True
                 setattr(user, field, bool_val)
-                logger.debug("Attribute '%s' for user '%s' was set to '%s'.", field, user, bool_val)
+                logger.info("Attribute '%s' for user '%s' was set to '%s'.", field, user, bool_val)
             else:
                 msg = "User model has no field named '{}'. Check ADFS boolean claims mapping."
                 raise ImproperlyConfigured(msg.format(field))
