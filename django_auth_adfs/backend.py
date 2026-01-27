@@ -1,6 +1,7 @@
 import logging
 
 import jwt
+from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group
@@ -198,10 +199,12 @@ class AdfsBaseBackend(ModelBackend):
             raise PermissionDenied
 
         groups = self.process_user_groups(claims, access_token)
-        user = self.create_user(claims)
-        self.update_user_attributes(user, claims)
-        self.update_user_groups(user, groups)
-        self.update_user_flags(user, claims, groups)
+        with transaction.atomic():
+            user = self.create_user(claims)
+            self.update_user_attributes(user, claims)
+            self.update_user_groups(user, groups)
+            self.update_user_flags(user, claims, groups)
+            user.save()
 
         signals.post_authenticate.send(
             sender=self,
