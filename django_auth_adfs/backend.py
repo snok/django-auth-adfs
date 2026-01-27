@@ -204,7 +204,6 @@ class AdfsBaseBackend(ModelBackend):
             self.update_user_attributes(user, claims)
             self.update_user_groups(user, groups)
             self.update_user_flags(user, claims, groups)
-            user.full_clean()
             user.save()
 
         signals.post_authenticate.send(
