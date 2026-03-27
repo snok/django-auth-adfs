@@ -244,8 +244,16 @@ Here we can give our frontend the permission scope we created earlier. Press **D
 
 ------------
 
-Finally, sometimes the plugin will need to obtain the user groups claim from MS Graph (for example when the user has too many groups to fit in the access token), to ensure the plugin can do this successfully add the GroupMember.Read.All permission.
+Sometimes the plugin will need to obtain the user groups claim from MS Graph (for example when the user has too many groups to fit in the access token), to ensure the plugin can do this successfully add the GroupMember.Read.All permission.
 
 
 .. image:: _static/AzureAD/20_add-permission-3.png
+    :scale: 50 %
+
+
+------------
+
+Finally, it might be necessary to add group claims to your application if you want them to show up in the access token and match against groups via the AUTH_ADFS setting `"GROUPS_CLAIM": "groups",`
+
+.. image:: _static/AzureAD/21_token_configuration_groups.png
     :scale: 50 %
